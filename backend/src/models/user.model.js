@@ -6,7 +6,7 @@ export async function createUser({
 
  email,
 
- senha,
+ senhaHash,
 
  role="lider"
 
@@ -15,46 +15,31 @@ export async function createUser({
  const [result]=await pool.query(
 
  `
-
  INSERT INTO users
-
  (
-
- nome,
-
- email,
-
- senha_hash,
-
- role
-
+  nome,
+  email,
+  senha_hash,
+  role
  )
-
  VALUES
-
  (
-
- ?,
-
- ?,
-
- ?,
-
- ?
-
+  ?,
+  ?,
+  ?,
+  ?
  )
-
  `,
 
  [
 
- nome,
+  nome,
 
- email,
+  email,
 
- senha,
+  senhaHash,
 
- role
+  role
 
  ]
 
@@ -83,15 +68,10 @@ export async function findUserByEmail(
  const [rows]=await pool.query(
 
  `
-
  SELECT *
-
  FROM users
-
  WHERE email=?
-
  LIMIT 1
-
  `,
 
  [

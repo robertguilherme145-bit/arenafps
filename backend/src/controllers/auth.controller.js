@@ -1,101 +1,97 @@
 import {
- createUser,
- findUserByEmail
+
+ register,
+
+ login
+
 }
-from "../models/user.model.js";
 
-export const register=(req,res)=>{
+from "../services/auth.service.js";
 
- const {
-  nome,
-  email,
-  senha
- }=req.body;
+export async function registerUser(
 
- if(!nome||!email||!senha){
+ req,
 
-  return res.status(400).json({
+ res
 
-   erro:"Campos obrigatórios"
+){
+
+ try{
+
+  const resultado=
+
+  await register(
+
+   req.body
+
+  );
+
+  return res.json(
+
+   resultado
+
+  );
+
+ }
+
+ catch(err){
+
+  return res.status(
+
+   400
+
+  ).json({
+
+   erro:
+
+   err.message
 
   });
 
  }
 
- const existe=
- findUserByEmail(email);
+}
 
- if(existe){
+export async function loginUser(
 
-  return res.status(400).json({
+ req,
 
-   erro:"Email já existe"
+ res
+
+){
+
+ try{
+
+  const resultado=
+
+  await login(
+
+   req.body
+
+  );
+
+  return res.json(
+
+   resultado
+
+  );
+
+ }
+
+ catch(err){
+
+  return res.status(
+
+   400
+
+  ).json({
+
+   erro:
+
+   err.message
 
   });
 
  }
 
- const novo=
- createUser({
-
-  nome,
-  email,
-  senha
-
- });
-
- return res.status(201).json({
-
-  mensagem:"Usuário criado",
-
-  usuario:novo
-
- });
-
-};
-
-export const login=(req,res)=>{
-
- const {
-  email,
-  senha
- }=req.body;
-
- const usuario=
- findUserByEmail(email);
-
- if(!usuario){
-
-  return res.status(401).json({
-
-   erro:"Usuário não encontrado"
-
-  });
-
- }
-
- if(usuario.senha!==senha){
-
-  return res.status(401).json({
-
-   erro:"Senha inválida"
-
-  });
-
- }
-
- return res.json({
-
-  mensagem:"Login OK",
-
-  usuario:{
-
-   nome:usuario.nome,
-
-   email:usuario.email
-
-  }
-
- });
-
-};
+}

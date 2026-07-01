@@ -1,23 +1,111 @@
+import bcrypt from "bcrypt";
+
 import {
+
  createUser,
+
  findUserByEmail
+
 }
+
 from "../models/user.model.js";
 
-export const createUserService=(data)=>{
+export async function register({
 
- if(
-  findUserByEmail(
-   data.email
-  )
- ){
+ nome,
+
+ email,
+
+ senha
+
+}){
+
+ const existe=
+
+ await findUserByEmail(
+
+  email
+
+ );
+
+ if(existe){
 
   throw new Error(
+
    "Email já cadastrado"
+
   );
 
  }
 
- return createUser(data);
+ const senhaHash=
 
-};
+ await bcrypt.hash(
+
+  senha,
+
+  10
+
+ );
+
+ return await createUser({
+
+  nome,
+
+  email,
+
+  senhaHash
+
+ });
+
+}
+
+export async function login({
+
+ email,
+
+ senha
+
+}){
+
+ const usuario=
+
+ await findUserByEmail(
+
+  email
+
+ );
+
+ if(!usuario){
+
+  throw new Error(
+
+   "Usuário não encontrado"
+
+  );
+
+ }
+
+ const ok=
+
+ await bcrypt.compare(
+
+  senha,
+
+  usuario.senha_hash
+
+ );
+
+ if(!ok){
+
+  throw new Error(
+
+   "Senha inválida"
+
+  );
+
+ }
+
+ return usuario;
+
+}
