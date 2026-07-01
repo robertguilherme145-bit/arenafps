@@ -1,40 +1,132 @@
-const clans=[];
+import pool from "../config/database.js";
 
-export const createClan=(clan)=>{
+/**
+ * Cria um clã
+ */
+export async function createClan({
+  nome,
+  tag,
+  logo = null,
+  descricao = null,
+  lider_id
+}) {
 
- clans.push(clan);
+  const [result] = await pool.query(
+    `
+    INSERT INTO clans
+    (
+      nome,
+      tag,
+      logo,
+      descricao,
+      lider_id
+    )
+    VALUES
+    (
+      ?,?,?,?,?
+    )
+    `,
+    [
+      nome,
+      tag,
+      logo,
+      descricao,
+      lider_id
+    ]
+  );
 
- return clan;
+  return {
+    id: result.insertId,
+    nome,
+    tag,
+    logo,
+    descricao,
+    lider_id
+  };
 
-};
+}
 
-export const findClan=(nome)=>{
+/**
+ * Procura um clã pelo nome
+ */
+export async function findClanByName(nome){
 
- return clans.find(
-  clan=>clan.nome===nome
- );
+  const [rows] = await pool.query(
 
-};
+    `
+    SELECT *
+    FROM clans
+    WHERE nome = ?
+    LIMIT 1
+    `,
 
-export const getClans=()=>{
+    [nome]
 
- return clans;
+  );
 
-};
+  return rows[0];
 
-export const addPlayer=(clanNome,jogador)=>{
+}
 
- const clan=
- findClan(clanNome);
+/**
+ * Procura o clã do líder
+ */
+export async function findClanByLeader(lider_id){
 
- if(!clan){
+  const [rows] = await pool.query(
 
-  return null;
+    `
+    SELECT *
+    FROM clans
+    WHERE lider_id = ?
+    LIMIT 1
+    `,
 
- }
+    [lider_id]
 
- clan.jogadores.push(jogador);
+  );
 
- return clan;
+  return rows[0];
 
-};
+}
+
+/**
+ * Lista todos os clãs
+ */
+export async function getClans(){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM clans
+    ORDER BY nome
+    `
+
+  );
+
+  return rows;
+
+}
+
+/**
+ * Procura um clã pela TAG
+ */
+export async function findClanByTag(tag){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM clans
+    WHERE tag = ?
+    LIMIT 1
+    `,
+
+    [tag]
+
+  );
+
+  return rows[0];
+
+}

@@ -2,32 +2,47 @@ import { Router } from "express";
 
 import {
 
- registerClan,
+  create,
 
- listClans,
-
- registerPlayer
+  index
 
 }
 
 from "../controllers/clan.controller.js";
 
-const router=
-Router();
+import {
 
+  auth
+
+}
+
+from "../middleware/auth.middleware.js";
+
+const router = Router();
+
+/**
+ * Criar clã
+ * Apenas líder autenticado
+ */
 router.post(
- "/create",
- registerClan
+
+  "/create",
+
+  auth,
+
+  create
+
 );
 
-router.post(
- "/player",
- registerPlayer
-);
-
+/**
+ * Listar clãs
+ */
 router.get(
- "/all",
- listClans
+
+  "/all",
+
+  index
+
 );
 
 export default router;

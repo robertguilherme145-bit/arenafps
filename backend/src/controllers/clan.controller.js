@@ -1,123 +1,65 @@
 import {
- createClan,
- findClan,
- getClans,
- addPlayer
+
+  registerClan,
+
+  listClans
+
 }
-from "../models/clan.model.js";
 
-export const registerClan=(req,res)=>{
+from "../services/clan.service.js";
 
- const {
-  nome,
-  lider
- }=req.body;
+/**
+ * Criar clã
+ */
+export async function create(req,res){
 
- if(!nome||!lider){
+  try{
 
-  return res.status(400).json({
+    const resultado = await registerClan({
 
-   erro:"Informe nome e líder"
+      ...req.body,
 
-  });
+      lider_id: req.user.id
 
- }
+    });
 
- if(findClan(nome)){
-
-  return res.status(400).json({
-
-   erro:"Clã já existe"
-
-  });
-
- }
-
- const novo=
- createClan({
-
-  id:Date.now(),
-
-  nome,
-
-  lider,
-
-  jogadores:[]
-
- });
-
- return res.status(201).json({
-
-  mensagem:"Clã criado",
-
-  clan:novo
-
- });
-
-};
-
-export const listClans=(req,res)=>{
-
- return res.json(
-  getClans()
- );
-};
-
-export const registerPlayer=(req,res)=>{
-
- const {
-  clan,
-  nick,
-  cargo
- }=req.body;
-
- if(
-  !clan||
-  !nick
- ){
-
-  return res.status(400).json({
-
-   erro:"Dados inválidos"
-
-  });
-
- }
-
- const resultado=
- addPlayer(
-
-  clan,
-
-  {
-
-   id:Date.now(),
-
-   nick,
-
-   cargo:
-   cargo||"player"
+    return res.status(201).json(resultado);
 
   }
 
- );
+  catch(err){
 
- if(!resultado){
+    return res.status(400).json({
 
-  return res.status(404).json({
+      erro: err.message
 
-   erro:"Clã não encontrado"
+    });
 
-  });
+  }
 
- }
+}
 
- return res.json({
+/**
+ * Listar clãs
+ */
+export async function index(req,res){
 
-  mensagem:"Jogador cadastrado",
+  try{
 
-  clan:resultado
+    const resultado = await listClans();
 
- });
+    return res.json(resultado);
 
-};
+  }
+
+  catch(err){
+
+    return res.status(500).json({
+
+      erro: err.message
+
+    });
+
+  }
+
+}
