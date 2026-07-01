@@ -4,9 +4,6 @@ dotenv.config();
 
 import mysql from "mysql2/promise";
 
-console.log("DB HOST:", process.env.DB_HOST);
-console.log("DB USER:", process.env.DB_USER);
-
 const pool = mysql.createPool({
 
  host: process.env.DB_HOST,

@@ -1,17 +1,107 @@
-const users=[];
+import pool from "../config/database.js";
 
-export const createUser=(user)=>{
+export async function createUser({
 
- users.push(user);
+ nome,
 
- return user;
+ email,
 
-};
+ senha,
 
-export const findUserByEmail=(email)=>{
+ role="lider"
 
- return users.find(
-  user=>user.email===email
+}){
+
+ const [result]=await pool.query(
+
+ `
+
+ INSERT INTO users
+
+ (
+
+ nome,
+
+ email,
+
+ senha_hash,
+
+ role
+
+ )
+
+ VALUES
+
+ (
+
+ ?,
+
+ ?,
+
+ ?,
+
+ ?
+
+ )
+
+ `,
+
+ [
+
+ nome,
+
+ email,
+
+ senha,
+
+ role
+
+ ]
+
  );
 
-};
+ return {
+
+  id:result.insertId,
+
+  nome,
+
+  email,
+
+  role
+
+ };
+
+}
+
+export async function findUserByEmail(
+
+ email
+
+){
+
+ const [rows]=await pool.query(
+
+ `
+
+ SELECT *
+
+ FROM users
+
+ WHERE email=?
+
+ LIMIT 1
+
+ `,
+
+ [
+
+  email
+
+ ]
+
+ );
+
+ return rows[0];
+
+}

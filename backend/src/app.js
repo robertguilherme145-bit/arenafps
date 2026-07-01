@@ -8,8 +8,6 @@ import cors from "cors";
 import routes from "./routes/index.js";
 import pool from "./config/database.js";
 
-console.log("HOST:", process.env.DB_HOST);
-
 const app = express();
 
 app.use(cors());
