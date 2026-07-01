@@ -4,7 +4,9 @@ import {
 
  listTournaments,
 
- registerClanTournament
+ registerClanTournament,
+
+ approveSubscription
 
 }
 
@@ -116,6 +118,46 @@ export const subscribeTournament=(req,res)=>{
   mensagem:"Inscrição realizada",
 
   torneio:resultado
+
+ });
+
+};
+
+export const approveTournament=(req,res)=>{
+
+ const {
+
+  tournamentId,
+
+  clan
+
+ }=req.body;
+
+ const aprovado=
+ approveSubscription(
+
+  tournamentId,
+
+  clan
+
+ );
+
+ if(!aprovado){
+
+  return res.status(404).json({
+
+   erro:"Inscrição não encontrada"
+
+  });
+
+ }
+
+ return res.json({
+
+  mensagem:
+  "Pagamento confirmado",
+
+  aprovado
 
  });
 

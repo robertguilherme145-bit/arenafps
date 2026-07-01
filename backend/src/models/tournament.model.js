@@ -51,3 +51,44 @@ export const registerClanTournament=(
  return torneio;
 
 };
+
+export const approveSubscription=(
+
+ tournamentId,
+
+ clan
+
+)=>{
+
+ const torneio=
+ findTournament(
+  tournamentId
+ );
+
+ if(!torneio){
+
+  return null;
+
+ }
+
+ const inscricao=
+ torneio.inscritos.find(
+
+  i=>
+
+  i.clan===clan
+
+ );
+
+ if(!inscricao){
+
+  return null;
+
+ }
+
+ inscricao.status=
+ "aprovado";
+
+ return inscricao;
+
+};
