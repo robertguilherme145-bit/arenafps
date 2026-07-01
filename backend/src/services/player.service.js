@@ -8,6 +8,8 @@ import {
 
   findPlayerByGame,
 
+  findPlayerByIdAndClan,
+
   updatePlayer,
 
   deactivatePlayer
@@ -124,7 +126,29 @@ export async function getPlayer(id){
 /**
  * Editar jogador
  */
-export async function editPlayer(id,data){
+export async function editPlayer(userId, id, data){
+
+  const clan = await findClanByLeader(userId);
+
+  if(!clan){
+
+    throw new Error("Clã não encontrado.");
+
+  }
+
+  const player = await findPlayerByIdAndClan(
+
+    id,
+
+    clan.id
+
+  );
+
+  if(!player){
+
+    throw new Error("Você não tem permissão para editar este jogador.");
+
+  }
 
   await updatePlayer(id,data);
 
@@ -133,7 +157,29 @@ export async function editPlayer(id,data){
 /**
  * Inativar jogador
  */
-export async function removePlayer(id){
+export async function removePlayer(userId,id){
+
+  const clan = await findClanByLeader(userId);
+
+  if(!clan){
+
+    throw new Error("Clã não encontrado.");
+
+  }
+
+  const player = await findPlayerByIdAndClan(
+
+    id,
+
+    clan.id
+
+  );
+
+  if(!player){
+
+    throw new Error("Você não tem permissão para remover este jogador.");
+
+  }
 
   await deactivatePlayer(id);
 

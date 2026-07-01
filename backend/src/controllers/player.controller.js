@@ -112,6 +112,8 @@ export async function update(req,res){
 
     await editPlayer(
 
+      req.user.id,
+
       req.params.id,
 
       req.body
@@ -146,6 +148,8 @@ export async function destroy(req,res){
   try{
 
     await removePlayer(
+
+      req.user.id,
 
       req.params.id
 

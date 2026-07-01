@@ -175,3 +175,29 @@ export async function deactivatePlayer(id){
   );
 
 }
+
+/**
+ * Busca jogador pelo ID e pelo clã
+ */
+export async function findPlayerByIdAndClan(id, clan_id){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM players
+    WHERE id = ?
+    AND clan_id = ?
+    LIMIT 1
+    `,
+
+    [
+      id,
+      clan_id
+    ]
+
+  );
+
+  return rows[0];
+
+}
