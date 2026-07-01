@@ -1,164 +1,168 @@
 import {
 
- createTournament,
+  registerTournament,
 
- listTournaments,
+  listTournaments,
 
- registerClanTournament,
+  getTournament,
 
- approveSubscription
+  editTournament,
+
+  updateTournamentStatus
 
 }
 
-from "../models/tournament.model.js";
+from "../services/tournament.service.js";
 
-export const registerTournament=(req,res)=>{
+/**
+ * Criar torneio
+ */
+export async function create(req,res){
 
- const {
+  try{
 
-  nome,
+    const tournament = await registerTournament(
 
-  valor,
+      req.body
 
-  vagas
+    );
 
- }=req.body;
+    return res.status(201).json(tournament);
 
- if(
-  !nome||
-  !valor||
-  !vagas
- ){
+  }
 
-  return res.status(400).json({
+  catch(err){
 
-   erro:"Dados inválidos"
+    return res.status(400).json({
 
-  });
+      erro: err.message
 
- }
+    });
 
- const novo=
- createTournament({
+  }
 
-  id:Date.now(),
+}
 
-  nome,
+/**
+ * Listar torneios
+ */
+export async function index(req,res){
 
-  valor,
+  try{
 
-  vagas,
+    const tournaments = await listTournaments();
 
-  inscritos:[]
+    return res.json(tournaments);
 
- });
+  }
 
- return res.status(201).json({
+  catch(err){
 
-  mensagem:"Torneio criado",
+    return res.status(500).json({
 
-  torneio:novo
+      erro: err.message
 
- });
+    });
 
-};
+  }
 
-export const getTournament=(req,res)=>{
+}
 
- return res.json(
-  listTournaments()
- );
+/**
+ * Buscar torneio
+ */
+export async function show(req,res){
 
-};
+  try{
 
-export const subscribeTournament=(req,res)=>{
+    const tournament = await getTournament(
 
- const {
+      req.params.id
 
-  tournamentId,
+    );
 
-  clan
+    return res.json(tournament);
 
- }=req.body;
+  }
 
- if(
-  !tournamentId||
-  !clan
- ){
+  catch(err){
 
-  return res.status(400).json({
+    return res.status(404).json({
 
-   erro:"Dados inválidos"
+      erro: err.message
 
-  });
+    });
 
- }
+  }
 
- const resultado=
- registerClanTournament(
+}
 
-  tournamentId,
+/**
+ * Editar torneio
+ */
+export async function update(req,res){
 
-  clan
+  try{
 
- );
+    await editTournament(
 
- if(!resultado){
+      req.params.id,
 
-  return res.status(404).json({
+      req.body
 
-   erro:"Torneio não encontrado"
+    );
 
-  });
+    return res.json({
 
- }
+      mensagem:"Torneio atualizado."
 
- return res.json({
+    });
 
-  mensagem:"Inscrição realizada",
+  }
 
-  torneio:resultado
+  catch(err){
 
- });
+    return res.status(400).json({
 
-};
+      erro: err.message
 
-export const approveTournament=(req,res)=>{
+    });
 
- const {
+  }
 
-  tournamentId,
+}
 
-  clan
+/**
+ * Alterar status
+ */
+export async function changeStatus(req,res){
 
- }=req.body;
+  try{
 
- const aprovado=
- approveSubscription(
+    await updateTournamentStatus(
 
-  tournamentId,
+      req.params.id,
 
-  clan
+      req.body.status
 
- );
+    );
 
- if(!aprovado){
+    return res.json({
 
-  return res.status(404).json({
+      mensagem:"Status atualizado."
 
-   erro:"Inscrição não encontrada"
+    });
 
-  });
+  }
 
- }
+  catch(err){
 
- return res.json({
+    return res.status(400).json({
 
-  mensagem:
-  "Pagamento confirmado",
+      erro: err.message
 
-  aprovado
+    });
 
- });
+  }
 
-};
+}

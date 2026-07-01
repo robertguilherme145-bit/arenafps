@@ -1,94 +1,271 @@
-const tournaments=[];
+import pool from "../config/database.js";
 
-export const createTournament=(data)=>{
+/**
+ * Criar torneio
+ */
+export async function createTournament({
 
- tournaments.push(data);
+  nome,
 
- return data;
+  descricao,
 
-};
+  game,
 
-export const listTournaments=()=>{
+  valor,
 
- return tournaments;
+  max_clans,
 
-};
+  titulares,
 
-export const findTournament=(id)=>{
+  reservas,
 
- return tournaments.find(
-  t=>t.id===Number(id)
- );
+  premiacao,
 
-};
+  banner = null,
 
-export const registerClanTournament=(
- tournamentId,
- clan
-)=>{
+  inicio,
 
- const torneio=
- findTournament(
-  tournamentId
- );
+  fim
 
- if(!torneio){
+}){
 
-  return null;
+  const [result] = await pool.query(
 
- }
+    `
+    INSERT INTO tournaments
+    (
 
- torneio.inscritos.push({
+      nome,
 
-  id:Date.now(),
+      descricao,
 
-  clan,
+      game,
 
-  status:"pendente"
+      valor,
 
- });
+      max_clans,
 
- return torneio;
+      titulares,
 
-};
+      reservas,
 
-export const approveSubscription=(
+      premiacao,
 
- tournamentId,
+      banner,
 
- clan
+      inicio,
 
-)=>{
+      fim
 
- const torneio=
- findTournament(
-  tournamentId
- );
+    )
 
- if(!torneio){
+    VALUES
 
-  return null;
+    (
 
- }
+      ?,?,?,?,?,?,?,?,?,?,?
 
- const inscricao=
- torneio.inscritos.find(
+    )
 
-  i=>
+    `,
 
-  i.clan===clan
+    [
 
- );
+      nome,
 
- if(!inscricao){
+      descricao,
 
-  return null;
+      game,
 
- }
+      valor,
 
- inscricao.status=
- "aprovado";
+      max_clans,
 
- return inscricao;
+      titulares,
 
-};
+      reservas,
+
+      premiacao,
+
+      banner,
+
+      inicio,
+
+      fim
+
+    ]
+
+  );
+
+  return {
+
+    id: result.insertId,
+
+    nome,
+
+    descricao,
+
+    game,
+
+    valor,
+
+    max_clans,
+
+    titulares,
+
+    reservas,
+
+    premiacao,
+
+    banner,
+
+    inicio,
+
+    fim
+
+  };
+
+}
+
+/**
+ * Lista torneios
+ */
+export async function getTournaments(){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM tournaments
+    ORDER BY inicio ASC
+    `
+
+  );
+
+  return rows;
+
+}
+
+/**
+ * Buscar torneio
+ */
+export async function findTournament(id){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM tournaments
+    WHERE id = ?
+    LIMIT 1
+    `,
+
+    [id]
+
+  );
+
+  return rows[0];
+
+}
+
+/**
+ * Atualizar torneio
+ */
+export async function updateTournament(id,data){
+
+  await pool.query(
+
+    `
+    UPDATE tournaments
+
+    SET
+
+      nome = ?,
+
+      descricao = ?,
+
+      game = ?,
+
+      valor = ?,
+
+      max_clans = ?,
+
+      titulares = ?,
+
+      reservas = ?,
+
+      premiacao = ?,
+
+      banner = ?,
+
+      inicio = ?,
+
+      fim = ?
+
+    WHERE id = ?
+    `,
+
+    [
+
+      data.nome,
+
+      data.descricao,
+
+      data.game,
+
+      data.valor,
+
+      data.max_clans,
+
+      data.titulares,
+
+      data.reservas,
+
+      data.premiacao,
+
+      data.banner,
+
+      data.inicio,
+
+      data.fim,
+
+      id
+
+    ]
+
+  );
+
+}
+
+/**
+ * Alterar status
+ */
+export async function changeTournamentStatus(
+
+  id,
+
+  status
+
+){
+
+  await pool.query(
+
+    `
+    UPDATE tournaments
+
+    SET status = ?
+
+    WHERE id = ?
+    `,
+
+    [
+
+      status,
+
+      id
+
+    ]
+
+  );
+
+}

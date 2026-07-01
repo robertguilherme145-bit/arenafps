@@ -2,60 +2,104 @@ import { Router } from "express";
 
 import {
 
- registerTournament,
+  create,
 
- getTournament,
+  index,
 
- subscribeTournament,
+  show,
 
- approveTournament
+  update,
+
+  changeStatus
 
 }
-
 
 from "../controllers/tournament.controller.js";
 
 import {
- auth
+
+  auth
+
 }
+
 from "../middleware/auth.middleware.js";
 
 import {
- role
+
+  role
+
 }
+
 from "../middleware/role.middleware.js";
 
-const router=Router();
+const router = Router();
 
+/**
+ * Criar torneio
+ * Apenas Admin
+ */
 router.post(
 
- "/create",
+  "/create",
 
- auth,
+  auth,
 
- role(
+  role("admin"),
 
-  "admin"
-
- ),
-
- registerTournament
+  create
 
 );
 
-router.post(
- "/subscribe",
- subscribeTournament
-);
-
-router.post(
- "/approve",
- approveTournament
-);
-
+/**
+ * Listar torneios
+ */
 router.get(
- "/all",
- getTournament
+
+  "/all",
+
+  index
+
+);
+
+/**
+ * Buscar torneio
+ */
+router.get(
+
+  "/:id",
+
+  show
+
+);
+
+/**
+ * Editar torneio
+ */
+router.put(
+
+  "/:id",
+
+  auth,
+
+  role("admin"),
+
+  update
+
+);
+
+/**
+ * Alterar status
+ */
+router.patch(
+
+  "/:id/status",
+
+  auth,
+
+  role("admin"),
+
+  changeStatus
+
 );
 
 export default router;
