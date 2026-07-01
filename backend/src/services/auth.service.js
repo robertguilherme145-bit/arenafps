@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-
+import jwt from "jsonwebtoken"
 import {
 
  createUser,
@@ -106,6 +106,44 @@ export async function login({
 
  }
 
- return usuario;
+ const token=
+
+ jwt.sign(
+
+ {
+
+  id:usuario.id,
+
+  role:usuario.role
+
+ },
+
+ process.env.JWT_SECRET,
+
+ {
+
+  expiresIn:"7d"
+
+ }
+
+ );
+
+ return{
+
+  token,
+
+  usuario:{
+
+   id:usuario.id,
+
+   nome:usuario.nome,
+
+   email:usuario.email,
+
+   role:usuario.role
+
+  }
+
+ };
 
 }
