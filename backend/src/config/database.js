@@ -1,26 +1,27 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
 import mysql from "mysql2/promise";
 
-const pool=
-mysql.createPool({
+console.log("DB HOST:", process.env.DB_HOST);
+console.log("DB USER:", process.env.DB_USER);
 
- host:
- process.env.DB_HOST,
+const pool = mysql.createPool({
 
- port:
- process.env.DB_PORT,
+ host: process.env.DB_HOST,
 
- user:
- process.env.DB_USER,
+ port: Number(process.env.DB_PORT),
 
- password:
- process.env.DB_PASSWORD,
+ user: process.env.DB_USER,
 
- database:
- process.env.DB_NAME,
+ password: process.env.DB_PASSWORD,
 
- waitForConnections:true,
+ database: process.env.DB_NAME,
 
- connectionLimit:10
+ waitForConnections: true,
+
+ connectionLimit: 10
 
 });
 

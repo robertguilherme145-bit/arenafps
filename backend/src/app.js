@@ -1,10 +1,14 @@
-import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 
-import routes from "./routes/index.js";
-
 dotenv.config();
+
+import express from "express";
+import cors from "cors";
+
+import routes from "./routes/index.js";
+import pool from "./config/database.js";
+
+console.log("HOST:", process.env.DB_HOST);
 
 const app = express();
 
@@ -14,8 +18,36 @@ app.use(express.json());
 
 app.use(routes);
 
-app.listen(3000,()=>{
+async function start() {
 
- console.log("Servidor iniciado");
+ try {
 
-});
+  await pool.query("SELECT 1");
+
+  console.log("BANCO CONECTADO");
+
+  app.listen(
+
+   process.env.PORT,
+
+   () => {
+
+    console.log("Servidor iniciado");
+
+   }
+
+  );
+
+ }
+
+ catch (err) {
+
+  console.log("ERRO BANCO");
+
+  console.log(err);
+
+ }
+
+}
+
+start();
