@@ -83,6 +83,8 @@ export async function show(req,res){
 
     const player = await getPlayer(
 
+      req.user.id,
+
       req.params.id
 
     );
@@ -110,6 +112,15 @@ export async function update(req,res){
 
   try{
 
+    if(!data.nick){
+      throw new Error("Nick é obrigatório.")
+    }
+    if(!data.game){
+      throw new Error("Jogo é obrigatório.")
+    }
+    if(!data.game_uid){
+      throw new Error("ID do jogo é obrigatório.")
+    }
     await editPlayer(
 
       req.user.id,

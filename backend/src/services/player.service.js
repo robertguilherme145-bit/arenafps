@@ -109,13 +109,27 @@ export async function listPlayers(userId){
 /**
  * Buscar jogador
  */
-export async function getPlayer(id){
+export async function getPlayer(userId, id){
 
-  const player = await findPlayer(id);
+  const clan = await findClanByLeader(userId);
+
+  if(!clan){
+
+    throw new Error("Clã não encontrado.");
+
+  }
+
+  const player = await findPlayerByIdAndClan(
+
+    id,
+
+    clan.id
+
+  );
 
   if(!player){
 
-    throw new Error("Jogador não encontrado.");
+    throw new Error("Você não tem permissão para visualizar este jogador.");
 
   }
 
