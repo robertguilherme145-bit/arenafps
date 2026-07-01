@@ -5,6 +5,7 @@ import clanRoutes from "./clan.routes.js";
 import tournamentRoutes from "./tournament.routes.js";
 import playerRoutes from "./player.routes.js";
 import entryRoutes from "./entry.routes.js";
+import entryPlayerRoutes from "./entryPlayer.routes.js";
 
 
 const router=Router();
@@ -26,5 +27,6 @@ router.use("/clan", clanRoutes);
 router.use("/player", playerRoutes);
 router.use("/tournament", tournamentRoutes);
 router.use("/entry", entryRoutes);
+router.use("/entry-player", entryPlayerRoutes);
 
 export default router;

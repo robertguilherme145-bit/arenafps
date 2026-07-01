@@ -201,3 +201,32 @@ export async function findPlayerByIdAndClan(id, clan_id){
   return rows[0];
 
 }
+
+/**
+ * Busca vários jogadores por IDs
+ */
+export async function findPlayersByIds(ids){
+
+  if(ids.length === 0){
+
+    return [];
+
+  }
+
+  const placeholders = ids.map(() => "?").join(",");
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM players
+    WHERE id IN (${placeholders})
+    `,
+
+    ids
+
+  );
+
+  return rows;
+
+}
