@@ -1,11 +1,9 @@
 import { Router } from "express";
 
 import {
-
  registerTournament,
-
- getTournament
-
+ getTournament,
+ subscribeTournament
 }
 
 from "../controllers/tournament.controller.js";
@@ -21,6 +19,11 @@ router.post(
 router.get(
  "/all",
  getTournament
+);
+
+router.post(
+ "/subscribe",
+ subscribeTournament
 );
 
 export default router;

@@ -21,3 +21,33 @@ export const findTournament=(id)=>{
  );
 
 };
+
+export const registerClanTournament=(
+ tournamentId,
+ clan
+)=>{
+
+ const torneio=
+ findTournament(
+  tournamentId
+ );
+
+ if(!torneio){
+
+  return null;
+
+ }
+
+ torneio.inscritos.push({
+
+  id:Date.now(),
+
+  clan,
+
+  status:"pendente"
+
+ });
+
+ return torneio;
+
+};

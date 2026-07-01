@@ -2,7 +2,9 @@ import {
 
  createTournament,
 
- listTournaments
+ listTournaments,
+
+ registerClanTournament
 
 }
 
@@ -64,5 +66,57 @@ export const getTournament=(req,res)=>{
  return res.json(
   listTournaments()
  );
+
+};
+
+export const subscribeTournament=(req,res)=>{
+
+ const {
+
+  tournamentId,
+
+  clan
+
+ }=req.body;
+
+ if(
+  !tournamentId||
+  !clan
+ ){
+
+  return res.status(400).json({
+
+   erro:"Dados inválidos"
+
+  });
+
+ }
+
+ const resultado=
+ registerClanTournament(
+
+  tournamentId,
+
+  clan
+
+ );
+
+ if(!resultado){
+
+  return res.status(404).json({
+
+   erro:"Torneio não encontrado"
+
+  });
+
+ }
+
+ return res.json({
+
+  mensagem:"Inscrição realizada",
+
+  torneio:resultado
+
+ });
 
 };
