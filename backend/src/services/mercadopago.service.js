@@ -102,3 +102,32 @@ export async function createPixPayment({
     }
 
 }
+
+/**
+ * Buscar pagamento no Mercado Pago
+ */
+export async function getPayment(paymentId){
+
+    try{
+
+        const response = await payment.get({
+
+            id: paymentId
+
+        });
+
+        return response;
+
+    }
+
+    catch(err){
+
+        console.error("Erro ao consultar pagamento:");
+
+        console.dir(err,{ depth:null });
+
+        throw err;
+
+    }
+
+}

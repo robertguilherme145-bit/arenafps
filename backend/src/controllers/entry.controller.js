@@ -1,16 +1,4 @@
-import {
-
-  registerEntry,
-
-  listEntries,
-
-  getEntry,
-
-  confirmEntry,
-
-  confirmPayment
-
-}
+import { registerEntry, listEntries, getEntry, confirmEntry, confirmPayment}
 
 from "../services/entry.service.js";
 

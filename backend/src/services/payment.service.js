@@ -1,33 +1,16 @@
-import {
+import {findUserById} from "../models/user.model.js";
 
-    findUserById
+import {findClanByLeader} from "../models/clan.model.js";
 
-} from "../models/user.model.js";
+import {createPayment, findPaymentByEntry, findPaymentByExternalReference, updatePaymentStatus} from "../models/payment.model.js";
 
-import {
-    findClanByLeader
-} from "../models/clan.model.js";
-
-import {
-
-    createPayment,
-    findPaymentByEntry
-
-} from "../models/payment.model.js";
-
-import {
-
-    findEntry
-
-} from "../models/entry.model.js";
+import {findEntry, updatePaymentStatus as updateEntryPaymentStatus ,updateEntryStatus} from "../models/entry.model.js";
 
 
-import {
+import {findTournament} from "../models/tournament.model.js";
 
-    findTournament
 
-} from "../models/tournament.model.js";
-import { createPixPayment } from "./mercadopago.service.js";
+import {createPixPayment, getPayment} from "./mercadopago.service.js";
 
 /**
  * Criar pagamento da inscrição
@@ -160,4 +143,78 @@ export async function createEntryPayment(userId, entryId){
         copia_cola: pix.point_of_interaction.transaction_data.qr_code
 
     };
+}
+
+/**
+ * Processar Webhook
+ */
+export async function processWebhook(paymentId){
+
+    const payment = await getPayment(paymentId);
+
+    console.log({
+        id: payment.id,
+        status: payment.status,
+        external_reference: payment.external_reference});
+
+    const pagamento = await findPaymentByExternalReference(payment.external_reference);
+
+    if(!pagamento){
+
+        return;
+
+    }
+    let statusBanco = "pendente";
+
+    switch (payment.status) {
+
+        case "approved":
+            statusBanco = "aprovado";
+            break;
+
+        case "pending":
+            statusBanco = "pendente";
+            break;
+
+        case "cancelled":
+            statusBanco = "cancelado";
+            break;
+
+        case "rejected":
+            statusBanco = "rejeitado";
+            break;
+
+    }
+
+    await updatePaymentStatus(
+
+        pagamento.id,
+
+        {
+
+            payment_id: String(payment.id),
+
+            status: statusBanco,
+
+            paid_at:
+
+                payment.status === "approved"
+
+                    ? new Date()
+
+                    : null
+
+        }
+
+    );
+
+    if(payment.status === "approved"){
+
+        await updateEntryPaymentStatus(pagamento.entry_id, "pago");
+
+        await updateEntryStatus(pagamento.entry_id, "confirmado");
+
+        console.log("✅ Inscrição confirmada!");
+
+    }
 }

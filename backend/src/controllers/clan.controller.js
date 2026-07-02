@@ -1,10 +1,4 @@
-import {
-
-  registerClan,
-
-  listClans
-
-}
+import {registerClan, listClans}
 
 from "../services/clan.service.js";
 

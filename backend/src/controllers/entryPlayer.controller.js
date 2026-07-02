@@ -1,14 +1,4 @@
-import {
-
-  registerEntryPlayer,
-
-  listEntryPlayers,
-
-  deleteEntryPlayer,
-
-  saveLineup
-
-}
+import {registerEntryPlayer, listEntryPlayers, deleteEntryPlayer, saveLineup}
 
 from "../services/entryPlayer.service.js";
 

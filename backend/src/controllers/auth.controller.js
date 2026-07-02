@@ -1,10 +1,4 @@
-import {
-
- register,
-
- login
-
-}
+import {register, login}
 
 from "../services/auth.service.js";
 

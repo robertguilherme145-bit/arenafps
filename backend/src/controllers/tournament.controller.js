@@ -1,16 +1,4 @@
-import {
-
-  registerTournament,
-
-  listTournaments,
-
-  getTournament,
-
-  editTournament,
-
-  updateTournamentStatus
-
-}
+import {registerTournament, listTournaments, getTournament, editTournament, updateTournamentStatus}
 
 from "../services/tournament.service.js";
 

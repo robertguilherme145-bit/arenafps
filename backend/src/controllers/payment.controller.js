@@ -1,8 +1,4 @@
-import {
-
-    createEntryPayment
-
-} from "../services/payment.service.js";
+import {createEntryPayment, processWebhook} from "../services/payment.service.js";
 
 /**
  * Criar pagamento
@@ -40,8 +36,30 @@ export async function create(req,res){
  */
 export async function webhook(req,res){
 
-    console.log(req.body);
+    try{
 
-    return res.sendStatus(200);
+        console.log(req.body);
+
+        if(req.body?.data?.id){
+
+            await processWebhook(
+
+                req.body.data.id
+
+            );
+
+        }
+
+        return res.sendStatus(200);
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+        return res.sendStatus(500);
+
+    }
 
 }
