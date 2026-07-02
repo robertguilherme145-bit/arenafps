@@ -16,6 +16,8 @@ export async function register({
 
  email,
 
+ cpf,
+
  senha
 
 }){
@@ -38,6 +40,12 @@ export async function register({
 
  }
 
+ if(!cpf){
+    throw new Error(
+       "CPF é obrigatório" 
+    )
+ }
+
  const senhaHash=
 
  await bcrypt.hash(
@@ -53,6 +61,8 @@ export async function register({
   nome,
 
   email,
+  
+  cpf,
 
   senhaHash
 

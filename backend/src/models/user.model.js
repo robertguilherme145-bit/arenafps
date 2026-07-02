@@ -6,6 +6,8 @@ export async function createUser({
 
  email,
 
+ cpf,
+
  senhaHash,
 
  role="lider"
@@ -19,11 +21,13 @@ export async function createUser({
  (
   nome,
   email,
+  cpf,
   senha_hash,
   role
  )
  VALUES
  (
+  ?,
   ?,
   ?,
   ?,
@@ -36,6 +40,8 @@ export async function createUser({
   nome,
 
   email,
+
+  cpf,
 
   senhaHash,
 
@@ -52,6 +58,8 @@ export async function createUser({
   nome,
 
   email,
+
+  cpf,
 
   role
 
@@ -74,14 +82,32 @@ export async function findUserByEmail(
  LIMIT 1
  `,
 
- [
-
-  email
-
- ]
+ [email]
 
  );
 
  return rows[0];
+
+}
+
+/**
+ * Buscar usuário pelo ID
+ */
+export async function findUserById(id){
+
+  const [rows] = await pool.query(
+
+    `
+    SELECT *
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+    `,
+
+    [id]
+
+  );
+
+  return rows[0];
 
 }
