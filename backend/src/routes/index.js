@@ -7,6 +7,7 @@ import playerRoutes from "./player.routes.js";
 import entryRoutes from "./entry.routes.js";
 import entryPlayerRoutes from "./entryPlayer.routes.js";
 import paymentRoutes from "./payment.routes.js";
+import gameRoutes from "./game.routes.js";
 
 
 const router=Router();
@@ -30,5 +31,6 @@ router.use("/tournament", tournamentRoutes);
 router.use("/entry", entryRoutes);
 router.use("/entry-player", entryPlayerRoutes);
 router.use("/payment", paymentRoutes)
+router.use("/game", gameRoutes);
 
 export default router;
