@@ -54,7 +54,7 @@ export async function createEntryPayment(userId, entryId){
     if(entry.team_id !== team.id){
 
         throw new Error(
-            "Esta inscrição não pertence a sua equipe."
+            "Esta inscrição não pertence à sua equipe."
         );
 
     }

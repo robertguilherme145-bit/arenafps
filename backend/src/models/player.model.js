@@ -4,7 +4,7 @@ import pool from "../config/database.js";
  * Criar jogador
  */
 export async function createPlayer({
-  clan_id,
+  team_id,
   nick,
   game,
   game_uid,
@@ -15,7 +15,7 @@ export async function createPlayer({
     `
     INSERT INTO players
     (
-      clan_id,
+      team_id,
       nick,
       game,
       game_uid,
@@ -27,7 +27,7 @@ export async function createPlayer({
     )
     `,
     [
-      clan_id,
+      team_id,
       nick,
       game,
       game_uid,
@@ -37,7 +37,7 @@ export async function createPlayer({
 
   return {
     id: result.insertId,
-    clan_id,
+    team_id,
     nick,
     game,
     game_uid,
@@ -97,19 +97,19 @@ export async function findPlayerByGame(game, game_uid){
 /**
  * Buscar jogadores do clã
  */
-export async function getPlayersByClan(clan_id){
+export async function ggetPlayersByTeam(team_id){
 
   const [rows] = await pool.query(
 
     `
     SELECT *
     FROM players
-    WHERE clan_id = ?
+    WHERE team_id = ?
     AND status = 'ativo'
     ORDER BY nick
     `,
 
-    [clan_id]
+    [team_id]
 
   );
 
@@ -179,7 +179,7 @@ export async function deactivatePlayer(id){
 /**
  * Busca jogador pelo ID e pelo clã
  */
-export async function findPlayerByIdAndClan(id, clan_id){
+export async function findPlayerByIdAndTeam(id, team_id){
 
   const [rows] = await pool.query(
 
@@ -187,13 +187,13 @@ export async function findPlayerByIdAndClan(id, clan_id){
     SELECT *
     FROM players
     WHERE id = ?
-    AND clan_id = ?
+    AND team_id = ?
     LIMIT 1
     `,
 
     [
       id,
-      clan_id
+      team_id
     ]
 
   );
