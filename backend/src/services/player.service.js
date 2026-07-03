@@ -1,7 +1,6 @@
 import {
   createPlayer,
   getPlayersByTeam,
-  findPlayer,
   findPlayerByGame,
   findPlayerByIdAndTeam,
   updatePlayer,

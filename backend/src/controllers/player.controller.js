@@ -110,6 +110,9 @@ export async function show(req,res){
  */
 export async function update(req,res){
 
+
+  const data = req.body;
+  
   try{
 
     if(!data.nick){
