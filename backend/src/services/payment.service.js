@@ -1,6 +1,6 @@
 import {findUserById} from "../models/user.model.js";
 
-import {findClanByLeader} from "../models/clan.model.js";
+import { findUserTeam } from "../models/team.model.js";
 
 import {createPayment, findPaymentByEntry, findPaymentByExternalReference, updatePaymentStatus} from "../models/payment.model.js";
 
@@ -17,13 +17,13 @@ import {createPixPayment, getPayment} from "./mercadopago.service.js";
  */
 export async function createEntryPayment(userId, entryId){
 
-    // Descobre o clã do líder
-    const clan = await findClanByLeader(userId);
+    // Descobre a Equipe do líder
+    const team = await findUserTeam(userId);
 
-    if(!clan){
+    if(!team){
 
         throw new Error(
-            "Clã não encontrado."
+            "Equipe não encontrada."
         );
 
     }
@@ -51,10 +51,10 @@ export async function createEntryPayment(userId, entryId){
 
     }
     
-    if(entry.clan_id !== clan.id){
+    if(entry.team_id !== team.id){
 
         throw new Error(
-            "Esta inscrição não pertence ao seu clã."
+            "Esta inscrição não pertence a sua equipe."
         );
 
     }
