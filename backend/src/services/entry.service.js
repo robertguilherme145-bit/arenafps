@@ -4,35 +4,29 @@ import {
 
   findEntry,
 
-  findEntryByClanAndTournament,
+  findEntryByTeamAndTournament,
 
-  getEntriesByClan,
+  getEntriesByTeam,
 
   updateEntryStatus,
 
   updatePaymentStatus,
 
-  findEntryByIdAndClan,
+  findEntryByIdAndTeam,
+
   getEntriesByTeam,
+
   findEntryByIdAndTeam
 
 }
 
 from "../models/entry.model.js";
 
-import {
+import {findUserTeam}
 
-  findUserTeam
+from "../models/team.model.js";
 
-}
-
-from "../models/clan.model.js";
-
-import {
-
-  findTournament
-
-}
+import {findTournament}
 
 from "../models/tournament.model.js";
 
@@ -47,7 +41,7 @@ export async function registerEntry(
 
 ){
 
-  // Descobre o clã do líder
+  // Descobre a Equipe do líder
   const team = await findUserTeam(userId);
 
   if(!team){
@@ -125,17 +119,9 @@ export async function registerEntry(
 /**
  * Listar minhas inscrições
  */
-export async function listEntries(
+export async function listEntries(userId){
 
-  userId
-
-){
-
-  const team = await findteamByLeader(
-
-    userId
-
-  );
+  const team = await findUserTeam(userId);
 
   if(!team){
 
@@ -163,13 +149,11 @@ export async function getEntry(
   id
 ){
 
-  const team = await findTeamByLeader(userId);
+  const team = await findUserTeam(userId);
 
   if(!team){
 
-    throw new Error(
-      "Equipe não encontrado."
-    );
+    throw new Error("Equipe não encontrado.");
 
   }
 
