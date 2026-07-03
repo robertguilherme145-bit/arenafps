@@ -3,10 +3,7 @@ import pool from "../config/database.js";
 /**
  * Criar inscrição
  */
-export async function createEntry({
-  tournament_id,
-  clan_id
-}) {
+export async function createEntry({tournament_id, team_id}) {
 
   const [result] = await pool.query(
 
@@ -14,7 +11,7 @@ export async function createEntry({
     INSERT INTO entries
     (
       tournament_id,
-      clan_id
+      team_id
     )
     VALUES
     (
@@ -24,7 +21,7 @@ export async function createEntry({
 
     [
       tournament_id,
-      clan_id
+      team_id
     ]
 
   );
@@ -35,7 +32,7 @@ export async function createEntry({
 
     tournament_id,
 
-    clan_id,
+    team_id,
 
     status: "pendente",
 
@@ -48,13 +45,7 @@ export async function createEntry({
 /**
  * Verifica se o clã já está inscrito
  */
-export async function findEntryByClanAndTournament(
-
-  tournament_id,
-
-  clan_id
-
-){
+export async function findEntryByTeamAndTournament(tournament_id, team_id){
 
   const [rows] = await pool.query(
 
@@ -62,7 +53,7 @@ export async function findEntryByClanAndTournament(
     SELECT *
     FROM entries
     WHERE tournament_id = ?
-    AND clan_id = ?
+    AND team_id = ?
     LIMIT 1
     `,
 
@@ -70,39 +61,7 @@ export async function findEntryByClanAndTournament(
 
       tournament_id,
 
-      clan_id
-
-    ]
-
-  );
-
-  return rows[0];
-
-}
-
-export async function findEntryByTeamAndTournament(
-
-  tournament_id,
-
-  clan_id
-
-){
-
-  const [rows] = await pool.query(
-
-    `
-    SELECT *
-    FROM entries
-    WHERE tournament_id = ?
-    AND clan_id = ?
-    LIMIT 1
-    `,
-
-    [
-
-      tournament_id,
-
-      clan_id
+      team_id
 
     ]
 
@@ -137,37 +96,18 @@ export async function findEntry(id){
 /**
  * Listar inscrições do clã
  */
-export async function getEntriesByClan(clan_id){
+export async function getEntriesByTeam(team_id){
 
   const [rows] = await pool.query(
 
     `
     SELECT *
     FROM entries
-    WHERE clan_id = ?
+    WHERE team_id = ?
     ORDER BY created_at DESC
     `,
 
-    [clan_id]
-
-  );
-
-  return rows;
-
-}
-
-export async function getEntriesByTeam(clan_id){
-
-  const [rows] = await pool.query(
-
-    `
-    SELECT *
-    FROM entries
-    WHERE clan_id = ?
-    ORDER BY created_at DESC
-    `,
-
-    [clan_id]
+    [team_id]
 
   );
 
@@ -178,13 +118,7 @@ export async function getEntriesByTeam(clan_id){
 /**
  * Alterar status
  */
-export async function updateEntryStatus(
-
-  id,
-
-  status
-
-){
+export async function updateEntryStatus(id, status){
 
   await pool.query(
 
@@ -240,10 +174,7 @@ export async function updatePaymentStatus(
 /**
  * Buscar inscrição pelo ID e pelo clã
  */
-export async function findEntryByIdAndClan(
-  id,
-  clan_id
-){
+export async function findEntryByIdAndTeam(id, team_id){
 
   const [rows] = await pool.query(
 
@@ -251,39 +182,13 @@ export async function findEntryByIdAndClan(
     SELECT *
     FROM entries
     WHERE id = ?
-    AND clan_id = ?
+    AND team_id = ?
     LIMIT 1
     `,
 
     [
       id,
-      clan_id
-    ]
-
-  );
-
-  return rows[0];
-
-}
-
-export async function findEntryByIdAndTeam(
-  id,
-  clan_id
-){
-
-  const [rows] = await pool.query(
-
-    `
-    SELECT *
-    FROM entries
-    WHERE id = ?
-    AND clan_id = ?
-    LIMIT 1
-    `,
-
-    [
-      id,
-      clan_id
+      team_id
     ]
 
   );
