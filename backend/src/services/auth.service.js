@@ -60,7 +60,7 @@ export async function register({
   
   cpf,
 
-  passwordHash: senhaHash,
+  senhaHash,
 
   role
 
@@ -72,7 +72,7 @@ export async function login({
 
  email,
 
- senha
+ password
 
 }){
 
@@ -98,7 +98,7 @@ export async function login({
 
  await bcrypt.compare(
 
-  senha,
+  password,
 
   usuario.senha_hash
 
