@@ -123,7 +123,7 @@ export async function listEntries(userId){
 
     throw new Error(
 
-      "Equipe não encontrado."
+      "Equipe não encontrada."
 
     );
 
@@ -149,7 +149,7 @@ export async function getEntry(
 
   if(!team){
 
-    throw new Error("Equipe não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
