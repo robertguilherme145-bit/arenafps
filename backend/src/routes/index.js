@@ -10,20 +10,12 @@ import paymentRoutes from "./payment.routes.js";
 import gameRoutes from "./game.routes.js";
 import teamRoutes from "./team.routes.js";
 import teamRequestRoutes from "./teamRequest.routes.js";
+import profileRoutes from "./profile.routes.js";
+import playerGameProfileRoutes from "./playerGameProfile.routes.js";
 
 const router=Router();
 
-router.get("/",(req,res)=>{
-
- res.json({
-
-  nome:"Arena Camp API",
-
-  status:"online"
-
- });
-
-});
+router.get("/",(req,res)=>{res.json({nome:"Arena Camp API", status:"online"});});
 
 router.use("/auth", authRoutes);
 router.use("/clan", clanRoutes);
@@ -35,5 +27,7 @@ router.use("/payment", paymentRoutes)
 router.use("/game", gameRoutes);
 router.use("/team", teamRoutes);
 router.use("/team-request", teamRequestRoutes);
+router.use("/profile", profileRoutes);
+router.use("/player-game-profile", playerGameProfileRoutes);
 
 export default router;
