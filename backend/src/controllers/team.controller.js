@@ -1,4 +1,4 @@
-import {registerTeam, listMembers, getMyTeams, getTeam}
+import {registerTeam, listMembers, getMyTeams, getTeam, changeMemberRole}
 from "../services/team.service.js";
 
 /**
@@ -103,6 +103,39 @@ export async function show(req,res){
     catch(err){
 
         return res.status(404).json({erro: err.message});
+
+    }
+
+}
+
+/**
+ * Alterar cargo
+ */
+export async function changeRole(req,res){
+
+    try{
+
+        const resultado = await changeMemberRole(
+
+            req.user.id,
+
+            req.params.id,
+
+            req.body.cargo
+
+        );
+
+        return res.json(resultado);
+
+    }
+
+    catch(err){
+
+        return res.status(400).json({
+
+            erro: err.message
+
+        });
 
     }
 

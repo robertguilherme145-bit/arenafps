@@ -531,3 +531,57 @@ export async function getTeamDetails(id){
     return rows[0];
 
 }
+
+/**
+ * Atualizar cargo do membro
+ */
+export async function updateMemberRole( id, cargo, connection = pool){
+
+    await connection.query(
+
+        `
+        UPDATE team_members
+        SET cargo = ?
+        WHERE id = ?
+        `,
+
+        [
+
+            cargo,
+
+            id
+
+        ]
+
+    );
+
+}
+
+/**
+ * Buscar membro da equipe
+ */
+export async function findMember(id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT *
+
+        FROM team_members
+
+        WHERE id = ?
+
+        LIMIT 1
+        `,
+
+        [
+
+            id
+
+        ]
+
+    );
+
+    return rows[0];
+
+}

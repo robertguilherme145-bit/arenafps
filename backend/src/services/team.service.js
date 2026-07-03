@@ -7,7 +7,9 @@ import { createTeam,
     getMembers, 
     isLeader, 
     findUserTeam,
-    findUserTeams } 
+    findUserTeams,
+    findMember,
+    updateMemberRole } 
 from "../models/team.model.js";
 
 import { findGame} 
@@ -173,5 +175,55 @@ export async function getTeam(id){
         throw new Error("Equipe não encontrada.");}
 
     return team;
+
+}
+
+/**
+ * Alterar cargo de um membro
+ */
+export async function changeMemberRole(leaderId, memberId, cargo){
+
+    // Cargo válido?
+    if(!["captain","player"].includes(cargo)){
+
+        throw new Error(
+            "Cargo inválido."
+        );
+
+    }
+
+    // Membro existe?
+    const member = await findMember(memberId);
+
+    if(!member){
+
+        throw new Error("Membro não encontrado.");
+
+    }
+
+    // Quem faz a alteração é líder?
+    const leader = await isLeader(leaderId, member.team_id);
+
+    if(!leader){
+
+        throw new Error(
+            "Sem permissão."
+        );
+
+    }
+
+    // Não pode alterar o próprio cargo por aqui
+    if(member.user_id === leaderId){
+
+        throw new Error(
+            "Você não pode alterar o próprio cargo.");}
+
+    await updateMemberRole(member.id, cargo);
+
+    return {
+
+        mensagem: "Cargo atualizado com sucesso."
+
+    };
 
 }
