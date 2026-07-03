@@ -1,4 +1,4 @@
-import {registerTeam, listMembers, getMyTeam}
+import {registerTeam, listMembers, getMyTeams, getTeam}
 from "../services/team.service.js";
 
 /**
@@ -73,11 +73,7 @@ export async function me(req,res){
 
     try{
 
-        const resultado = await getMyTeam(
-
-            req.user.id
-
-        );
+        const resultado = await getMyTeams(req.user.id);
 
         return res.json(resultado);
 
@@ -85,11 +81,28 @@ export async function me(req,res){
 
     catch(err){
 
-        return res.status(400).json({
+        return res.status(400).json({erro: err.message});
 
-            erro: err.message
+    }
 
-        });
+}
+
+/**
+ * Buscar equipe
+ */
+export async function show(req,res){
+
+    try{
+
+        const team = await getTeam(req.params.id);
+
+        return res.json(team);
+
+    }
+
+    catch(err){
+
+        return res.status(404).json({erro: err.message});
 
     }
 

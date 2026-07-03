@@ -441,3 +441,93 @@ export async function findUserTeam(user_id){
     return rows[0];
 
 }
+
+/**
+ * Buscar equipes do usuário
+ */
+export async function findUserTeams(user_id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT
+
+            t.id,
+            t.game_id,
+            t.nome,
+            t.tag,
+            t.slug,
+
+            tm.cargo,
+
+            g.nome_curto AS game
+
+        FROM team_members tm
+
+        INNER JOIN teams t
+
+            ON t.id = tm.team_id
+
+        INNER JOIN games g
+
+            ON g.id = t.game_id
+
+        WHERE tm.user_id = ?
+
+        ORDER BY g.nome_curto ASC
+        `,
+
+        [
+
+            user_id
+
+        ]
+
+    );
+
+    return rows;
+
+}
+
+/**
+ * Buscar detalhes da equipe
+ */
+export async function getTeamDetails(id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT
+
+            t.*,
+
+            g.nome AS game,
+
+            COUNT(tm.id) AS total_membros
+
+        FROM teams t
+
+        INNER JOIN games g
+
+            ON g.id = t.game_id
+
+        LEFT JOIN team_members tm
+
+            ON tm.team_id = t.id
+
+        WHERE t.id = ?
+
+        GROUP BY t.id
+        `,
+
+        [
+
+            id
+
+        ]
+
+    );
+
+    return rows[0];
+
+}

@@ -1,10 +1,13 @@
 import { createTeam, 
     findLeaderByGame, 
     findTeamByGameAndName, 
-    findTeamBySlug, findTeam, 
+    findTeamBySlug, 
+    findTeam, 
+    getTeamDetails,
     getMembers, 
     isLeader, 
-    findUserTeam } 
+    findUserTeam,
+    findUserTeams } 
 from "../models/team.model.js";
 
 import { findGame} 
@@ -144,5 +147,31 @@ export async function getMyTeam(userId){
         team
 
     };
+
+}
+
+/**
+ * Buscar minhas equipes
+ */
+export async function getMyTeams(userId){
+
+    const teams = await findUserTeams(userId);
+
+    return {teams};
+
+}
+
+/**
+ * Buscar detalhes da equipe
+ */
+export async function getTeam(id){
+
+    const team = await getTeamDetails(id);
+
+    if(!team){
+
+        throw new Error("Equipe não encontrada.");}
+
+    return team;
 
 }

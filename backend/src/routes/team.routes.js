@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import {create, members, me}
+import {create, members, me, show}
 
 from "../controllers/team.controller.js";
 
@@ -25,6 +25,8 @@ router.get("/me", auth, me);
  */
 router.get("/:id/members", auth, members);
 
+
+router.get("/:id", auth, show);
 
 
 export default router;
