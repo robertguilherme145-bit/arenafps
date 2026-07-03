@@ -54,7 +54,7 @@ export async function register({
 
  return await createUser({
 
-  name,
+  nome: name,
 
   email,
   
