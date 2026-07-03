@@ -37,6 +37,13 @@ export async function registerEntry(
 
 ){
 
+  // Limita o total de Inscrições
+  const total = await countEntries(tournament_id);
+
+  if (total >= tournament.max_teams) {
+      throw new Error("O torneio já atingiu o limite de equipes.");
+  }
+
   // Descobre a Equipe do líder
   const team = await findUserTeam(userId);
 
