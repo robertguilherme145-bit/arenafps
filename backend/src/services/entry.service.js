@@ -12,7 +12,9 @@ import {
 
   updatePaymentStatus,
 
-  findEntryByIdAndClan
+  findEntryByIdAndClan,
+  getEntriesByTeam,
+  findEntryByIdAndTeam
 
 }
 
@@ -20,7 +22,7 @@ from "../models/entry.model.js";
 
 import {
 
-  findClanByLeader
+  findUserTeam
 
 }
 
@@ -46,13 +48,13 @@ export async function registerEntry(
 ){
 
   // Descobre o clã do líder
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
     throw new Error(
 
-      "Você precisa possuir um clã."
+      "Você precisa possuir um equipe."
 
     );
 
@@ -92,11 +94,11 @@ export async function registerEntry(
   // Verifica inscrição duplicada
   const existe =
 
-  await findEntryByClanAndTournament(
+  await findEntryByTeamAndTournament(
 
     tournament_id,
 
-    clan.id
+    team.id
 
   );
 
@@ -114,7 +116,7 @@ export async function registerEntry(
 
     tournament_id,
 
-    clan_id: clan.id
+    clan_id: team.id
 
   });
 
@@ -129,25 +131,25 @@ export async function listEntries(
 
 ){
 
-  const clan = await findClanByLeader(
+  const team = await findteamByLeader(
 
     userId
 
   );
 
-  if(!clan){
+  if(!team){
 
     throw new Error(
 
-      "Clã não encontrado."
+      "Equipe não encontrado."
 
     );
 
   }
 
-  return await getEntriesByClan(
+  return await getEntriesByTeam(
 
-    clan.id
+    team.id
 
   );
 
@@ -161,21 +163,21 @@ export async function getEntry(
   id
 ){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findTeamByLeader(userId);
 
-  if(!clan){
+  if(!team){
 
     throw new Error(
-      "Clã não encontrado."
+      "Equipe não encontrado."
     );
 
   }
 
-  const entry = await findEntryByIdAndClan(
+  const entry = await findEntryByIdAndTeam(
 
     id,
 
-    clan.id
+    team.id
 
   );
 
