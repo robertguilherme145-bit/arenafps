@@ -1,4 +1,9 @@
-import {registerTeam, listMembers, getMyTeams, getTeam, changeMemberRole}
+import {registerTeam, 
+    listMembers, 
+    getMyTeams, 
+    getTeam, 
+    changeMemberRole,
+    transferLeadership}
 from "../services/team.service.js";
 
 /**
@@ -124,6 +129,31 @@ export async function changeRole(req,res){
             req.body.cargo
 
         );
+
+        return res.json(resultado);
+
+    }
+
+    catch(err){
+
+        return res.status(400).json({
+
+            erro: err.message
+
+        });
+
+    }
+
+}
+
+/**
+ * Transferir liderança
+ */
+export async function transfer(req,res){
+
+    try{
+
+        const resultado = await transferLeadership(req.user.id, req.params.id);
 
         return res.json(resultado);
 

@@ -1,3 +1,5 @@
+import pool from "../config/database.js";
+
 import { createTeam, 
     findLeaderByGame, 
     findTeamByGameAndName, 
@@ -9,7 +11,11 @@ import { createTeam,
     findUserTeam,
     findUserTeams,
     findMember,
-    updateMemberRole } 
+    updateMemberRole,
+    findLeader,
+    findCaptain,
+    updateMemberRoleByUser } 
+
 from "../models/team.model.js";
 
 import { findGame} 
@@ -225,5 +231,72 @@ export async function changeMemberRole(leaderId, memberId, cargo){
         mensagem: "Cargo atualizado com sucesso."
 
     };
+
+}
+/**
+ * Transferir liderança
+ */
+export async function transferLeadership(leaderId, memberId){
+
+    const connection = await pool.getConnection();
+
+    try{
+
+        await connection.beginTransaction();
+
+        // Novo líder
+        const member = await findMember(memberId);
+
+        if(!member){
+
+            throw new Error("Membro não encontrado.");}
+
+        // Líder atual
+        const leader = await findLeader(member.team_id);
+
+        if(!leader){
+
+            throw new Error("Líder não encontrado.");}
+
+        // Quem chamou é realmente o líder?
+        if(leader.user_id !== leaderId){
+
+            throw new Error(
+                "Sem permissão."
+            );
+
+        }
+
+        // Não pode transferir para si mesmo
+        if(member.user_id === leaderId){
+
+            throw new Error("Você já é o líder.");}
+
+        // Capitão atual
+        const captain = await findCaptain(member.team_id);
+
+        // Se existir capitão,
+        // ele volta para player
+        if(captain){
+
+            await updateMemberRoleByUser( member.team_id, captain.user_id, "player", connection);
+
+        }
+
+        // Líder vira capitão
+        await updateMemberRoleByUser(member.team_id, leader.user_id, "captain", connection);
+
+        // Novo líder
+        await updateMemberRoleByUser( member.team_id, member.user_id, "leader", connection);
+
+        await connection.commit();
+
+        return{mensagem:"Liderança transferida com sucesso."};
+
+    }
+
+    catch(err){await connection.rollback();throw err;}
+
+    finally{connection.release();}
 
 }

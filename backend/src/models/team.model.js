@@ -585,3 +585,96 @@ export async function findMember(id){
     return rows[0];
 
 }
+
+/**
+ * Buscar capitão da equipe
+ */
+export async function findCaptain(team_id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT *
+
+        FROM team_members
+
+        WHERE team_id = ?
+
+        AND cargo = 'captain'
+
+        LIMIT 1
+        `,
+
+        [
+
+            team_id
+
+        ]
+
+    );
+
+    return rows[0];
+
+}
+
+/**
+ * Buscar líder da equipe
+ */
+export async function findLeader(team_id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT *
+
+        FROM team_members
+
+        WHERE team_id = ?
+
+        AND cargo = 'leader'
+
+        LIMIT 1
+        `,
+
+        [
+
+            team_id
+
+        ]
+
+    );
+
+    return rows[0];
+
+}
+
+/**
+ * Atualizar cargo pelo usuário
+ */
+export async function updateMemberRoleByUser( team_id, user_id, cargo, connection = pool){
+
+    await connection.query(
+
+        `
+        UPDATE team_members
+
+        SET cargo = ?
+
+        WHERE team_id = ?
+
+        AND user_id = ?
+        `,
+
+        [
+
+            cargo,
+
+            team_id,
+
+            user_id
+
+        ]
+
+    );
+
+}
