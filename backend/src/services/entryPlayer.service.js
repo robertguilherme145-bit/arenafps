@@ -17,12 +17,8 @@ import { findEntry }
 from "../models/entry.model.js";
 
 import {
-  getPlayersByTeam,
-  findPlayerByIdAndTeam,
-  createPlayer,
-  findPlayerByGame,
-  updatePlayer,
-  deactivatePlayer
+    findPlayerByIdAndTeam,
+    findPlayersByIds
 } from "../models/player.model.js";
 
 import { findUserTeam } from "../models/team.model.js";
@@ -85,7 +81,7 @@ export async function registerEntryPlayer(
 
     throw new Error(
 
-      "Esta inscrição não pertence á sua Equipe."
+      "Esta inscrição não pertence à sua equipe."
 
     );
 
@@ -309,7 +305,7 @@ export async function saveLineup(
 
   if(entry.team_id !== team.id){
 
-    throw new Error("Esta inscrição não pertence á sua equipe.");
+    throw new Error("Esta inscrição não pertence à sua equipe.");
 
   }
 
