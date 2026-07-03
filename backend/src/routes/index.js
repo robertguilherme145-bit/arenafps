@@ -13,6 +13,8 @@ import teamRequestRoutes from "./teamRequest.routes.js";
 import profileRoutes from "./profile.routes.js";
 import playerGameProfileRoutes from "./playerGameProfile.routes.js";
 import dashboardRoutes from "./dashboard.routes.js";
+import notificationRoutes from "./notification.routes.js";
+import matchRoutes from "./match.routes.js";
 
 const router=Router();
 
@@ -31,5 +33,7 @@ router.use("/team-request", teamRequestRoutes);
 router.use("/profile", profileRoutes);
 router.use("/player-game-profile", playerGameProfileRoutes);
 router.use("/dashboard", dashboardRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/match", matchRoutes);
 
 export default router;

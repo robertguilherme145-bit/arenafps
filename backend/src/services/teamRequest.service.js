@@ -1,16 +1,20 @@
 import pool from "../config/database.js";
 
-import {createRequest, findPendingRequest, getPendingRequests, findRequest, updateRequestStatus}
+import { createRequest, findPendingRequest, getPendingRequests, findRequest, updateRequestStatus}
 
 from "../models/teamRequest.model.js";
 
-import {findTeam, isLeader, isMember, addMember}
+import { findTeam, isLeader, isMember, addMember }
 
 from "../models/team.model.js";
 
-import {findUserById}
+import { findUserById }
 
 from "../models/user.model.js";
+
+import { notify }
+
+from "./notification.service.js";
 
 /**
  * Solicitar entrada em uma equipe
@@ -222,7 +226,29 @@ export async function acceptRequest(leaderId, requestId){
 
         await connection.commit();
 
-        return {mensagem: "Solicitação aceita com sucesso."};
+        try{
+
+            await notify({
+
+                user_id: request.user_id,
+
+                titulo: "Solicitação aceita",
+
+                mensagem: `Sua solicitação para entrar na equipe ${team.nome} foi aceita.`,
+
+                tipo: "team_request",
+
+                link: `/team/${team.id}`
+
+            });
+
+        }
+
+        catch(err){
+
+            console.error("Erro ao criar notificação:", err.message);}
+
+        return {mensagem:"Solicitação aceita com sucesso."};
 
     }
 
