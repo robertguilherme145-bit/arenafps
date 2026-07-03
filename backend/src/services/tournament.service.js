@@ -14,6 +14,8 @@ import {
 
 from "../models/tournament.model.js";
 
+import { findGame } from "../models/game.model.js";
+
 /**
  * Criar torneio
  */
