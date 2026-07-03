@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import {create, members, me, show, changeRole, transfer}
+import {create, members, me, show, changeRole, transfer, kick}
 
 from "../controllers/team.controller.js";
 
@@ -28,6 +28,8 @@ router.get("/:id/members", auth, members);
 router.patch("/member/:id", auth, changeRole);
 
 router.patch("/transfer-leader/:id", auth, transfer);
+
+router.delete("/member/:id", auth, kick);
 
 router.get("/:id", auth, show);
 

@@ -3,7 +3,8 @@ import {registerTeam,
     getMyTeams, 
     getTeam, 
     changeMemberRole,
-    transferLeadership}
+    transferLeadership,
+    kickMember}
 from "../services/team.service.js";
 
 /**
@@ -154,6 +155,37 @@ export async function transfer(req,res){
     try{
 
         const resultado = await transferLeadership(req.user.id, req.params.id);
+
+        return res.json(resultado);
+
+    }
+
+    catch(err){
+
+        return res.status(400).json({
+
+            erro: err.message
+
+        });
+
+    }
+
+}
+
+/**
+ * Expulsar membro
+ */
+export async function kick(req, res){
+
+    try{
+
+        const resultado = await kickMember(
+
+            req.user.id,
+
+            req.params.id
+
+        );
 
         return res.json(resultado);
 

@@ -14,7 +14,8 @@ import { createTeam,
     updateMemberRole,
     findLeader,
     findCaptain,
-    updateMemberRoleByUser } 
+    updateMemberRoleByUser,
+    removeMember } 
 
 from "../models/team.model.js";
 
@@ -298,5 +299,74 @@ export async function transferLeadership(leaderId, memberId){
     catch(err){await connection.rollback();throw err;}
 
     finally{connection.release();}
+
+}
+
+/**
+ * Expulsar membro
+ */
+export async function kickMember(leaderId, memberId){
+
+    // Membro existe?
+    const member = await findMember(memberId);
+
+    if(!member){
+
+        throw new Error(
+
+            "Membro não encontrado."
+
+        );
+
+    }
+
+    // Quem está expulsando é líder?
+    const leader = await isLeader(
+
+        leaderId,
+
+        member.team_id
+
+    );
+
+    if(!leader){
+
+        throw new Error(
+
+            "Sem permissão."
+
+        );
+
+    }
+
+    // Não pode expulsar a si mesmo
+    if(member.user_id === leaderId){
+
+        throw new Error(
+
+            "Você não pode remover a si mesmo."
+
+        );
+
+    }
+
+    // Não pode expulsar o líder
+    if(member.cargo === "leader"){
+
+        throw new Error(
+
+            "O líder deve transferir a liderança antes de sair."
+
+        );
+
+    }
+
+    await removeMember(member.id);
+
+    return{
+
+        mensagem:"Membro removido com sucesso."
+
+    };
 
 }

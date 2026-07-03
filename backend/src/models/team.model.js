@@ -678,3 +678,26 @@ export async function updateMemberRoleByUser( team_id, user_id, cargo, connectio
     );
 
 }
+
+/**
+ * Remover membro
+ */
+export async function removeMember(id, connection = pool){
+
+    await connection.query(
+
+        `
+        DELETE FROM team_members
+
+        WHERE id = ?
+        `,
+
+        [
+
+            id
+
+        ]
+
+    );
+
+}
