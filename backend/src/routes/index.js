@@ -8,7 +8,8 @@ import entryRoutes from "./entry.routes.js";
 import entryPlayerRoutes from "./entryPlayer.routes.js";
 import paymentRoutes from "./payment.routes.js";
 import gameRoutes from "./game.routes.js";
-
+import teamRoutes from "./team.routes.js";
+import teamRequestRoutes from "./teamRequest.routes.js";
 
 const router=Router();
 
@@ -32,5 +33,7 @@ router.use("/entry", entryRoutes);
 router.use("/entry-player", entryPlayerRoutes);
 router.use("/payment", paymentRoutes)
 router.use("/game", gameRoutes);
+router.use("/team", teamRoutes);
+router.use("/team-request", teamRequestRoutes);
 
 export default router;
