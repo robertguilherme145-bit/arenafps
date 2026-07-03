@@ -10,40 +10,24 @@ import {
 
 }
 
-
-
 from "../models/entryPlayer.model.js";
 
-import {
-
-  findEntry
-
-}
+import { findEntry }
 
 from "../models/entry.model.js";
 
 import {
+  getPlayersByTeam,
+  findPlayerByIdAndTeam,
+  createPlayer,
+  findPlayerByGame,
+  updatePlayer,
+  deactivatePlayer
+} from "../models/player.model.js";
 
-  findPlayerByIdAndClan,
-  findPlayersByIds
+import { findUserTeam } from "../models/team.model.js";
 
-}
-
-from "../models/player.model.js";
-
-import {
-
-  findClanByLeader
-
-}
-
-from "../models/clan.model.js";
-
-import {
-
-  findTournament
-
-}
+import { findTournament }
 
 from "../models/tournament.model.js";
 
@@ -70,14 +54,14 @@ export async function registerEntryPlayer(
 
   } = data;
 
-  // Descobre o clã do líder
-  const clan = await findClanByLeader(userId);
+  // Descobre a Equipe do líder
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
     throw new Error(
 
-      "Clã não encontrado."
+      "Equipe não encontrada."
 
     );
 
@@ -97,22 +81,22 @@ export async function registerEntryPlayer(
   }
 
   // Segurança
-  if(entry.clan_id !== clan.id){
+  if(entry.team_id !== team.id){
 
     throw new Error(
 
-      "Esta inscrição não pertence ao seu clã."
+      "Esta inscrição não pertence á sua Equipe."
 
     );
 
   }
 
   // Busca jogador
-  const player = await findPlayerByIdAndClan(
+  const player = await findPlayerByIdAndTeam(
 
     player_id,
 
-    clan.id
+    team.id
 
   );
 
@@ -253,19 +237,11 @@ export async function deleteEntryPlayer(
 
 ){
 
-  const clan = await findClanByLeader(
+  const team = await findUserTeam(userId);
 
-    userId
+  if(!team){
 
-  );
-
-  if(!clan){
-
-    throw new Error(
-
-      "Clã não encontrado."
-
-    );
+    throw new Error("Equipe não encontrada.");
 
   }
 
@@ -285,7 +261,7 @@ export async function deleteEntryPlayer(
 
   }
 
-  if(entry.clan_id !== clan.id){
+  if(entry.team_id !== team.id){
 
     throw new Error(
 
@@ -315,11 +291,11 @@ export async function saveLineup(
   reservas
 ){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Clã não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
@@ -331,9 +307,9 @@ export async function saveLineup(
 
   }
 
-  if(entry.clan_id !== clan.id){
+  if(entry.team_id !== team.id){
 
-    throw new Error("Esta inscrição não pertence ao seu clã.");
+    throw new Error("Esta inscrição não pertence á sua equipe.");
 
   }
 
@@ -401,14 +377,14 @@ export async function saveLineup(
 
   }
 
-  // Todos precisam pertencer ao clã
+  // Todos precisam pertencer a Equipe
   for(const player of players){
 
-    if(player.clan_id !== clan.id){
+    if(player.team_id !== team.id){
 
       throw new Error(
 
-        `O jogador ${player.nick} não pertence ao seu clã.`
+        `O jogador ${player.nick} não pertence á Equipe.`
 
       );
 

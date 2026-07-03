@@ -97,7 +97,7 @@ export async function findPlayerByGame(game, game_uid){
 /**
  * Buscar jogadores da Equipe
  */
-export async function ggetPlayersByTeam(team_id){
+export async function getPlayersByTeam(team_id){
 
   const [rows] = await pool.query(
 
