@@ -95,8 +95,7 @@ export async function createTeam({
 
                 team_id,
                 user_id,
-                cargo,
-                status
+                cargo
 
             )
 
@@ -104,7 +103,7 @@ export async function createTeam({
 
             (
 
-                ?,?, 'leader', 'active'
+                ?,?, 'leader'
 
             )
             `,
@@ -241,8 +240,6 @@ export async function findLeaderByGame(user_id, game_id){
         WHERE tm.user_id = ?
 
         AND tm.cargo = 'leader'
-
-        AND tm.status = 'active'
 
         AND t.game_id = ?
 

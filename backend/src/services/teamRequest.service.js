@@ -67,6 +67,11 @@ export async function requestJoinTeam(userId, teamId){
         );
 
     }
+    const member = await isMember(userId, teamId);
+
+    if (member) {
+        throw new Error("Você já faz parte desta equipe.");
+    }
 
     return await createRequest({
 
