@@ -13,7 +13,7 @@ export async function createTournament({
 
   valor,
 
-  max_clans,
+  max_teams,
 
   titulares,
 
@@ -43,7 +43,7 @@ export async function createTournament({
 
       valor,
 
-      max_clans,
+      max_teams,
 
       titulares,
 
@@ -79,7 +79,7 @@ export async function createTournament({
 
       valor,
 
-      max_clans,
+      max_teams,
 
       titulares,
 
@@ -109,7 +109,7 @@ export async function createTournament({
 
     valor,
 
-    max_clans,
+    max_teams,
 
     titulares,
 
@@ -188,7 +188,7 @@ export async function updateTournament(id,data){
 
       valor = ?,
 
-      max_clans = ?,
+      max_teams = ?,
 
       titulares = ?,
 
@@ -215,7 +215,7 @@ export async function updateTournament(id,data){
 
       data.valor,
 
-      data.max_clans,
+      data.max_teams,
 
       data.titulares,
 
