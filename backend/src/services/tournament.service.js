@@ -39,7 +39,7 @@ export async function registerTournament(data){
 
   if(data.max_clans <= 0){
 
-    throw new Error("Quantidade de clãs inválida.");
+    throw new Error("Quantidade de Equipes inválida.");
 
   }
 
