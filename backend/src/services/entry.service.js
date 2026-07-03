@@ -14,10 +14,6 @@ import {
 
   findEntryByIdAndTeam,
 
-  getEntriesByTeam,
-
-  findEntryByIdAndTeam
-
 }
 
 from "../models/entry.model.js";
@@ -48,7 +44,7 @@ export async function registerEntry(
 
     throw new Error(
 
-      "Você precisa possuir um equipe."
+      "Você precisa possuir uma equipe."
 
     );
 
@@ -100,7 +96,7 @@ export async function registerEntry(
 
     throw new Error(
 
-      "Seu clã já está inscrito."
+      "Sua equipe já está inscrita."
 
     );
 
