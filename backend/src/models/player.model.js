@@ -95,7 +95,7 @@ export async function findPlayerByGame(game, game_uid){
 }
 
 /**
- * Buscar jogadores do clã
+ * Buscar jogadores da Equipe
  */
 export async function ggetPlayersByTeam(team_id){
 
@@ -177,7 +177,7 @@ export async function deactivatePlayer(id){
 }
 
 /**
- * Busca jogador pelo ID e pelo clã
+ * Busca jogador pelo ID e pela Equipe
  */
 export async function findPlayerByIdAndTeam(id, team_id){
 
