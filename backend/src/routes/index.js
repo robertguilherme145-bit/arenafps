@@ -12,6 +12,7 @@ import teamRoutes from "./team.routes.js";
 import teamRequestRoutes from "./teamRequest.routes.js";
 import profileRoutes from "./profile.routes.js";
 import playerGameProfileRoutes from "./playerGameProfile.routes.js";
+import dashboardRoutes from "./dashboard.routes.js";
 
 const router=Router();
 
@@ -29,5 +30,6 @@ router.use("/team", teamRoutes);
 router.use("/team-request", teamRequestRoutes);
 router.use("/profile", profileRoutes);
 router.use("/player-game-profile", playerGameProfileRoutes);
+router.use("/dashboard", dashboardRoutes);
 
 export default router;
