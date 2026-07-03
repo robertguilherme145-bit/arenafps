@@ -1,30 +1,14 @@
 import {
-
   createPlayer,
-
-  getPlayersByClan,
-
+  getPlayersByTeam,
   findPlayer,
-
   findPlayerByGame,
-
-  findPlayerByIdAndClan,
-
+  findPlayerByIdAndTeam,
   updatePlayer,
-
   deactivatePlayer
+} from "../models/player.model.js";
 
-}
-
-from "../models/player.model.js";
-
-import {
-
-  findClanByLeader
-
-}
-
-from "../models/clan.model.js";
+import { findUserTeam } from "../models/team.model.js";
 
 /**
  * Cadastrar jogador
@@ -49,12 +33,12 @@ export async function registerPlayer(userId, data){
 
   }
 
-  // Descobre o clã do líder
-  const clan = await findClanByLeader(userId);
+  // Descobre a Equipe do líder
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Você precisa criar um clã primeiro.");
+    throw new Error("Você precisa criar uma Equipe primeiro.");
 
   }
 
@@ -75,7 +59,7 @@ export async function registerPlayer(userId, data){
 
   return await createPlayer({
 
-    clan_id: clan.id,
+    team_id: team.id,
 
     nick: data.nick,
 
@@ -94,15 +78,15 @@ export async function registerPlayer(userId, data){
  */
 export async function listPlayers(userId){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Clã não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
-  return await getPlayersByClan(clan.id);
+  return await getPlayersByTeam(team.id);
 
 }
 
@@ -111,21 +95,15 @@ export async function listPlayers(userId){
  */
 export async function getPlayer(userId, id){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Clã não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
-  const player = await findPlayerByIdAndClan(
-
-    id,
-
-    clan.id
-
-  );
+  const player = await findPlayerByIdAndTeam(id, team.id);
 
   if(!player){
 
@@ -142,21 +120,15 @@ export async function getPlayer(userId, id){
  */
 export async function editPlayer(userId, id, data){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Clã não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
-  const player = await findPlayerByIdAndClan(
-
-    id,
-
-    clan.id
-
-  );
+  const player = await findPlayerByIdAndTeam(id, team.id);
 
   if(!player){
 
@@ -173,21 +145,15 @@ export async function editPlayer(userId, id, data){
  */
 export async function removePlayer(userId,id){
 
-  const clan = await findClanByLeader(userId);
+  const team = await findUserTeam(userId);
 
-  if(!clan){
+  if(!team){
 
-    throw new Error("Clã não encontrado.");
+    throw new Error("Equipe não encontrada.");
 
   }
 
-  const player = await findPlayerByIdAndClan(
-
-    id,
-
-    clan.id
-
-  );
+  const player = await findPlayerByIdAndTeam(id, team.id);
 
   if(!player){
 
