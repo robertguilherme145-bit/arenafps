@@ -106,7 +106,7 @@ export async function registerEntry(
 
     tournament_id,
 
-    clan_id: team.id
+    team_id: team.id
 
   });
 
