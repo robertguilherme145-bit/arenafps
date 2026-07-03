@@ -31,6 +31,12 @@ export async function registerTournament(data){
 
   }
 
+  const game = await findGame(data.game);
+
+  if (!game) {
+      throw new Error("Jogo não encontrado.");
+  }
+
   if(data.valor < 0){
 
     throw new Error("Valor inválido.");
