@@ -43,7 +43,7 @@ export async function createEntry({tournament_id, team_id}) {
 }
 
 /**
- * Verifica se o clã já está inscrito
+ * Verifica se o Equipe já está inscrito
  */
 export async function findEntryByTeamAndTournament(tournament_id, team_id){
 
@@ -94,7 +94,7 @@ export async function findEntry(id){
 }
 
 /**
- * Listar inscrições do clã
+ * Listar inscrições do Equipe
  */
 export async function getEntriesByTeam(team_id){
 
@@ -172,7 +172,7 @@ export async function updatePaymentStatus(
 }
 
 /**
- * Buscar inscrição pelo ID e pelo clã
+ * Buscar inscrição pelo ID e pelo Equipe
  */
 export async function findEntryByIdAndTeam(id, team_id){
 
