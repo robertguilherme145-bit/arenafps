@@ -2,13 +2,7 @@ import {register, login}
 
 from "../services/auth.service.js";
 
-export async function registerUser(
-
- req,
-
- res
-
-){
+export async function registerUser(req, res){
 
  try{
 

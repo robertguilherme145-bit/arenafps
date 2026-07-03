@@ -12,13 +12,15 @@ from "../models/user.model.js";
 
 export async function register({
 
- nome,
+ name,
 
  email,
 
  cpf,
 
- senha
+ password,
+
+ role
 
 }){
 
@@ -48,23 +50,19 @@ export async function register({
 
  const senhaHash=
 
- await bcrypt.hash(
-
-  senha,
-
-  10
-
- );
+ await bcrypt.hash(password, 10);
 
  return await createUser({
 
-  nome,
+  name,
 
   email,
   
   cpf,
 
-  senhaHash
+  passwordHash: senhaHash,
+
+  role
 
  });
 
