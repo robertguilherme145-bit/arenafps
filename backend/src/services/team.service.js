@@ -1,4 +1,10 @@
-import { createTeam, findLeaderByGame,findTeamByGameAndName, findTeamBySlug, findTeam, getMembers, isLeader} 
+import { createTeam, 
+    findLeaderByGame, 
+    findTeamByGameAndName, 
+    findTeamBySlug, findTeam, 
+    getMembers, 
+    isLeader, 
+    findUserTeam } 
 from "../models/team.model.js";
 
 import { findGame} 
@@ -113,5 +119,30 @@ export async function listMembers(userId, teamId){
         throw new Error("Equipe não encontrada.");}
 
     return await getMembers(teamId);
+
+}
+
+/**
+ * Buscar minha equipe
+ */
+export async function getMyTeam(userId){
+
+    const team = await findUserTeam(userId);
+
+    if(!team){
+
+        return {
+
+            team: null
+
+        };
+
+    }
+
+    return {
+
+        team
+
+    };
 
 }

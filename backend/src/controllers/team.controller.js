@@ -1,4 +1,4 @@
-import {registerTeam, listMembers}
+import {registerTeam, listMembers, getMyTeam}
 from "../services/team.service.js";
 
 /**
@@ -47,6 +47,35 @@ export async function members(req,res){
             req.user.id,
 
             req.params.id
+
+        );
+
+        return res.json(resultado);
+
+    }
+
+    catch(err){
+
+        return res.status(400).json({
+
+            erro: err.message
+
+        });
+
+    }
+
+}
+
+/**
+ * Minha equipe
+ */
+export async function me(req,res){
+
+    try{
+
+        const resultado = await getMyTeam(
+
+            req.user.id
 
         );
 

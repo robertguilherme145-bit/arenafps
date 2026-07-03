@@ -396,3 +396,48 @@ export async function getMembers(team_id){
     return rows;
 
 }
+
+/**
+ * Buscar equipe do usuário
+ */
+export async function findUserTeam(user_id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT
+
+            t.id,
+            t.game_id,
+            t.nome,
+            t.tag,
+            t.slug,
+
+            tm.cargo,
+
+            g.nome_curto AS game
+
+        FROM team_members tm
+
+        INNER JOIN teams t
+            ON t.id = tm.team_id
+
+        INNER JOIN games g
+            ON g.id = t.game_id
+
+        WHERE tm.user_id = ?
+
+        LIMIT 1
+        `,
+
+        [
+
+            user_id
+
+        ]
+
+    );
+
+    return rows[0];
+
+}
