@@ -23,6 +23,8 @@ export async function createTournament({
 
   banner = null,
 
+  status = "aberto",
+
   inicio,
 
   fim
@@ -53,6 +55,8 @@ export async function createTournament({
 
       banner,
 
+      status,
+
       inicio,
 
       fim
@@ -63,7 +67,7 @@ export async function createTournament({
 
     (
 
-      ?,?,?,?,?,?,?,?,?,?,?
+      ?,?,?,?,?,?,?,?,?,?,?,?
 
     )
 
@@ -88,6 +92,8 @@ export async function createTournament({
       premiacao,
 
       banner,
+
+      status,
 
       inicio,
 
@@ -118,6 +124,8 @@ export async function createTournament({
     premiacao,
 
     banner,
+
+    status,
 
     inicio,
 
