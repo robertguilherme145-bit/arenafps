@@ -196,3 +196,21 @@ export async function findEntryByIdAndTeam(id, team_id){
   return rows[0];
 
 }
+
+/**
+ * Contar inscrições do torneio
+ */
+export async function countEntries(tournament_id) {
+
+  const [rows] = await pool.query(
+    `
+    SELECT COUNT(*) AS total
+    FROM entries
+    WHERE tournament_id = ?
+    `,
+    [tournament_id]
+  );
+
+  return rows[0].total;
+
+}
