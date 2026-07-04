@@ -134,7 +134,9 @@ export async function updatePlayer(id, data){
 
       game_uid = ?,
 
-      foto = ?
+      foto = ?,
+
+      status = ?
 
     WHERE id = ?
     `,
@@ -148,6 +150,8 @@ export async function updatePlayer(id, data){
       data.game_uid,
 
       data.foto,
+
+      data.status,
 
       id
 

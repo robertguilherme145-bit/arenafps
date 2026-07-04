@@ -63,6 +63,15 @@ export async function registerEntryPlayer(
 
   }
 
+  if (
+      team.cargo !== "leader" &&
+      team.cargo !== "captain"
+  ) {
+      throw new Error(
+          "Somente o líder ou capitão podem gerenciar a lineup da equipe."
+      );
+  }
+
   // Busca inscrição
   const entry = await findEntry(entry_id);
 
@@ -241,6 +250,15 @@ export async function deleteEntryPlayer(
 
   }
 
+  if (
+      team.cargo !== "leader" &&
+      team.cargo !== "captain"
+  ) {
+      throw new Error(
+          "Somente o líder ou capitão podem gerenciar a lineup da equipe."
+      );
+  }
+
   const entry = await findEntry(
 
     entry_id
@@ -293,6 +311,15 @@ export async function saveLineup(
 
     throw new Error("Equipe não encontrada.");
 
+  }
+
+  if (
+      team.cargo !== "leader" &&
+      team.cargo !== "captain"
+  ) {
+      throw new Error(
+          "Somente o líder ou capitão podem gerenciar a lineup da equipe."
+      );
   }
 
   const entry = await findEntry(entry_id);

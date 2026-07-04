@@ -42,11 +42,7 @@ export async function registerEntry(
 
   if(!team){
 
-    throw new Error(
-
-      "Você precisa possuir uma equipe."
-
-    );
+    throw new Error("Você precisa possuir uma equipe.");
 
   }
 
