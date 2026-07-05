@@ -1,5 +1,7 @@
 import pool from "../config/database.js";
 
+import TOURNAMENT_STATUS from "../constants/tournamentStatus.js";
+
 /**
  * Criar torneio
  */
@@ -23,7 +25,7 @@ export async function createTournament({
 
   banner = null,
 
-  status = "aberto",
+  status = TOURNAMENT_STATUS.CREATED,
 
   inicio,
 

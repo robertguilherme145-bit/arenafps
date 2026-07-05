@@ -16,6 +16,10 @@ from "../models/tournament.model.js";
 
 import { findGame } from "../models/game.model.js";
 
+import TOURNAMENT_STATUS from "../constants/tournamentStatus.js";
+
+import { canChangeTournamentStatus } from "./tournamentStatus.service.js";
+
 /**
  * Criar torneio
  */
@@ -69,6 +73,9 @@ export async function registerTournament(data){
 
   }
 
+    // Define o status inicial do torneio
+  data.status = TOURNAMENT_STATUS.CREATED;
+
   return await createTournament(data);
 
 }
@@ -119,28 +126,24 @@ export async function editTournament(id,data){
 /**
  * Alterar status
  */
-export async function updateTournamentStatus(
+export async function updateTournamentStatus(id, status) {
 
-  id,
+    const tournament = await findTournament(id);
 
-  status
+    if (!tournament) {
+        throw new Error("Torneio não encontrado.");
+    }
 
-){
+    const valid = canChangeTournamentStatus(
+        tournament.status,
+        status
+    );
 
-  const tournament = await findTournament(id);
+    if (!valid) {
+        throw new Error(
+            `Não é permitido alterar o status de "${tournament.status}" para "${status}".`
+        );
+    }
 
-  if(!tournament){
-
-    throw new Error("Torneio não encontrado.");
-
-  }
-
-  await changeTournamentStatus(
-
-    id,
-
-    status
-
-  );
-
+    await changeTournamentStatus(id, status);
 }
