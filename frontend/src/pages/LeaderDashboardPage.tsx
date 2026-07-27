@@ -36,6 +36,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatCard } from "../components/ui/StatCard";
 import { TeamPlayerRankingPanel } from "../components/team/TeamPlayerRankingPanel";
+import { ImageUploadField } from "../components/ui/ImageUploadField";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
 import {
@@ -188,7 +189,7 @@ export function LeaderDashboardPage() {
 }
 
 function TeamOnboarding({ games, busy, run, onCreated }: { games: LeaderWorkspace["games"]; busy: string | null; run: Runner; onCreated: () => Promise<void> }) {
-  const [form, setForm] = useState({ nome: "", tag: "", slug: "", game_id: String(games[0]?.id ?? ""), descricao: "" });
+  const [form, setForm] = useState({ nome: "", tag: "", slug: "", game_id: String(games[0]?.id ?? ""), descricao: "", logo: "", banner: "" });
   useEffect(() => {
     if (!form.game_id && games[0]) setForm((state) => ({ ...state, game_id:String(games[0].id) }));
   }, [games, form.game_id]);
@@ -207,6 +208,8 @@ function TeamOnboarding({ games, busy, run, onCreated }: { games: LeaderWorkspac
           <Field label="Tag"><Input maxLength={10} value={form.tag} onChange={(event) => setForm((state) => ({ ...state, tag: event.target.value.toUpperCase() }))} /></Field>
           <Field label="URL da equipe"><Input placeholder="ex.: minha-equipe" value={form.slug} onChange={(event) => setForm((state) => ({ ...state, slug: slugify(event.target.value) }))} /></Field>
           <Field label="Jogo"><Select value={form.game_id} onChange={(event) => setForm((state) => ({ ...state, game_id: event.target.value }))}>{games.map((game) => <option key={game.id} value={game.id}>{game.nome}</option>)}</Select></Field>
+          <Field label="Logo da equipe"><ImageUploadField value={form.logo} onChange={(logo) => setForm((state) => ({ ...state, logo }))} label="Selecionar logo" /></Field>
+          <Field label="Banner da equipe"><ImageUploadField value={form.banner} onChange={(banner) => setForm((state) => ({ ...state, banner }))} label="Selecionar banner" /></Field>
           <div className="md:col-span-2"><Field label="Descricao"><Textarea value={form.descricao} onChange={(event) => setForm((state) => ({ ...state, descricao: event.target.value }))} /></Field></div>
           <div className="md:col-span-2"><Button disabled={!form.nome.trim() || !form.tag.trim() || !form.slug || !form.game_id} loading={busy === "create-team"} icon={<Shield className="h-4 w-4" />} onClick={() => void submit()}>Criar equipe</Button></div>
         </CardContent></Card>
@@ -262,7 +265,7 @@ function TeamModule({ data, busy, run }: ModuleProps) {
     <Card><CardContent className="p-0"><div className="relative aspect-[16/7] overflow-hidden border-b border-arena-line bg-cyan-400/10">{team.banner ? <img alt={`Banner da ${team.nome}`} className="h-full w-full object-cover" src={team.banner} /> : null}</div><div className="p-5"><div className="flex items-center gap-4"><div className="flex h-20 w-20 items-center justify-center border border-cyan-400/30 bg-arena-bg">{team.logo ? <img alt={`Logo da ${team.nome}`} className="h-full w-full object-cover" src={team.logo} /> : <Shield className="h-8 w-8 text-cyan-200" />}</div><div><h2 className="font-display text-2xl font-bold">{team.nome}</h2><p className="text-sm text-arena-muted">{team.tag} · {team.game_name}</p></div></div><div className="mt-5 grid grid-cols-2 gap-3"><Metric label="Regiao" value={team.regiao || "Nao definida"} /><Metric label="Criada ha" value={`${team.age_days} dias`} /><Metric label="Win rate" value={`${data.statistics.win_rate}%`} /><Metric label="Partidas" value={String(data.statistics.matches)} /></div></div></CardContent></Card>
     <Card><CardHeader><h2 className="font-display text-xl font-semibold">Personalizacao da equipe</h2></CardHeader><CardContent className="grid gap-4 md:grid-cols-2">
       <Field label="Nome"><Input value={form.nome} onChange={(e) => setForm((s) => ({ ...s, nome: e.target.value }))} /></Field><Field label="Tag"><Input maxLength={10} value={form.tag} onChange={(e) => setForm((s) => ({ ...s, tag: e.target.value.toUpperCase() }))} /></Field>
-      <Field label="Logo (URL)"><Input value={form.logo} onChange={(e) => setForm((s) => ({ ...s, logo: e.target.value }))} /></Field><Field label="Banner (URL)"><Input value={form.banner} onChange={(e) => setForm((s) => ({ ...s, banner: e.target.value }))} /></Field>
+      <Field label="Logo da equipe"><ImageUploadField value={form.logo} onChange={(logo) => setForm((state) => ({ ...state, logo }))} label="Alterar logo" /></Field><Field label="Banner da equipe"><ImageUploadField value={form.banner} onChange={(banner) => setForm((state) => ({ ...state, banner }))} label="Alterar banner" /></Field>
       <Field label="Regiao"><Input value={form.regiao} onChange={(e) => setForm((s) => ({ ...s, regiao: e.target.value }))} /></Field><Field label="Discord"><Input value={form.discord} onChange={(e) => setForm((s) => ({ ...s, discord: e.target.value }))} /></Field>
       <Field label="Steam"><Input value={form.steam} onChange={(e) => setForm((s) => ({ ...s, steam: e.target.value }))} /></Field><Field label="Instagram"><Input value={form.instagram} onChange={(e) => setForm((s) => ({ ...s, instagram: e.target.value }))} /></Field>
       <Field label="Website"><Input value={form.website} onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))} /></Field><Field label="YouTube"><Input value={form.youtube} onChange={(e) => setForm((s) => ({ ...s, youtube: e.target.value }))} /></Field>

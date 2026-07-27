@@ -1,6 +1,6 @@
 import { ImagePlus, LoaderCircle } from "lucide-react";
 import { useState } from "react";
-import { uploadAdminImage } from "../../services/api";
+import { uploadImage } from "../../services/api";
 import { useToast } from "../../hooks/useToast";
 
 export function ImageUploadField({ value, onChange, label = "Enviar imagem" }: { value?:string; onChange:(url:string)=>void; label?:string }) {
@@ -9,7 +9,7 @@ export function ImageUploadField({ value, onChange, label = "Enviar imagem" }: {
   async function select(file?:File) {
     if (!file) return;
     setBusy(true);
-    try { onChange((await uploadAdminImage(file)).url); }
+    try { onChange((await uploadImage(file)).url); }
     catch (reason) { error("Falha no upload", reason instanceof Error ? reason.message : "Tente novamente."); }
     finally { setBusy(false); }
   }

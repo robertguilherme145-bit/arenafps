@@ -19,6 +19,7 @@ import leaderRoutes from "./leader.routes.js";
 import captainRoutes from "./captain.routes.js";
 import identityRoutes from "./identity.routes.js";
 import publicPortalRoutes from "./publicPortal.routes.js";
+import mediaRoutes from "./media.routes.js";
 
 const router=Router();
 
@@ -43,5 +44,6 @@ router.use("/leader", leaderRoutes);
 router.use("/captain", captainRoutes);
 router.use("/identity", identityRoutes);
 router.use("/public", publicPortalRoutes);
+router.use("/media", mediaRoutes);
 
 export default router;

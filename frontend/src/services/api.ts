@@ -673,6 +673,8 @@ export async function createTeam(input: {
   tag: string;
   slug: string;
   descricao?: string;
+  logo?: string | null;
+  banner?: string | null;
 }) {
   const { data } = await api.post<{ id: number; nome: string }>("/team", input);
   return data;
@@ -979,9 +981,9 @@ export async function logoutPlayerSession() {
   return data;
 }
 
-export async function uploadAdminImage(file: File) {
+export async function uploadImage(file: File) {
   const body = new FormData();
   body.append("image", file);
-  const { data } = await api.post<{ url:string; filename:string; mime_type:string; size:number }>("/admin/media/images", body);
+  const { data } = await api.post<{ url:string; filename:string; mime_type:string; size:number }>("/media/images", body);
   return data;
 }
