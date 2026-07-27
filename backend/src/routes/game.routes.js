@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import {create, index, show}
+import {create, index, show, update}
 
 from "../controllers/game.controller.js";
 
@@ -39,6 +39,13 @@ router.get(
 
     index
 
+);
+
+router.put(
+    "/:id",
+    auth,
+    role("admin"),
+    update
 );
 
 /**

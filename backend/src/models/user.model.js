@@ -10,7 +10,7 @@ export async function createUser({
 
  senhaHash,
 
- role="lider"
+ role="jogador"
 
 }){
 
@@ -109,5 +109,16 @@ export async function findUserById(id){
   );
 
   return rows[0];
+
+}
+
+export async function findUserIdsByRole(role){
+
+  const [rows] = await pool.query(
+    `SELECT id FROM users WHERE role = ? ORDER BY id`,
+    [role]
+  );
+
+  return rows.map((row) => Number(row.id));
 
 }

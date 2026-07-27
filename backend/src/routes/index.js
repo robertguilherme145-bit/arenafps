@@ -14,10 +14,15 @@ import playerGameProfileRoutes from "./playerGameProfile.routes.js";
 import dashboardRoutes from "./dashboard.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import matchRoutes from "./match.routes.js";
+import adminRoutes from "./admin.routes.js";
+import leaderRoutes from "./leader.routes.js";
+import captainRoutes from "./captain.routes.js";
+import identityRoutes from "./identity.routes.js";
+import publicPortalRoutes from "./publicPortal.routes.js";
 
 const router=Router();
 
-router.get("/",(req,res)=>{res.json({nome:"Arena Camp API", status:"online"});});
+router.get("/api/health",(req,res)=>{res.json({nome:"Arena Camp API",status:"online",environment:process.env.NODE_ENV||"development"});});
 
 router.use("/auth", authRoutes);
 router.use("/player", playerRoutes);
@@ -33,5 +38,10 @@ router.use("/player-game-profile", playerGameProfileRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/match", matchRoutes);
+router.use("/admin", adminRoutes);
+router.use("/leader", leaderRoutes);
+router.use("/captain", captainRoutes);
+router.use("/identity", identityRoutes);
+router.use("/public", publicPortalRoutes);
 
 export default router;

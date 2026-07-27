@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
+import { touchUserSession } from "../models/security.model.js";
+import { resolveUserAccess } from "../services/identity.service.js";
 
-export function auth(req,res,next){
+export async function auth(req,res,next){
 
  try{
 
@@ -26,15 +28,25 @@ export function auth(req,res,next){
 
   );
 
-  req.user=
-
-  jwt.verify(
+  const payload = jwt.verify(
 
    token,
 
    process.env.JWT_SECRET
 
   );
+
+  if(payload.jti && !await touchUserSession(payload.jti)){
+   return res.status(401).json({ erro:"Sessao encerrada" });
+  }
+
+  const access = await resolveUserAccess(payload.id, payload.role);
+
+  if(!access){
+   return res.status(401).json({ erro:"Conta nao encontrada" });
+  }
+
+  req.user={ ...payload, ...access, role:access.active_role };
 
   next();
 

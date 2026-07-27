@@ -214,3 +214,22 @@ export async function countEntries(tournament_id) {
   return rows[0].total;
 
 }
+
+/**
+ * Contar inscricoes confirmadas do torneio
+ */
+export async function countConfirmedEntries(tournament_id) {
+
+  const [rows] = await pool.query(
+    `
+    SELECT COUNT(*) AS total
+    FROM entries
+    WHERE tournament_id = ?
+    AND status = 'confirmado'
+    `,
+    [tournament_id]
+  );
+
+  return rows[0].total;
+
+}

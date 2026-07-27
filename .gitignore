@@ -3,3 +3,7 @@ node_modules
 dist
 build
 coverage
+deploy/
+*.log
+uploads/*
+!uploads/.gitkeep

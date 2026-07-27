@@ -145,14 +145,24 @@ export async function getTournaments(){
   const [rows] = await pool.query(
 
     `
-    SELECT *
-    FROM tournaments
-    ORDER BY inicio ASC
+    SELECT
+      t.*,
+      COALESCE(tcs.game_id, NULLIF(CAST(t.game AS UNSIGNED), 0)) AS game_id,
+      g.nome AS game_name,
+      g.nome_curto AS game_short_name,
+      g.slug AS game_slug
+    FROM tournaments t
+    LEFT JOIN tournament_competition_settings tcs ON tcs.tournament_id = t.id
+    LEFT JOIN games g ON g.id = COALESCE(tcs.game_id, NULLIF(CAST(t.game AS UNSIGNED), 0))
+    ORDER BY t.inicio ASC
     `
 
   );
 
-  return rows;
+  return rows.map((row) => ({
+    ...row,
+    game_id: row.game_id ? Number(row.game_id) : null
+  }));
 
 }
 

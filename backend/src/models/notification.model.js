@@ -3,7 +3,7 @@ import pool from "../config/database.js";
 /**
  * Criar notificação
  */
-export async function createNotification({ user_id, titulo, mensagem, tipo, link = null}){
+export async function createNotification({ user_id, titulo, mensagem, tipo, link = null, dedupe_key = null}){
 
     const [result] = await pool.query(
 
@@ -16,13 +16,16 @@ export async function createNotification({ user_id, titulo, mensagem, tipo, link
             titulo,
             mensagem,
             tipo,
-            link
+            link,
+            dedupe_key
 
         )
 
         VALUES
 
-        (?,?,?,?,?)
+        (?,?,?,?,?,?)
+
+        ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)
         `,
 
         [
@@ -31,7 +34,8 @@ export async function createNotification({ user_id, titulo, mensagem, tipo, link
             titulo,
             mensagem,
             tipo,
-            link
+            link,
+            dedupe_key
 
         ]
 

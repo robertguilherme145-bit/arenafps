@@ -9,7 +9,7 @@ from "../models/notification.model.js";
 /**
  * Enviar notificação
  */
-export async function notify({user_id, titulo, mensagem, tipo, link = null}){
+export async function notify({user_id, titulo, mensagem, tipo, link = null, dedupe_key = null}){
 
     return await createNotification({
 
@@ -17,7 +17,8 @@ export async function notify({user_id, titulo, mensagem, tipo, link = null}){
         titulo,
         mensagem,
         tipo,
-        link
+        link,
+        dedupe_key
 
     });
 

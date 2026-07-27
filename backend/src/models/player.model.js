@@ -180,6 +180,34 @@ export async function deactivatePlayer(id){
 
 }
 
+export async function updatePlayerAdmin(id, data){
+
+  await pool.query(
+
+    `
+    UPDATE players
+    SET
+      nick = ?,
+      game = ?,
+      game_uid = ?,
+      foto = ?,
+      status = ?
+    WHERE id = ?
+    `,
+
+    [
+      data.nick,
+      data.game,
+      data.game_uid,
+      data.foto,
+      data.status,
+      id
+    ]
+
+  );
+
+}
+
 /**
  * Busca jogador pelo ID e pela Equipe
  */

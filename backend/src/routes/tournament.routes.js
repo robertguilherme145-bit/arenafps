@@ -10,7 +10,11 @@ import {
 
   update,
 
-  changeStatus
+  changeStatus,
+
+  ranking,
+
+  statistics
 
 }
 
@@ -69,6 +73,28 @@ router.get(
   "/:id",
 
   show
+
+);
+
+/**
+ * Ranking calculado do torneio
+ */
+router.get(
+
+  "/:id/ranking",
+
+  ranking
+
+);
+
+/**
+ * Estatisticas calculadas do torneio
+ */
+router.get(
+
+  "/:id/statistics",
+
+  statistics
 
 );
 

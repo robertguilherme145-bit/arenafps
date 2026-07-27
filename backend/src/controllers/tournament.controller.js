@@ -2,6 +2,14 @@ import {registerTournament, listTournaments, getTournament, editTournament, upda
 
 from "../services/tournament.service.js";
 
+import { getTournamentTeamRanking }
+
+from "../services/ranking.service.js";
+
+import { getTournamentPlayerStatistics }
+
+from "../services/statistics.service.js";
+
 /**
  * Criar torneio
  */
@@ -143,6 +151,54 @@ export async function changeStatus(req,res){
 
   }
 
+  catch(err){
+
+    return res.status(400).json({
+
+      erro: err.message
+
+    });
+
+  }
+
+}
+
+/**
+ * Ranking calculado do torneio
+ */
+export async function ranking(req,res){
+
+  try{
+
+    const resultado = await getTournamentTeamRanking(req.params.id);
+
+    return res.json(resultado);
+
+  }
+  catch(err){
+
+    return res.status(400).json({
+
+      erro: err.message
+
+    });
+
+  }
+
+}
+
+/**
+ * Estatisticas calculadas do torneio
+ */
+export async function statistics(req,res){
+
+  try{
+
+    const resultado = await getTournamentPlayerStatistics(req.params.id);
+
+    return res.json(resultado);
+
+  }
   catch(err){
 
     return res.status(400).json({

@@ -1,220 +1,190 @@
-import {findUserById} from "../models/user.model.js";
-
+import COMPETITION_EVENTS from "../constants/competitionEvents.js";
+import { findEntry } from "../models/entry.model.js";
+import {
+  createPayment,
+  findPaymentByEntry,
+  findPaymentByExternalReference,
+  findPaymentByGatewayId,
+  findPendingPayments,
+  findPendingPaymentsByTeam,
+  reconcileGatewayPayment
+} from "../models/payment.model.js";
 import { findUserTeam } from "../models/team.model.js";
+import { findTournament } from "../models/tournament.model.js";
+import { findUserById, findUserIdsByRole } from "../models/user.model.js";
+import { normalizeGatewayPaymentStatus, preparePixData, resolvePaymentStatusTransition } from "../utils/pix.js";
+import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
+import { buildPixDescription, createPixPayment, getPayment } from "./mercadopago.service.js";
+import { notify } from "./notification.service.js";
 
-import {createPayment, findPaymentByEntry, findPaymentByExternalReference, updatePaymentStatus} from "../models/payment.model.js";
+export async function createEntryPayment(userId, entryId) {
+  const [team, user, entry] = await Promise.all([
+    findUserTeam(userId),
+    findUserById(userId),
+    findEntry(entryId)
+  ]);
 
-import {findEntry, updatePaymentStatus as updateEntryPaymentStatus ,updateEntryStatus} from "../models/entry.model.js";
+  if (!team) throw new Error("Equipe nao encontrada.");
+  if (!user) throw new Error("Usuario nao encontrado.");
+  if (!entry) throw new Error("Inscricao nao encontrada.");
+  if (Number(entry.team_id) !== Number(team.id)) {
+    throw new Error("Esta inscricao nao pertence a sua equipe.");
+  }
 
+  if (await findPaymentByEntry(entry.id)) {
+    throw new Error("Ja existe um pagamento para esta inscricao.");
+  }
 
-import {findTournament} from "../models/tournament.model.js";
+  const tournament = await findTournament(entry.tournament_id);
+  if (!tournament) throw new Error("Torneio nao encontrado.");
 
+  const pix = await createPixPayment({
+    valor: tournament.valor,
+    descricao: buildPixDescription(team.nome, tournament.nome),
+    email: user.email,
+    cpf: user.cpf,
+    externalReference: `ENTRY_${entryId}`
+  });
+  const pixData = await preparePixData(pix);
+  const status = normalizeGatewayPaymentStatus(pix.status);
 
-import {createPixPayment, getPayment} from "./mercadopago.service.js";
+  const localPayment = await createPayment({
+    entry_id: entry.id,
+    provider: "mercadopago",
+    payment_id: String(pix.id),
+    external_reference: pix.external_reference,
+    status,
+    valor: pix.transaction_amount,
+    qr_code: pixData.qr_code,
+    qr_code_base64: pixData.qr_code_base64,
+    copia_cola: pixData.copia_cola
+  });
 
-/**
- * Criar pagamento da inscrição
- */
-export async function createEntryPayment(userId, entryId){
-
-    // Descobre a Equipe do líder
-    const team = await findUserTeam(userId);
-
-    if(!team){
-
-        throw new Error(
-            "Equipe não encontrada."
-        );
-
-    }
-
-    const usuario = await findUserById(userId);
-
-    if(!usuario){
-
-        throw new Error(
-            "Usuário não encontrado."
-        );
-
-    }
-    
-    // Busca inscrição
-    const entry = await findEntry(entryId);
-
-    if(!entry){
-
-        throw new Error(
-
-            "Inscrição não encontrada."
-
-        );
-
-    }
-    
-    if(entry.team_id !== team.id){
-
-        throw new Error(
-            "Esta inscrição não pertence à sua equipe."
-        );
-
-    }
-
-
-    // Verifica se já existe pagamento
-    const existingPayment = await findPaymentByEntry(
-
-        entry.id
-
-    );
-
-    if(existingPayment){
-
-        throw new Error(
-
-            "Já existe um pagamento para esta inscrição."
-
-        );
-
-    }
-
-    // Busca torneio
-    const tournament = await findTournament(
-
-        entry.tournament_id
-
-    );
-
-    if(!tournament){
-
-        throw new Error(
-
-            "Torneio não encontrado."
-
-        );
-
-    }
-
-    // Cria pagamento
-    const pix = await createPixPayment({
-        
-        valor: tournament.valor,
-
-        descricao: `Inscrição - ${tournament.nome}`,
-
-        email: usuario.email,
-
-        cpf: usuario.cpf,
-
-        externalReference: `ENTRY_${entryId}`
-    
-    });
-
-    await createPayment({
-
-        entry_id: entry.id,
-
-        provider: "mercadopago",
-
-        payment_id: String(pix.id),
-
-        external_reference: pix.external_reference,
-
-        status: pix.status,
-
-        valor: pix.transaction_amount,
-
-        qr_code: pix.point_of_interaction.transaction_data.qr_code,
-
-        qr_code_base64: pix.point_of_interaction.transaction_data.qr_code_base64,
-
-        copia_cola: pix.point_of_interaction.transaction_data.qr_code
-
-    });
-    return {
-
-        payment_id: pix.id,
-
-        status: pix.status,
-
-        qr_code: pix.point_of_interaction.transaction_data.qr_code,
-
-        qr_code_base64: pix.point_of_interaction.transaction_data.qr_code_base64,
-
-        copia_cola: pix.point_of_interaction.transaction_data.qr_code
-
-    };
+  return {
+    id: localPayment.id,
+    payment_id: pix.id,
+    status,
+    qr_code: pixData.qr_code,
+    qr_code_base64: pixData.qr_code_base64,
+    copia_cola: pixData.copia_cola
+  };
 }
 
-/**
- * Processar Webhook
- */
-export async function processWebhook(paymentId){
+export async function processWebhook(paymentId) {
+  const gatewayPayment = await getPayment(paymentId);
+  const localPayment =
+    await findPaymentByGatewayId(gatewayPayment.id) ??
+    await findPaymentByExternalReference(gatewayPayment.external_reference);
 
-    const payment = await getPayment(paymentId);
+  if (!localPayment) {
+    return { ignored: true, reason: "payment_not_found" };
+  }
 
-    console.log({
-        id: payment.id,
-        status: payment.status,
-        external_reference: payment.external_reference});
+  validateGatewayPayment(gatewayPayment, localPayment);
 
-    const pagamento = await findPaymentByExternalReference(payment.external_reference);
+  const status = resolvePaymentStatusTransition(localPayment.status, gatewayPayment.status);
+  const paidAt = status === "aprovado"
+    ? validDateOrNow(gatewayPayment.date_approved ?? localPayment.paid_at)
+    : null;
+  const reconciled = await reconcileGatewayPayment(localPayment.id, {
+    payment_id: String(gatewayPayment.id),
+    status,
+    paid_at: paidAt
+  });
 
-    if(!pagamento){
+  if (status === "aprovado") {
+    await dispatchCompetitionEvent(COMPETITION_EVENTS.PAYMENT_APPROVED, {
+      payment_id: reconciled.id,
+      entry_id: reconciled.entry_id
+    });
+    await notifyPaymentApproved(reconciled);
+  }
 
-        return;
+  return {
+    ignored: false,
+    payment_id: reconciled.id,
+    entry_id: reconciled.entry_id,
+    previous_status: reconciled.previous_status,
+    status: reconciled.status,
+    status_changed: reconciled.status_changed
+  };
+}
 
+export async function syncTeamPendingPayments(teamId) {
+  const payments = await findPendingPaymentsByTeam(teamId);
+  return syncPayments(payments);
+}
+
+export async function syncPendingPayments(limit = 50) {
+  const payments = await findPendingPayments(limit);
+  return syncPayments(payments);
+}
+
+async function syncPayments(payments) {
+  const results = [];
+
+  for (const payment of payments) {
+    try {
+      results.push(await processWebhook(payment.payment_id));
+    } catch (error) {
+      console.error(`Falha ao sincronizar pagamento local #${payment.id}:`, error.message);
+      results.push({ payment_id: payment.id, error: true });
     }
-    let statusBanco = "pendente";
+  }
 
-    switch (payment.status) {
+  return {
+    checked: payments.length,
+    updated: results.filter((item) => item?.status_changed).length,
+    approved: results.filter((item) => item?.status === "aprovado").length
+  };
+}
 
-        case "approved":
-            statusBanco = "aprovado";
-            break;
+function validateGatewayPayment(gatewayPayment, localPayment) {
+  if (String(localPayment.payment_id ?? gatewayPayment.id) !== String(gatewayPayment.id)) {
+    throw new Error("O pagamento retornado nao corresponde ao pagamento local.");
+  }
 
-        case "pending":
-            statusBanco = "pendente";
-            break;
+  if (String(localPayment.external_reference ?? "") !== String(gatewayPayment.external_reference ?? "")) {
+    throw new Error("A referencia externa do pagamento nao confere.");
+  }
 
-        case "cancelled":
-            statusBanco = "cancelado";
-            break;
+  if (Math.abs(Number(localPayment.valor) - Number(gatewayPayment.transaction_amount)) > 0.001) {
+    throw new Error("O valor confirmado pelo gateway nao corresponde ao valor da inscricao.");
+  }
 
-        case "rejected":
-            statusBanco = "rejeitado";
-            break;
+  if (gatewayPayment.currency_id && gatewayPayment.currency_id !== "BRL") {
+    throw new Error("A moeda confirmada pelo gateway e invalida para esta inscricao.");
+  }
+}
 
-    }
+async function notifyPaymentApproved(payment) {
+  const adminIds = await findUserIdsByRole("admin");
+  const amount = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  }).format(Number(payment.valor));
+  const message = `Pagamento de ${amount} da equipe ${payment.team_name} confirmado para o torneio ${payment.tournament_name}.`;
 
-    await updatePaymentStatus(
+  await Promise.all(adminIds.map((adminId) => notify({
+    user_id: adminId,
+    titulo: "Pagamento PIX confirmado",
+    mensagem: message,
+    tipo: "payment_approved",
+    link: "/admin?module=finance",
+    dedupe_key: `payment-approved:${payment.id}:admin:${adminId}`
+  })));
 
-        pagamento.id,
+  await notify({
+    user_id: Number(payment.team_creator_id),
+    titulo: "Pagamento confirmado",
+    mensagem: `O pagamento da equipe ${payment.team_name} para ${payment.tournament_name} foi confirmado automaticamente.`,
+    tipo: "payment_approved",
+    link: "/lider?module=finance",
+    dedupe_key: `payment-approved:${payment.id}:leader:${payment.team_creator_id}`
+  });
+}
 
-        {
-
-            payment_id: String(payment.id),
-
-            status: statusBanco,
-
-            paid_at:
-
-                payment.status === "approved"
-
-                    ? new Date()
-
-                    : null
-
-        }
-
-    );
-
-    if(payment.status === "approved"){
-
-        await updateEntryPaymentStatus(pagamento.entry_id, "pago");
-
-        await updateEntryStatus(pagamento.entry_id, "confirmado");
-
-        console.log("✅ Inscrição confirmada!");
-
-    }
+function validDateOrNow(value) {
+  const date = value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date() : date;
 }

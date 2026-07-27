@@ -10,6 +10,8 @@ import {findUserTeams}
 
 from "../models/team.model.js";
 
+import { getTeamPlayerRanking } from "./teamRanking.service.js";
+
 /**
  * Dashboard do jogador
  */
@@ -27,6 +29,20 @@ export async function getDashboard(userId){
 
     ]);
 
-    return{profile, games, teams};
+    const teamRankings = await Promise.all(teams.map(async (team) => ({
+
+        team_id: Number(team.id),
+
+        team_name: team.nome,
+
+        team_tag: team.tag,
+
+        game: team.game,
+
+        ...(await getTeamPlayerRanking(team.id))
+
+    })));
+
+    return{profile, games, teams, team_rankings: teamRankings};
 
 }

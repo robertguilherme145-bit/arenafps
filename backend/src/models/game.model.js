@@ -133,3 +133,34 @@ export async function findGameBySlug(slug){
     return rows[0];
 
 }
+
+export async function updateGame(id, data){
+
+    await pool.query(
+        `
+        UPDATE games
+        SET
+            nome = ?,
+            nome_curto = ?,
+            slug = ?,
+            descricao = ?,
+            logo = ?,
+            banner = ?,
+            cor_primaria = ?,
+            ativo = ?
+        WHERE id = ?
+        `,
+        [
+            data.nome,
+            data.nome_curto,
+            data.slug,
+            data.descricao,
+            data.logo,
+            data.banner,
+            data.cor_primaria,
+            data.ativo,
+            id
+        ]
+    );
+
+}

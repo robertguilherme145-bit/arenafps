@@ -119,7 +119,25 @@ export async function editTournament(id,data){
 
   }
 
-  await updateTournament(id,data);
+  const next = {
+    nome: data.nome ?? tournament.nome,
+    descricao: data.descricao ?? tournament.descricao,
+    game: data.game ?? tournament.game,
+    valor: data.valor ?? tournament.valor,
+    max_teams: data.max_teams ?? tournament.max_teams,
+    titulares: data.titulares ?? tournament.titulares,
+    reservas: data.reservas ?? tournament.reservas,
+    premiacao: data.premiacao ?? tournament.premiacao,
+    banner: data.banner !== undefined ? data.banner : tournament.banner,
+    inicio: data.inicio ?? tournament.inicio,
+    fim: data.fim ?? tournament.fim
+  };
+
+  if(new Date(next.inicio) >= new Date(next.fim)){
+    throw new Error("A data inicial deve ser menor que a final.");
+  }
+
+  await updateTournament(id,next);
 
 }
 

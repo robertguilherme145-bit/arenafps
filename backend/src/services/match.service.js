@@ -2,7 +2,8 @@ import {
     createMatch,
     findMatch,
     findTournamentMatches,
-    finishMatch
+    finishMatch,
+    replaceMatchPlayerStats
 }
 
 from "../models/match.model.js";
@@ -10,6 +11,19 @@ from "../models/match.model.js";
 import { findTournament }
 
 from "../models/tournament.model.js";
+
+import TOURNAMENT_STATUS from "../constants/tournamentStatus.js";
+
+import COMPETITION_EVENTS from "../constants/competitionEvents.js";
+
+import { dispatchCompetitionEvent }
+
+from "./competitionEngine.service.js";
+
+import {
+    initializeMatchCompetition,
+    listTournamentTeams
+} from "./competitionSetup.service.js";
 
 /**
  * Listar partidas do torneio
@@ -53,7 +67,7 @@ export async function registerMatch(data){
 
     }
 
-    if(tournament.status !== "andamento"){
+    if(![TOURNAMENT_STATUS.CLOSED, TOURNAMENT_STATUS.IN_PROGRESS, "andamento"].includes(tournament.status)){
 
         throw new Error("O torneio não está em andamento.");
 
@@ -65,7 +79,30 @@ export async function registerMatch(data){
 
     }
 
-    return await createMatch(data);
+    const eligibleTeams = await listTournamentTeams(tournament.id);
+    const eligibleIds = new Set(
+        eligibleTeams
+            .filter((entry) =>
+                ["confirmado", "pago"].includes(entry.entry_status) &&
+                Number(entry.lineup_size) >= Number(tournament.titulares)
+            )
+            .map((entry) => Number(entry.team_id))
+    );
+
+    if(!eligibleIds.has(Number(data.team_a_id)) || !eligibleIds.has(Number(data.team_b_id))){
+        throw new Error(`Selecione duas equipes confirmadas com ao menos ${tournament.titulares} jogadores na lineup.`);
+    }
+
+    const match = await createMatch({
+        ...data,
+        tournament_id: Number(data.tournament_id),
+        round: Number(data.round),
+        team_a_id: Number(data.team_a_id),
+        team_b_id: Number(data.team_b_id)
+    });
+
+    await initializeMatchCompetition(match.id, tournament.id);
+    return match;
 
 }
 
@@ -94,6 +131,20 @@ export async function finishMatchResult(matchId, data){
 
     }
 
+    if(Array.isArray(data.player_stats)){
+
+        validatePlayerStats(data.player_stats, match);
+
+        await replaceMatchPlayerStats(
+
+            match.id,
+
+            data.player_stats
+
+        );
+
+    }
+
     let winner;
 
     if(data.score_team_a > data.score_team_b){
@@ -118,10 +169,60 @@ export async function finishMatchResult(matchId, data){
 
     );
 
+    await dispatchCompetitionEvent(
+
+        COMPETITION_EVENTS.MATCH_RESULT_SAVED,
+
+        {
+            match_id: match.id,
+            tournament_id: match.tournament_id,
+            winner_team_id: winner
+        }
+
+    );
+
     return{
 
-        mensagem:"Resultado registrado com sucesso."
+        mensagem:"Resultado registrado com sucesso.",
+
+        event: COMPETITION_EVENTS.MATCH_RESULT_SAVED
 
     };
+
+}
+
+function validatePlayerStats(playerStats, match){
+
+    for(const stat of playerStats){
+
+        if(!stat.player_id){
+
+            throw new Error("Jogador e obrigatorio nas estatisticas.");
+
+        }
+
+        if(![match.team_a_id, match.team_b_id].includes(stat.team_id)){
+
+            throw new Error("Equipe invalida nas estatisticas da partida.");
+
+        }
+
+        for(const field of ["kills", "deaths", "assists", "headshots"]){
+
+            if(stat[field] !== undefined && Number(stat[field]) < 0){
+
+                throw new Error(`${field} nao pode ser negativo.`);
+
+            }
+
+        }
+
+        if(Number(stat.headshots ?? 0) > Number(stat.kills ?? 0)){
+
+            throw new Error("Headshots nao pode ser maior que kills.");
+
+        }
+
+    }
 
 }

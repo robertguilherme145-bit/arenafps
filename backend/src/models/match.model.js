@@ -162,3 +162,250 @@ export async function finishMatch( id, winner_team_id, score_team_a, score_team_
     );
 
 }
+
+/**
+ * Substituir estatisticas dos jogadores da partida
+ */
+export async function replaceMatchPlayerStats(match_id, playerStats = []){
+
+    const connection = await pool.getConnection();
+
+    try{
+
+        await connection.beginTransaction();
+
+        const [mapStats] = await connection.query(
+            `SELECT id FROM match_map_player_stats WHERE match_id = ? LIMIT 1`,
+            [match_id]
+        );
+
+        if(mapStats.length){
+            throw new Error("Esta partida usa sumulas por mapa e nao aceita mais um total manual.");
+        }
+
+        await connection.query(
+            `
+            DELETE FROM match_player_stats
+            WHERE match_id = ?
+            `,
+            [match_id]
+        );
+
+        for(const stat of playerStats){
+
+            await connection.query(
+                `
+                INSERT INTO match_player_stats
+                (
+                    match_id,
+                    player_id,
+                    team_id,
+                    kills,
+                    deaths,
+                    assists,
+                    headshots,
+                    mvp
+                )
+                VALUES
+                (?,?,?,?,?,?,?,?)
+                `,
+                [
+                    match_id,
+                    stat.player_id,
+                    stat.team_id,
+                    stat.kills ?? 0,
+                    stat.deaths ?? 0,
+                    stat.assists ?? 0,
+                    stat.headshots ?? 0,
+                    stat.mvp ? 1 : 0
+                ]
+            );
+
+        }
+
+        await connection.commit();
+
+    }
+    catch(err){
+
+        await connection.rollback();
+        throw err;
+
+    }
+    finally{
+
+        connection.release();
+
+    }
+
+}
+
+/**
+ * Salvar a sumula de um mapa e recalcular os totais oficiais da partida.
+ */
+export async function replaceMatchMapPlayerStats(match_id, match_map_id, playerStats = []){
+
+    const connection = await pool.getConnection();
+
+    try{
+
+        await connection.beginTransaction();
+
+        const [maps] = await connection.query(
+            `SELECT id FROM match_maps WHERE id = ? AND match_id = ? LIMIT 1`,
+            [match_map_id, match_id]
+        );
+
+        if(!maps.length){
+            throw new Error("O mapa informado nao pertence a esta partida.");
+        }
+
+        await connection.query(
+            `DELETE FROM match_map_player_stats WHERE match_map_id = ?`,
+            [match_map_id]
+        );
+
+        for(const stat of playerStats){
+
+            await connection.query(
+                `
+                INSERT INTO match_map_player_stats
+                (
+                    match_map_id,
+                    match_id,
+                    player_id,
+                    team_id,
+                    kills,
+                    deaths,
+                    assists,
+                    headshots,
+                    mvp
+                )
+                VALUES (?,?,?,?,?,?,?,?,?)
+                `,
+                [
+                    match_map_id,
+                    match_id,
+                    stat.player_id,
+                    stat.team_id,
+                    stat.kills ?? 0,
+                    stat.deaths ?? 0,
+                    stat.assists ?? 0,
+                    stat.headshots ?? 0,
+                    stat.mvp ? 1 : 0
+                ]
+            );
+
+        }
+
+        const [totals] = await connection.query(
+            `
+            SELECT
+                player_id,
+                team_id,
+                SUM(kills) AS kills,
+                SUM(deaths) AS deaths,
+                SUM(assists) AS assists,
+                SUM(headshots) AS headshots,
+                SUM(mvp) AS mvp
+            FROM match_map_player_stats
+            WHERE match_id = ?
+            GROUP BY player_id, team_id
+            `,
+            [match_id]
+        );
+
+        await connection.query(
+            `DELETE FROM match_player_stats WHERE match_id = ?`,
+            [match_id]
+        );
+
+        for(const stat of totals){
+
+            await connection.query(
+                `
+                INSERT INTO match_player_stats
+                (match_id, player_id, team_id, kills, deaths, assists, headshots, mvp)
+                VALUES (?,?,?,?,?,?,?,?)
+                `,
+                [
+                    match_id,
+                    stat.player_id,
+                    stat.team_id,
+                    Number(stat.kills),
+                    Number(stat.deaths),
+                    Number(stat.assists),
+                    Number(stat.headshots),
+                    Number(stat.mvp)
+                ]
+            );
+
+        }
+
+        await connection.commit();
+
+    }
+    catch(err){
+
+        await connection.rollback();
+        throw err;
+
+    }
+    finally{
+
+        connection.release();
+
+    }
+
+}
+
+/**
+ * Buscar partidas finalizadas do torneio
+ */
+export async function findFinishedTournamentMatches(tournament_id){
+
+    const [rows] = await pool.query(
+        `
+        SELECT *
+        FROM matches
+        WHERE tournament_id = ?
+        AND status = 'finalizada'
+        ORDER BY finished_at ASC, id ASC
+        `,
+        [tournament_id]
+    );
+
+    return rows;
+
+}
+
+/**
+ * Buscar estatisticas oficiais dos jogadores do torneio
+ */
+export async function findTournamentPlayerStats(tournament_id){
+
+    const [rows] = await pool.query(
+        `
+        SELECT
+            mps.*,
+            m.tournament_id,
+            m.winner_team_id,
+            p.nick,
+            t.nome AS team
+        FROM match_player_stats mps
+        INNER JOIN matches m
+            ON m.id = mps.match_id
+        INNER JOIN players p
+            ON p.id = mps.player_id
+        INNER JOIN teams t
+            ON t.id = mps.team_id
+        WHERE m.tournament_id = ?
+        AND m.status = 'finalizada'
+        ORDER BY p.nick ASC
+        `,
+        [tournament_id]
+    );
+
+    return rows;
+
+}

@@ -1,4 +1,4 @@
-import {createGame, getGames, findGame, findGameBySlug}
+import {createGame, getGames, findGame, findGameBySlug, updateGame}
 
 from "../models/game.model.js";
 
@@ -7,9 +7,11 @@ from "../models/game.model.js";
  */
 export async function registerGame(dados){
 
+    const normalized = normalizeGame(dados);
+
     const existe = await findGameBySlug(
 
-        dados.slug
+        normalized.slug
 
     );
 
@@ -23,7 +25,7 @@ export async function registerGame(dados){
 
     }
 
-    return await createGame(dados);
+    return await createGame(normalized);
 
 }
 
@@ -54,5 +56,69 @@ export async function getGame(id){
     }
 
     return game;
+
+}
+
+export async function editGame(id, dados){
+
+    const current = await getGame(id);
+    const normalized = normalizeGame({ ...current, ...dados });
+    const slugOwner = await findGameBySlug(normalized.slug);
+
+    if(slugOwner && Number(slugOwner.id) !== Number(current.id)){
+        throw new Error("Ja existe outro jogo com este slug.");
+    }
+
+    const next = {
+        ...normalized,
+        logo: dados.logo !== undefined ? dados.logo : current.logo,
+        banner: dados.banner !== undefined ? dados.banner : current.banner,
+        ativo: dados.ativo !== undefined ? (dados.ativo ? 1 : 0) : Number(current.ativo)
+    };
+
+    await updateGame(current.id, next);
+    return { ...current, ...next };
+
+}
+
+function normalizeGame(dados = {}){
+
+    const nome = String(dados.nome ?? "").trim();
+    const nomeCurto = String(dados.nome_curto ?? "").trim();
+    const slug = slugify(dados.slug || nome);
+
+    if(nome.length < 2){
+        throw new Error("Informe o nome completo do jogo.");
+    }
+
+    if(nomeCurto.length < 1){
+        throw new Error("Informe o nome curto do jogo.");
+    }
+
+    if(!slug){
+        throw new Error("Nao foi possivel gerar o slug do jogo.");
+    }
+
+    return {
+        nome,
+        nome_curto: nomeCurto,
+        slug,
+        descricao: String(dados.descricao ?? "").trim() || null,
+        logo: dados.logo ?? null,
+        banner: dados.banner ?? null,
+        cor_primaria: String(dados.cor_primaria ?? "").trim() || null
+    };
+
+}
+
+function slugify(value){
+
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 
 }

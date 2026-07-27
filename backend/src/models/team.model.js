@@ -117,6 +117,21 @@ export async function createTeam({
 
         );
 
+        await connection.query(
+
+            `UPDATE users SET role = 'lider' WHERE id = ? AND role <> 'admin'`,
+
+            [creator_id]
+
+        );
+
+        const [[creator]] = await connection.query(`SELECT nome,nickname FROM users WHERE id=? LIMIT 1`, [creator_id]);
+        const nick = String(creator?.nickname || creator?.nome || `Player${creator_id}`).trim().slice(0, 50);
+        await connection.query(
+            `INSERT INTO players (team_id,user_id,nick,game,status) VALUES (?,?,?,?,'ativo') ON DUPLICATE KEY UPDATE nick=VALUES(nick),game=VALUES(game),status='ativo'`,
+            [team.insertId, creator_id, nick, String(game_id)]
+        );
+
         await connection.commit();
 
         return {
@@ -160,6 +175,34 @@ export async function findTeam(id){
         SELECT *
         FROM teams
         WHERE id = ?
+        LIMIT 1
+        `,
+
+        [id]
+
+    );
+
+    return rows[0];
+
+}
+
+export async function findTeamWithContext(id){
+
+    const [rows] = await pool.query(
+
+        `
+        SELECT
+            t.*,
+            g.nome AS game_name,
+            u.nome AS creator_name,
+            u.email AS creator_email,
+            u.cpf AS creator_cpf
+        FROM teams t
+        INNER JOIN games g
+            ON g.id = t.game_id
+        INNER JOIN users u
+            ON u.id = t.creator_id
+        WHERE t.id = ?
         LIMIT 1
         `,
 
@@ -337,6 +380,20 @@ export async function isMember(user_id, team_id){
         LIMIT 1`,[user_id, team_id]);
 
     return !!rows.length;
+
+}
+
+export async function findMembershipByUserAndTeam(user_id, team_id){
+
+    const [rows] = await pool.query(
+
+        `SELECT * FROM team_members WHERE user_id = ? AND team_id = ? LIMIT 1`,
+
+        [user_id, team_id]
+
+    );
+
+    return rows[0];
 
 }
 
@@ -693,6 +750,36 @@ export async function removeMember(id, connection = pool){
 
             id
 
+        ]
+
+    );
+
+}
+
+export async function updateTeamAdmin(id, data){
+
+    await pool.query(
+
+        `
+        UPDATE teams
+        SET
+            nome = ?,
+            tag = ?,
+            descricao = ?,
+            recrutando = ?,
+            privada = ?,
+            ativo = ?
+        WHERE id = ?
+        `,
+
+        [
+            data.nome,
+            data.tag,
+            data.descricao,
+            data.recrutando,
+            data.privada,
+            data.ativo,
+            id
         ]
 
     );

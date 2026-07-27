@@ -1,4 +1,4 @@
-import {registerGame, listGames, getGame}
+import {registerGame, listGames, getGame, editGame}
 
 from "../services/game.service.js";
 
@@ -81,6 +81,18 @@ export async function show(req, res){
 
         });
 
+    }
+
+}
+
+export async function update(req, res){
+
+    try{
+        const game = await editGame(req.params.id, req.body);
+        return res.json(game);
+    }
+    catch(err){
+        return res.status(400).json({ erro: err.message });
     }
 
 }
