@@ -55,7 +55,7 @@ export function RegisterPage() {
   const [result, setResult] = useState<RegisterResponse | null>(null);
   const [form, setForm] = useState({ name:"", nickname:"", email:"", password:"", confirm:"", games:[] as number[], steam:"", discord:"" });
   useEffect(() => { void getGames().then((items) => setGames(items.filter((game) => Boolean(game.ativo)))).catch((reason) => error("Falha ao carregar jogos", message(reason))); }, []);
-  const canContinue = step === 1 ? Boolean(form.name && form.nickname && form.email && form.password.length >= 8 && form.password === form.confirm) : step === 2 ? form.games.length > 0 : true;
+  const canContinue = step === 1 ? Boolean(form.name && form.nickname && form.email && form.password.length >= 8 && form.password === form.confirm) : step === 2 ? games.length === 0 || form.games.length > 0 : true;
 
   async function finish() {
     setBusy(true);
@@ -68,9 +68,9 @@ export function RegisterPage() {
   return <AuthShell eyebrow={`Etapa ${step} de 4`} title="Criar sua conta" description="Uma identidade para todos os jogos, equipes e papeis da Arena Camp.">
     <div className="mb-6 grid grid-cols-4 gap-2">{["Conta", "Jogos", "Vinculos", "Revisao"].map((label, index) => <div key={label}><div className={`h-1 ${step >= index + 1 ? "bg-cyan-400" : "bg-white/10"}`} /><p className="mt-2 hidden text-xs text-arena-muted sm:block">{label}</p></div>)}</div>
     {step === 1 ? <div className="grid gap-4 sm:grid-cols-2"><Field label="Nome"><Input value={form.name} onChange={(event) => setForm((state) => ({ ...state, name:event.target.value }))} /></Field><Field label="Nickname"><Input value={form.nickname} onChange={(event) => setForm((state) => ({ ...state, nickname:event.target.value }))} /></Field><div className="sm:col-span-2"><Field label="Email"><Input type="email" value={form.email} onChange={(event) => setForm((state) => ({ ...state, email:event.target.value }))} /></Field></div><Field label="Senha"><Input type="password" value={form.password} onChange={(event) => setForm((state) => ({ ...state, password:event.target.value }))} /></Field><Field label="Confirmar senha"><Input type="password" value={form.confirm} onChange={(event) => setForm((state) => ({ ...state, confirm:event.target.value }))} /></Field></div> : null}
-    {step === 2 ? <div className="grid gap-3 sm:grid-cols-2">{games.map((game) => { const selected = form.games.includes(game.id); return <button className={`flex min-h-16 items-center justify-between border p-4 text-left ${selected ? "border-cyan-400 bg-cyan-400/10" : "border-arena-line bg-black/20"}`} key={game.id} onClick={() => setForm((state) => ({ ...state, games:selected ? state.games.filter((id) => id !== game.id) : [...state.games, game.id] }))}><span><span className="block font-semibold">{game.nome}</span><span className="text-xs text-arena-muted">{game.nome_curto}</span></span>{selected ? <Check className="h-5 w-5 text-cyan-200" /> : <Gamepad2 className="h-5 w-5 text-arena-muted" />}</button>; })}</div> : null}
+    {step === 2 ? <div className="grid gap-3 sm:grid-cols-2">{games.map((game) => { const selected = form.games.includes(game.id); return <button className={`flex min-h-16 items-center justify-between border p-4 text-left ${selected ? "border-cyan-400 bg-cyan-400/10" : "border-arena-line bg-black/20"}`} key={game.id} onClick={() => setForm((state) => ({ ...state, games:selected ? state.games.filter((id) => id !== game.id) : [...state.games, game.id] }))}><span><span className="block font-semibold">{game.nome}</span><span className="text-xs text-arena-muted">{game.nome_curto}</span></span>{selected ? <Check className="h-5 w-5 text-cyan-200" /> : <Gamepad2 className="h-5 w-5 text-arena-muted" />}</button>; })}{!games.length ? <div className="border border-dashed border-arena-line p-5 sm:col-span-2"><p className="font-semibold">Catalogo em preparacao</p><p className="mt-1 text-sm text-arena-muted">O administrador ainda cadastrara os jogos. Voce pode continuar e escolher seus jogos depois.</p></div> : null}</div> : null}
     {step === 3 ? <div className="space-y-4"><Field label="Steam"><Input placeholder="Perfil ou Steam ID" value={form.steam} onChange={(event) => setForm((state) => ({ ...state, steam:event.target.value }))} /></Field><Field label="Discord"><Input placeholder="Usuario do Discord" value={form.discord} onChange={(event) => setForm((state) => ({ ...state, discord:event.target.value }))} /></Field><p className="text-sm text-arena-muted">Os vinculos sao opcionais e podem ser alterados no perfil.</p></div> : null}
-    {step === 4 ? <div className="space-y-3"><Review label="Conta" value={`${form.nickname} - ${form.email}`} /><Review label="Jogos" value={games.filter((game) => form.games.includes(game.id)).map((game) => game.nome_curto).join(", ")} /><Review label="Steam" value={form.steam || "Vincular depois"} /><Review label="Discord" value={form.discord || "Vincular depois"} /></div> : null}
+    {step === 4 ? <div className="space-y-3"><Review label="Conta" value={`${form.nickname} - ${form.email}`} /><Review label="Jogos" value={games.filter((game) => form.games.includes(game.id)).map((game) => game.nome_curto).join(", ") || "Selecionar depois"} /><Review label="Steam" value={form.steam || "Vincular depois"} /><Review label="Discord" value={form.discord || "Vincular depois"} /></div> : null}
     <div className="mt-7 flex justify-between gap-3"><Button disabled={step === 1} icon={<ChevronLeft className="h-4 w-4" />} variant="secondary" onClick={() => setStep((value) => Math.max(1, value - 1))}>Voltar</Button>{step < 4 ? <Button disabled={!canContinue} onClick={() => setStep((value) => Math.min(4, value + 1))}>Continuar <ChevronRight className="h-4 w-4" /></Button> : <Button loading={busy} icon={<ShieldCheck className="h-4 w-4" />} onClick={() => void finish()}>Criar conta</Button>}</div>
   </AuthShell>;
 }
@@ -125,15 +125,17 @@ export function OnboardingPage() {
   const { error, success } = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [availableGames, setAvailableGames] = useState<Game[]>([]);
+  const [gamesLoaded, setGamesLoaded] = useState(false);
   const [selectedGames, setSelectedGames] = useState<number[]>([]);
   const [contact, setContact] = useState({ email:"", nickname:"" });
-  useEffect(() => { void getGames().then((items) => setAvailableGames(items.filter((game) => Boolean(game.ativo)))).catch(() => undefined); }, []);
+  useEffect(() => { void getGames().then((items) => setAvailableGames(items.filter((game) => Boolean(game.ativo)))).catch(() => undefined).finally(() => setGamesLoaded(true)); }, []);
   useEffect(() => { if (user) setContact((state) => ({ email:user.needs_email ? state.email : user.email, nickname:state.nickname || user.nickname || "" })); }, [user?.id, user?.needs_email]);
   if (!token) return <Navigate replace to="/entrar" />;
   const options = [{ role:"jogador" as const, title:"Sou jogador", description:"Construa sua carreira, encontre equipes e acompanhe partidas.", icon:<UserRound className="h-6 w-6" /> }, { role:"lider" as const, title:"Sou lider de equipe", description:"Crie e gerencie elenco, lineups e inscricoes.", icon:<Users className="h-6 w-6" /> }];
   async function choose(role: typeof options[number]["role"]) { setBusy(role); try { await completeAccountOnboarding(role); await refreshSession(); navigate(roleHref(role)); } catch (reason) { error("Nao foi possivel concluir", message(reason)); } finally { setBusy(null); } }
   if (user?.onboarding_completed) return <Navigate replace to={roleHref(user.active_role)} />;
   if (!user) return <AuthShell eyebrow="Primeiro acesso" title="Preparando sua conta" description="Carregando seus contextos e permissoes."><div className="flex justify-center py-8"><LoaderCircle className="h-9 w-9 animate-spin text-cyan-200" /></div></AuthShell>;
+  if (!gamesLoaded) return <AuthShell eyebrow="Primeiro acesso" title="Preparando sua conta" description="Carregando o catalogo competitivo."><div className="flex justify-center py-8"><LoaderCircle className="h-9 w-9 animate-spin text-cyan-200" /></div></AuthShell>;
   if (user.needs_email) {
     async function saveContact() {
       setBusy("contact");
@@ -146,7 +148,7 @@ export function OnboardingPage() {
     }
     return <AuthShell eyebrow="Primeiro acesso" title="Complete seu perfil" description="A Steam nao compartilha email. Informe um endereco valido para proteger e recuperar sua conta."><div className="space-y-4"><Field label="Email"><Input autoComplete="email" type="email" value={contact.email} onChange={(event) => setContact((state) => ({ ...state, email:event.target.value }))} /></Field><Field label="Nickname"><Input value={contact.nickname} onChange={(event) => setContact((state) => ({ ...state, nickname:event.target.value }))} /></Field><Button className="w-full" disabled={!/^\S+@\S+\.\S+$/.test(contact.email)} loading={busy === "contact"} icon={<AtSign className="h-4 w-4" />} onClick={() => void saveContact()}>Salvar e continuar</Button></div></AuthShell>;
   }
-  if (!user.games.length) {
+  if (!user.games.length && availableGames.length) {
     async function saveGames() {
       setBusy("games");
       try { await updateGames(selectedGames, selectedGames[0]); success("Jogos salvos", "Seu painel sera filtrado pelos jogos selecionados."); }

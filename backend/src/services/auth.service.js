@@ -9,6 +9,7 @@ import { resolveUserAccess } from "./identity.service.js";
 import { sendTransactionalMail } from "./mail.service.js";
 import { oauthProviderEnabled } from "./oauth.service.js";
 import { createAuthenticatedSession } from "./sessionAuth.service.js";
+import { countActiveGames } from "../models/game.model.js";
 
 export async function register(payload) {
   const email = String(payload.email || "").trim().toLowerCase();
@@ -20,8 +21,8 @@ export async function register(payload) {
 
   const intendedRole = ["jogador", "lider"].includes(payload.intended_role) ? payload.intended_role : "jogador";
   const gameIds = [...new Set((Array.isArray(payload.game_ids) ? payload.game_ids : []).map(Number).filter(Number.isInteger))];
-  if (!gameIds.length) throw new Error("Selecione pelo menos um jogo.");
-  const primaryGameId = gameIds.includes(Number(payload.primary_game_id)) ? Number(payload.primary_game_id) : gameIds[0];
+  if (!gameIds.length && await countActiveGames() > 0) throw new Error("Selecione pelo menos um jogo.");
+  const primaryGameId = gameIds.includes(Number(payload.primary_game_id)) ? Number(payload.primary_game_id) : gameIds[0] ?? null;
   const passwordHash = await bcrypt.hash(payload.password, 10);
   const user = await createUser({ nome:name, email, cpf:optional(payload.cpf, 14), senhaHash:passwordHash, role:"jogador" });
 

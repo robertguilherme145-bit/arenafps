@@ -134,6 +134,11 @@ export async function findGameBySlug(slug){
 
 }
 
+export async function countActiveGames(){
+    const [[row]] = await pool.query(`SELECT COUNT(*) AS total FROM games WHERE ativo = 1`);
+    return Number(row.total);
+}
+
 export async function updateGame(id, data){
 
     await pool.query(
