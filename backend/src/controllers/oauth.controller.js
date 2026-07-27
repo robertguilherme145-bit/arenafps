@@ -46,7 +46,7 @@ function redirectError(res, error) {
   url.searchParams.set("oauth_error", error?.message || "Nao foi possivel autenticar com este provedor.");
   return res.redirect(url.toString());
 }
-function frontendUrl() { return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, ""); }
+function frontendUrl() { return String(process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0].trim().replace(/\/$/, ""); }
 function readCookie(req, name) {
   const prefix = `${name}=`;
   const item = String(req.headers.cookie || "").split(";").map((value) => value.trim()).find((value) => value.startsWith(prefix));

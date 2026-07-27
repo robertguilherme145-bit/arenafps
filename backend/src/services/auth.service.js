@@ -119,7 +119,7 @@ async function issueEmailVerification(userId, email, name) {
 
 function mailTemplate(title, text, url, action) { return `<div style="font-family:Arial,sans-serif;background:#07111f;color:#f7fbff;padding:32px"><h1>${title}</h1><p style="color:#b8c4d6">${text}</p><p><a href="${url}" style="display:inline-block;background:#16c8e5;color:#001018;padding:12px 18px;text-decoration:none;font-weight:700">${action}</a></p><p style="color:#7d8ca3;font-size:12px">Se voce nao solicitou esta acao, ignore esta mensagem.</p></div>`; }
 function hashToken(token) { return crypto.createHash("sha256").update(String(token || "")).digest("hex"); }
-function frontendUrl() { return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, ""); }
+function frontendUrl() { return String(process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0].trim().replace(/\/$/, ""); }
 function required(value, message, max) { const text = String(value || "").trim(); if (!text) throw new Error(message); return text.slice(0, max); }
 function optional(value, max) { const text = String(value || "").trim(); return text ? text.slice(0, max) : null; }
 function validatePassword(password) { if (String(password || "").length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) throw new Error("A senha deve ter ao menos 8 caracteres, uma letra e um numero."); }
