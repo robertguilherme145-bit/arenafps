@@ -62,9 +62,21 @@ app.use("/uploads", express.static(uploadDirectory, { maxAge:"7d", immutable:tru
 app.use(routes);
 
 if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
- app.use(express.static(publicDirectory, { maxAge:process.env.NODE_ENV === "production" ? "1d" : 0 }));
+ app.use(express.static(publicDirectory, {
+  maxAge:process.env.NODE_ENV === "production" ? "1y" : 0,
+  immutable:process.env.NODE_ENV === "production",
+  index:false
+ }));
  app.use((req,res,next) => {
-  if (req.method === "GET" && req.accepts("html")) return res.sendFile(path.join(publicDirectory, "index.html"));
+  if (req.method === "GET" && req.accepts("html")) {
+   res.set({
+    "Cache-Control":"no-store, no-cache, must-revalidate, proxy-revalidate",
+    Pragma:"no-cache",
+    Expires:"0",
+    "Surrogate-Control":"no-store"
+   });
+   return res.sendFile(path.join(publicDirectory, "index.html"));
+  }
   return next();
  });
 }
