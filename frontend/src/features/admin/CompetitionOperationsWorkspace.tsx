@@ -174,7 +174,11 @@ export function CompetitionOperationsWorkspace({
       return;
     }
 
-    setSelectedMatchId((current) => current && matches.some((match) => match.id === current) ? current : matches[0].id);
+    setSelectedMatchId((current) => {
+      const currentMatch = matches.find((match) => match.id === current);
+      if (currentMatch && !["finalizada", "cancelada"].includes(currentMatch.status)) return currentMatch.id;
+      return matches.find((match) => !["finalizada", "cancelada"].includes(match.status))?.id ?? matches.at(-1)?.id ?? null;
+    });
   }, [matches]);
 
   useEffect(() => {
@@ -202,12 +206,14 @@ export function CompetitionOperationsWorkspace({
       return;
     }
 
-    setSelectedStatsMapId((current) =>
-      current && operations.maps.some((map) => map.id === current)
-        ? current
-        : operations.maps.find((map) => map.status === "finalizado")?.id ?? operations.maps[0].id
-    );
-  }, [operations?.match.id, operations?.maps.length]);
+    setSelectedStatsMapId((current) => {
+      const currentMap = operations.maps.find((map) => map.id === current);
+      if (currentMap && !["finalizado", "cancelado"].includes(currentMap.status)) return currentMap.id;
+      return operations.maps.find((map) => !["finalizado", "cancelado"].includes(map.status))?.id
+        ?? [...operations.maps].reverse().find((map) => map.status === "finalizado")?.id
+        ?? operations.maps[0].id;
+    });
+  }, [operations?.match.id, operations?.maps.map((map) => `${map.id}:${map.status}`).join("|")]);
 
   async function loadGames(preferredId?: number) {
     try {
