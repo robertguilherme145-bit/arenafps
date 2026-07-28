@@ -233,10 +233,16 @@ export function TournamentWizardPage() {
         return;
       }
       const selectedActions = vetoOrder.filter((item) => item.action !== "ban").length;
-      if (selectedActions !== requiredMaps) {
+      const completedOrder = completeAutomaticVetoOrder(vetoOrder, values.best_of, values.auto_decider);
+      if (selectedActions > requiredMaps || (!values.auto_decider && selectedActions !== requiredMaps)) {
         toast.warning("Ordem de veto invalida", `A sequencia precisa selecionar exatamente ${requiredMaps} mapas.`);
         return;
       }
+      if (completedOrder.length > selectedMapIds.length) {
+        toast.warning("Ordem de veto invalida", "Nao restam mapas suficientes para completar a serie automaticamente.");
+        return;
+      }
+      if (completedOrder.length !== vetoOrder.length) setVetoOrder(completedOrder);
     }
     if (step === 5 && isMix && selectedMapIds.length < 1) { toast.warning("Map pool vazio", "O Mix precisa de ao menos um mapa para o sorteio automatico."); return; }
     const next = Math.min(steps.length - 1, step + 1);
@@ -295,6 +301,10 @@ export function TournamentWizardPage() {
     }
     if(data.tournament_mode === "mix" && selectedMapIds.length < 1){setStep(5);toast.warning("Map pool vazio","Selecione ao menos um mapa para o Mix.");return;}
 
+    const publishVetoOrder = data.pick_ban_enabled
+      ? completeAutomaticVetoOrder(vetoOrder, data.best_of, data.auto_decider)
+      : [];
+
     setPublishing(true);
     setPublishError(null);
     try {
@@ -317,7 +327,7 @@ export function TournamentWizardPage() {
         format: data.formato,
         best_of: data.best_of,
         pick_ban_enabled: data.pick_ban_enabled,
-        veto_order: data.pick_ban_enabled ? vetoOrder : [],
+        veto_order: publishVetoOrder,
         auto_decider: data.auto_decider,
         overtime_enabled: data.overtime_enabled,
         initial_side: data.initial_side,
@@ -425,6 +435,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) { return <button aria-label={label} className="flex h-9 w-9 items-center justify-center text-arena-muted hover:bg-white/[.07] hover:text-white" onClick={onClick} title={label} type="button">{children}</button>; }
 
 function buildDefaultVetoOrder(bestOf: WizardForm["best_of"], mapCount: number): VetoStep[] { if (mapCount <= 0) return []; const seriesMaps = Math.min(Number(bestOf.replace("bo", "")), Math.max(1, mapCount)); const totalBans = Math.max(0, mapCount - seriesMaps); const preBans = bestOf === "bo1" ? totalBans : Math.min(2, totalBans); const order: VetoStep[] = []; for (let index = 0; index < preBans; index += 1) order.push({ action: "ban", team: index % 2 === 0 ? "A" : "B" }); for (let index = 0; index < Math.max(0, seriesMaps - 1); index += 1) order.push({ action: "pick", team: index % 2 === 0 ? "A" : "B" }); for (let index = preBans; index < totalBans; index += 1) order.push({ action: "ban", team: index % 2 === 0 ? "A" : "B" }); order.push({ action: "decider", team: "SYSTEM" }); return order; }
+function completeAutomaticVetoOrder(order: VetoStep[], bestOf: WizardForm["best_of"], autoDecider: boolean): VetoStep[] { if (!autoDecider) return order; const requiredMaps = Number(bestOf.replace("bo", "")); const selectedMaps = order.filter((item) => item.action !== "ban").length; const missingMaps = Math.max(0, requiredMaps - selectedMaps); return [...order, ...Array.from({ length: missingMaps }, (): VetoStep => ({ action: "decider", team: "SYSTEM" }))]; }
 function formatLabel(value: WizardForm["formato"]) { return { mix_single_elimination:"Mix Individual",single_elimination: "Eliminacao simples", double_elimination: "Eliminacao dupla", swiss: "Sistema suico", round_robin: "Todos contra todos", group_playoffs: "Fase de grupos + eliminatorias", league: "Liga", custom: "Personalizado" }[value]; }
 function toApiDate(value: string) { return new Date(value).toISOString().slice(0, 19).replace("T", " "); }
 function messageOf(error: unknown) { return error instanceof Error ? error.message : "Tente novamente."; }

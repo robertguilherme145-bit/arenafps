@@ -196,13 +196,13 @@ export async function saveTournamentCompetition(adminUser, tournamentId, payload
     throw new Error(`Uma serie ${bestOf.toUpperCase()} exige ao menos ${requiredMaps} mapas no map pool.`);
   }
 
-  const vetoOrder = normalizeVetoOrder(
+  const autoDecider = payload.auto_decider !== false;
+  const requestedVetoOrder = normalizeVetoOrder(
     payload.veto_order?.length ? payload.veto_order : buildDefaultVetoOrder(bestOf, mapIds.length)
   );
-
-  if (pickBanEnabled) {
-    validateVetoOrder(vetoOrder, bestOf, mapIds.length);
-  }
+  const vetoOrder = pickBanEnabled
+    ? completeVetoOrder(requestedVetoOrder, bestOf, mapIds.length, autoDecider)
+    : requestedVetoOrder;
 
   const data = {
     game_id: game.id,
@@ -210,7 +210,7 @@ export async function saveTournamentCompetition(adminUser, tournamentId, payload
     best_of: bestOf,
     pick_ban_enabled: pickBanEnabled ? 1 : 0,
     veto_order: vetoOrder,
-    auto_decider: payload.auto_decider === false ? 0 : 1,
+    auto_decider: autoDecider ? 1 : 0,
     overtime_enabled: payload.overtime_enabled === false ? 0 : 1,
     initial_side: String(payload.initial_side ?? "knife").trim() || "knife",
     pause_minutes: nonNegativeInteger(payload.pause_minutes, 5),
@@ -256,7 +256,7 @@ export async function getMatchOperations(matchId) {
     getVetoSession(match.id)
   ]);
   const actions = session ? await getVetoActions(session.id) : [];
-  const vetoOrder = parseVetoOrder(match.veto_order) ?? buildDefaultVetoOrder(match.best_of, mapPool.length);
+  const vetoOrder = resolveVetoOrder(match.veto_order, match.best_of, mapPool.length, match.auto_decider);
 
   return {
     match: normalizeMatchRecord(match),
@@ -317,6 +317,9 @@ export async function openMatchVeto(adminUser, matchId) {
 
   if (match.status === "finalizada") throw new Error("Uma partida finalizada nao pode iniciar um novo Pick & Ban.");
   await createOrOpenVetoSession(match.id, adminUser.id, match.veto_action_seconds);
+  const session = await getVetoSession(match.id);
+  const order = resolveVetoOrder(match.veto_order, match.best_of, pool.length, match.auto_decider);
+  if (session) await completeAutomaticDecider(adminUser, match, session, order, pool);
   await audit(adminUser, "match.veto.opened", "match", match.id, null);
   return await getMatchOperations(match.id);
 }
@@ -337,7 +340,7 @@ export async function performMatchVetoAction(adminUser, matchId, payload) {
   }
 
   const mapPool = await getTournamentMapPool(match.tournament_id);
-  const order = parseVetoOrder(match.veto_order) ?? buildDefaultVetoOrder(match.best_of, mapPool.length);
+  const order = resolveVetoOrder(match.veto_order, match.best_of, mapPool.length, match.auto_decider);
   const actions = await getVetoActions(session.id);
   const expected = order[actions.length];
 
@@ -387,7 +390,7 @@ export async function performParticipantVetoAction(user, matchId, payload) {
   }
 
   const mapPool = await getTournamentMapPool(match.tournament_id);
-  const order = parseVetoOrder(match.veto_order) ?? buildDefaultVetoOrder(match.best_of, mapPool.length);
+  const order = resolveVetoOrder(match.veto_order, match.best_of, mapPool.length, match.auto_decider);
   const actions = await getVetoActions(session.id);
   const expected = order[actions.length];
 
@@ -432,7 +435,7 @@ export async function resolveExpiredVetoAction(matchId) {
   if (match.status === "finalizada") return null;
 
   const [mapPool, actions] = await Promise.all([getTournamentMapPool(match.tournament_id), getVetoActions(session.id)]);
-  const order = parseVetoOrder(match.veto_order) ?? buildDefaultVetoOrder(match.best_of, mapPool.length);
+  const order = resolveVetoOrder(match.veto_order, match.best_of, mapPool.length, match.auto_decider);
   const expected = order[actions.length];
   if (!expected) return null;
   const used = new Set(actions.map((action) => Number(action.game_map_id)));
@@ -628,14 +631,28 @@ function normalizeVetoOrder(order) {
   }));
 }
 
-function validateVetoOrder(order, bestOf, mapCount) {
-  if (!order.length) throw new Error("Defina ao menos uma etapa para o pick/ban.");
+export function completeVetoOrder(order, bestOf, mapCount, autoDecider = true) {
+  if (!order.length && !autoDecider) throw new Error("Defina ao menos uma etapa para o pick/ban.");
   if (order.length > mapCount) throw new Error("O veto possui mais etapas do que mapas no map pool.");
 
   const selectedMaps = order.filter((step) => step.action === "pick" || step.action === "decider").length;
-  if (selectedMaps !== bestOfNumber(bestOf)) {
-    throw new Error(`A ordem do veto deve selecionar exatamente ${bestOfNumber(bestOf)} mapas para ${bestOf.toUpperCase()}.`);
+  const requiredMaps = bestOfNumber(bestOf);
+  if (selectedMaps > requiredMaps) {
+    throw new Error(`A ordem do veto deve selecionar exatamente ${requiredMaps} mapas para ${bestOf.toUpperCase()}.`);
   }
+
+  const missingMaps = requiredMaps - selectedMaps;
+  if (missingMaps > 0 && !autoDecider) {
+    throw new Error(`A ordem do veto deve selecionar exatamente ${requiredMaps} mapas para ${bestOf.toUpperCase()}.`);
+  }
+  if (order.length + missingMaps > mapCount) {
+    throw new Error("Nao restam mapas suficientes para completar a serie automaticamente.");
+  }
+
+  return [
+    ...order,
+    ...Array.from({ length: missingMaps }, () => ({ action: "decider", team: "SYSTEM" }))
+  ];
 }
 
 export function buildDefaultVetoOrder(bestOf, mapCount) {
@@ -688,25 +705,26 @@ async function persistVetoAction({ adminUser, match, session, action, mapId, tea
 
 async function completeAutomaticDecider(adminUser, match, session, order, mapPool, adminForced = true) {
   if (!Boolean(match.auto_decider)) return;
-  const actions = await getVetoActions(session.id);
-  const expected = order[actions.length];
-  if (!expected || expected.action !== "decider") return;
+  let actions = await getVetoActions(session.id);
 
-  const used = new Set(actions.map((action) => Number(action.game_map_id)));
-  const remaining = mapPool.filter((map) => !used.has(Number(map.id)));
-  if (remaining.length !== 1) return;
+  while (order[actions.length]?.action === "decider") {
+    const used = new Set(actions.map((action) => Number(action.game_map_id)));
+    const remaining = mapPool.filter((map) => Boolean(map.ativo) && !used.has(Number(map.id)));
+    if (!remaining.length) return;
 
-  await persistVetoAction({
-    adminUser,
-    match,
-    session,
-    action: "decider",
-    mapId: Number(remaining[0].id),
-    teamId: null,
-    sequenceNumber: actions.length + 1,
-    orderLength: order.length,
-    adminForced
-  });
+    await persistVetoAction({
+      adminUser,
+      match,
+      session,
+      action: "decider",
+      mapId: Number(remaining[0].id),
+      teamId: null,
+      sequenceNumber: actions.length + 1,
+      orderLength: order.length,
+      adminForced
+    });
+    actions = await getVetoActions(session.id);
+  }
 }
 
 async function validateAvailableVetoMap(mapId, mapPool, usedItems) {
@@ -765,6 +783,11 @@ function parseVetoOrder(value) {
   } catch {
     return null;
   }
+}
+
+function resolveVetoOrder(value, bestOf, mapCount, autoDecider) {
+  const order = normalizeVetoOrder(parseVetoOrder(value) ?? buildDefaultVetoOrder(bestOf, mapCount));
+  return completeVetoOrder(order, bestOf, mapCount, Boolean(autoDecider));
 }
 
 function bestOfNumber(value) {
