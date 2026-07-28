@@ -773,11 +773,12 @@ function GameCatalog({
               <Field label="Imagem do mapa"><Input placeholder="URL ou envie uma imagem abaixo" value={mapForm.imagem} onChange={(event) => onMapFormChange({ ...mapForm, imagem:event.target.value })} /><div className="mt-2 max-w-xl"><ImageUploadField value={mapForm.imagem} onChange={(imagem)=>onMapFormChange({ ...mapForm, imagem })} label="Enviar imagem do mapa" /></div></Field>
               <div className="divide-y divide-arena-line border-y border-arena-line">
                 {maps.map((map) => (
-                  <div className="grid items-center gap-3 py-3 md:grid-cols-[48px_1fr_120px_auto]" key={map.id}>
-                    <div className="flex h-10 w-10 items-center justify-center border border-arena-line bg-black/25"><MapIcon className="h-4 w-4 text-cyan-200" /></div>
+                  <div className="group/map relative grid items-center gap-3 py-3 md:grid-cols-[48px_1fr_120px_auto]" key={map.id}>
+                    <div className="flex h-10 w-10 overflow-hidden border border-arena-line bg-black/25">{map.imagem ? <img className="h-full w-full object-cover" src={map.imagem} alt="" /> : <MapIcon className="m-auto h-4 w-4 text-cyan-200" />}</div>
                     <div><p className="font-semibold">{map.nome}</p><p className="text-xs text-arena-muted">#{map.id} · {map.slug}</p></div>
                     <Badge tone={map.ativo ? "success" : "neutral"}>{map.ativo ? "Disponivel" : "Desativado"}</Badge>
                     <div className="flex gap-2"><Button className="h-9" loading={busy === `map-${map.id}`} variant="secondary" onClick={() => onToggleMap(map)}>{map.ativo ? "Desativar" : "Reativar"}</Button><Button aria-label={`Excluir ${map.nome}`} className="h-9 w-9 px-0" loading={busy === `delete-map-${map.id}`} variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => onDeleteMap(map)} /></div>
+                    {map.imagem ? <MapHoverPreview map={map} /> : null}
                   </div>
                 ))}
                 {!maps.length ? <div className="py-8"><EmptyState title="Este jogo ainda nao tem mapas" description="Adicione os mapas oficiais usados nas competicoes." /></div> : null}
@@ -854,7 +855,7 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
           <CardContent className="grid gap-2 sm:grid-cols-2">
             {competition.available_maps.map((map) => {
               const checked = competition.map_ids.includes(map.id);
-              return <label className={cn("flex cursor-pointer items-center gap-3 border p-3 transition", checked ? "border-cyan-400/50 bg-cyan-400/10" : "border-arena-line bg-black/20 hover:bg-white/[.04]")} key={map.id}><input checked={checked} className="h-4 w-4 accent-cyan-400" onChange={() => change("map_ids", checked ? competition.map_ids.filter((id) => id !== map.id) : [...competition.map_ids, map.id])} type="checkbox" /><span><span className="block text-sm font-semibold">{map.nome}</span><span className="text-xs text-arena-muted">#{map.id} · {map.slug}</span></span></label>;
+              return <label className={cn("group/map relative flex cursor-pointer items-center gap-3 border p-3 transition", checked ? "border-cyan-400/50 bg-cyan-400/10" : "border-arena-line bg-black/20 hover:bg-white/[.04]")} key={map.id}><input checked={checked} className="h-4 w-4 accent-cyan-400" onChange={() => change("map_ids", checked ? competition.map_ids.filter((id) => id !== map.id) : [...competition.map_ids, map.id])} type="checkbox" />{map.imagem ? <img className="h-10 w-14 object-cover" src={map.imagem} alt="" /> : <MapIcon className="h-4 w-4 text-cyan-200" />}<span><span className="block text-sm font-semibold">{map.nome}</span><span className="text-xs text-arena-muted">#{map.id} · {map.slug}</span></span>{map.imagem ? <MapHoverPreview map={map} /> : null}</label>;
             })}
             {!competition.available_maps.length ? <div className="sm:col-span-2"><EmptyState title="Jogo sem mapas" description="Cadastre os mapas do jogo antes de montar o map pool." /></div> : null}
           </CardContent>
@@ -1054,6 +1055,10 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
 
 function Roster({ title, players }: { title: string; players: MatchOperations["rosters"] }) {
   return <div><h4 className="mb-2 font-semibold">{title}</h4><div className="divide-y divide-arena-line border-y border-arena-line">{players.map((player) => <div className="grid grid-cols-[32px_1fr_auto] items-center gap-3 py-3" key={player.id}><UserRound className="h-4 w-4 text-arena-muted" /><div><p className="text-sm font-semibold">{player.nick}</p><p className="text-xs text-arena-muted">ID interno #{player.id} · ID do jogo: {player.game_uid || "nao informado"}</p></div><Badge tone={player.in_lineup ? "success" : "warning"}>{player.in_lineup ? (player.titular ? "Titular" : "Reserva") : "Fora da lineup"}</Badge></div>)}</div></div>;
+}
+
+function MapHoverPreview({ map }: { map: GameMap }) {
+  return <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 z-50 hidden w-80 overflow-hidden border border-cyan-400/35 bg-[#070b12] shadow-2xl group-hover/map:block"><div className="aspect-video bg-[#09121d]"><img className="h-full w-full object-cover" src={map.imagem || ""} alt="" /></div><div className="p-3"><p className="font-display text-base font-semibold">{map.nome}</p><p className="mt-1 text-xs text-arena-muted">Pre-visualizacao do mapa</p></div></div>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) { return <div className="border border-arena-line bg-black/20 p-3"><p className="text-xs uppercase text-arena-muted">{label}</p><p className="mt-2 font-semibold capitalize">{value}</p></div>; }

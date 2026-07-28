@@ -1,4 +1,4 @@
-import {createGame, getGames, findGame, findGameBySlug, updateGame}
+import {createGame, getGames, findGame, findGameBySlug, findActiveGameMaps, updateGame}
 
 from "../models/game.model.js";
 
@@ -55,7 +55,7 @@ export async function getGame(id){
 
     }
 
-    return game;
+    return { ...game, maps: await findActiveGameMaps(game.id) };
 
 }
 

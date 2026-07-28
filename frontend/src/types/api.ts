@@ -30,6 +30,7 @@ export type Game = {
   cor_primaria: string | null;
   ativo?: number | boolean;
   created_at?: string;
+  maps?: GameMap[];
 };
 
 export type Match = {

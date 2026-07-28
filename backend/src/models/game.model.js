@@ -81,6 +81,7 @@ export async function getGames(){
         `
         SELECT *
         FROM games
+        WHERE ativo = 1
         ORDER BY nome ASC
         `
 
@@ -132,6 +133,14 @@ export async function findGameBySlug(slug){
 
     return rows[0];
 
+}
+
+export async function findActiveGameMaps(gameId){
+    const [rows] = await pool.query(
+        `SELECT id,game_id,nome,slug,imagem,ordem FROM game_maps WHERE game_id = ? AND ativo = 1 ORDER BY ordem ASC,nome ASC,id ASC`,
+        [gameId]
+    );
+    return rows;
 }
 
 export async function countActiveGames(){

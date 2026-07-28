@@ -273,6 +273,11 @@ export async function getGames() {
   return data;
 }
 
+export async function getGame(gameId: number) {
+  const { data } = await api.get<Game>(`/game/${gameId}`);
+  return data;
+}
+
 export async function createGame(input: {
   nome: string;
   nome_curto: string;
