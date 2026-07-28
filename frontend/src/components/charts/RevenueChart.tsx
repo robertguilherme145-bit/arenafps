@@ -1,15 +1,10 @@
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const data = [
-  { month: "Jan", receita: 2200, times: 18 },
-  { month: "Fev", receita: 3100, times: 24 },
-  { month: "Mar", receita: 4600, times: 38 },
-  { month: "Abr", receita: 5200, times: 44 },
-  { month: "Mai", receita: 7800, times: 61 },
-  { month: "Jun", receita: 9400, times: 78 }
-];
+export type RevenuePoint = { month: string; receita: number; inscricoes: number };
 
-export function RevenueChart() {
+export function RevenueChart({ data }: { data: RevenuePoint[] }) {
+  const hasActivity = data.some((item) => item.receita > 0 || item.inscricoes > 0);
+  if (!hasActivity) return <div className="flex h-72 flex-col items-center justify-center border border-dashed border-arena-line bg-black/10 px-6 text-center"><p className="font-semibold">Sem movimentacao no periodo</p><p className="mt-2 max-w-md text-sm text-arena-muted">O grafico sera construido com pagamentos aprovados e inscricoes reais dos ultimos seis meses.</p></div>;
   return (
     <div className="h-72">
       <ResponsiveContainer width="100%" height="100%">
@@ -22,8 +17,10 @@ export function RevenueChart() {
           </defs>
           <CartesianGrid stroke="#20283a" strokeDasharray="3 3" />
           <XAxis dataKey="month" stroke="#9aa6b8" tickLine={false} axisLine={false} />
-          <YAxis stroke="#9aa6b8" tickLine={false} axisLine={false} />
+          <YAxis yAxisId="money" stroke="#9aa6b8" tickLine={false} axisLine={false} tickFormatter={(value) => `R$ ${Number(value).toLocaleString("pt-BR")}`} />
+          <YAxis yAxisId="entries" orientation="right" allowDecimals={false} stroke="#9aa6b8" tickLine={false} axisLine={false} />
           <Tooltip
+            formatter={(value, name) => name === "receita" ? [new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(Number(value)), "Receita aprovada"] : [value, "Inscricoes"]}
             contentStyle={{
               background: "#0b0f18",
               border: "1px solid #20283a",
@@ -31,7 +28,9 @@ export function RevenueChart() {
               color: "#f7fbff"
             }}
           />
-          <Area type="monotone" dataKey="receita" stroke="#22d3ee" fill="url(#receita)" strokeWidth={2} />
+          <Legend formatter={(value) => value === "receita" ? "Receita aprovada" : "Inscricoes"} />
+          <Area yAxisId="money" type="monotone" dataKey="receita" stroke="#22d3ee" fill="url(#receita)" strokeWidth={2} />
+          <Area yAxisId="entries" type="monotone" dataKey="inscricoes" stroke="#34d399" fill="transparent" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

@@ -98,34 +98,6 @@ import type {
   Tournament,
 } from "../types/api";
 
-const roadmap = [
-  {
-    status: "criado",
-    title: "Setup",
-    description: "Configurar regulamento, datas, vagas e premiacao.",
-  },
-  {
-    status: "aberto",
-    title: "Inscricoes",
-    description: "Abrir entrada de equipes e recebimento de pagamentos.",
-  },
-  {
-    status: "fechado",
-    title: "Seeding",
-    description: "Congelar entradas e preparar chaveamento oficial.",
-  },
-  {
-    status: "em_andamento",
-    title: "Operacao ao vivo",
-    description: "Criar partidas, registrar placares e validar resultados.",
-  },
-  {
-    status: "finalizado",
-    title: "Encerramento",
-    description: "Consolidar ranking, estatisticas e historico competitivo.",
-  },
-] as const;
-
 const statusActions = {
   criado: ["aberto", "cancelado"],
   aberto: ["fechado", "cancelado"],
@@ -434,6 +406,38 @@ export function AdminDashboardPage() {
           String(b.created_at).localeCompare(String(a.created_at)),
         )
         .slice(0, 8);
+  const dashboardSeries = useMemo(() => {
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date();
+      date.setDate(1);
+      date.setMonth(date.getMonth() - (5 - index));
+      return {
+        key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
+        month: new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date).replace(".", ""),
+        receita: 0,
+        inscricoes: 0,
+      };
+    });
+    const byMonth = new Map(months.map((item) => [item.key, item]));
+    scopedPayments.filter((item) => item.status === "aprovado").forEach((item) => {
+      const date = new Date(item.paid_at || item.created_at);
+      const point = byMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
+      if (point) point.receita += Number(item.valor || 0);
+    });
+    scopedEntries.forEach((item) => {
+      const date = new Date(item.created_at);
+      const point = byMonth.get(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
+      if (point) point.inscricoes += 1;
+    });
+    return months;
+  }, [scopedEntries, scopedPayments]);
+  const operationalPriorities = [
+    { label: "Inscricoes aguardando analise", value: scopedPendingEntries, module: "competitions" as const },
+    { label: "Pagamentos aguardando confirmacao", value: scopedPendingPayments, module: "finance" as const },
+    { label: "Partidas aguardando resultado", value: adminDashboard?.matches_waiting_result ?? 0, module: "operations" as const },
+    { label: "Disputas abertas", value: adminDashboard?.open_disputes ?? 0, module: "community" as const },
+    { label: "Tickets abertos", value: adminDashboard?.open_tickets ?? 0, module: "community" as const },
+  ].filter((item) => item.value > 0);
 
   const activeEntry =
     filteredEntries.find((item) => item.id === selectedEntryId) ??
@@ -1429,12 +1433,11 @@ export function AdminDashboardPage() {
           <div className="mt-6 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
             <Card>
               <CardHeader>
-                <h2 className="font-display text-xl font-semibold">
-                  Visao executiva
-                </h2>
+                <h2 className="font-display text-xl font-semibold">Movimento dos ultimos 6 meses</h2>
+                <p className="mt-1 text-sm text-arena-muted">Receita aprovada e novas inscricoes registradas no banco.</p>
               </CardHeader>
               <CardContent>
-                <RevenueChart />
+                <RevenueChart data={dashboardSeries} />
               </CardContent>
             </Card>
 
@@ -1447,7 +1450,7 @@ export function AdminDashboardPage() {
               <CardContent className="space-y-3">
                 <QueueLine
                   icon={<CalendarClock className="h-4 w-4" />}
-                  label="Proximos torneios"
+                  label="Torneios em preparacao ou abertos"
                   value={String(
                     filteredTournaments.filter((item) =>
                       ["criado", "aberto"].includes(item.status),
@@ -1492,77 +1495,60 @@ export function AdminDashboardPage() {
             </Card>
           </div>
 
-          <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_1fr]">
+          <div className="mt-6 grid gap-5 xl:grid-cols-[.9fr_1.1fr]">
             <Card>
               <CardHeader>
-                <h2 className="font-display text-xl font-semibold">
-                  Roadmap do admin
-                </h2>
+                <h2 className="font-display text-xl font-semibold">Prioridades agora</h2>
+                <p className="mt-1 text-sm text-arena-muted">Somente itens que exigem uma decisao ou atualizacao.</p>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {roadmap.map((step, index) => {
-                  const isCurrent = activeTournament?.status === step.status;
-                  return (
-                    <div
-                      className="flex gap-3 rounded-arena border border-arena-line bg-black/20 p-4"
-                      key={step.status}
-                    >
-                      <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${isCurrent ? "border-cyan-300 bg-cyan-400/15 text-cyan-100" : "border-arena-line text-arena-muted"}`}
-                      >
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{step.title}</p>
-                          {isCurrent ? <Badge tone="info">Atual</Badge> : null}
-                        </div>
-                        <p className="mt-1 text-sm text-arena-muted">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <CardContent className="space-y-2">
+                {operationalPriorities.length ? operationalPriorities.map((item) => (
+                  <Link
+                    className="flex items-center justify-between border border-arena-line bg-black/20 px-4 py-3 transition hover:border-cyan-400/40 hover:bg-cyan-400/5"
+                    key={item.label}
+                    to={`/admin?module=${item.module}`}
+                  >
+                    <span className="text-sm font-semibold">{item.label}</span>
+                    <span className="flex h-7 min-w-7 items-center justify-center bg-amber-400/10 px-2 text-sm font-bold text-amber-200">{item.value}</span>
+                  </Link>
+                )) : (
+                  <div className="flex min-h-48 flex-col items-center justify-center border border-dashed border-emerald-400/25 bg-emerald-400/5 px-6 text-center">
+                    <CheckCircle2 className="h-8 w-8 text-emerald-300" />
+                    <p className="mt-3 font-semibold">Operacao em dia</p>
+                    <p className="mt-1 text-sm text-arena-muted">Nao existem pendencias administrativas neste momento.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <h2 className="font-display text-xl font-semibold">
-                  Ultimos pagamentos
-                </h2>
+                <h2 className="font-display text-xl font-semibold">Atividade recente</h2>
+                <p className="mt-1 text-sm text-arena-muted">Alteracoes administrativas registradas pela auditoria.</p>
               </CardHeader>
-              <DataTable
-                data={scopedLatestPayments}
-                empty={
-                  <div className="p-6 text-sm text-arena-muted">
-                    Nenhum pagamento encontrado.
+              <CardContent className="space-y-1">
+                {auditLogs.slice(0, 6).map((item) => (
+                  <div className="grid gap-1 border-b border-arena-line py-3 last:border-0 sm:grid-cols-[1fr_auto]" key={item.id}>
+                    <div><p className="text-sm font-semibold">{auditActionLabel(item.action)}</p><p className="mt-1 text-xs text-arena-muted">{item.actor_name || item.actor_email || "Sistema"} · {item.entity_type}{item.entity_id ? ` #${item.entity_id}` : ""}</p></div>
+                    <time className="text-xs text-arena-muted">{formatRelativeDate(item.created_at)}</time>
                   </div>
-                }
-                columns={[
-                  { header: "Equipe", cell: (item) => item.team_name },
-                  { header: "Torneio", cell: (item) => item.tournament_name },
-                  {
-                    header: "Valor",
-                    cell: (item) => formatCurrency(item.valor),
-                  },
-                  {
-                    header: "Status",
-                    cell: (item) => (
-                      <Badge
-                        tone={
-                          item.status === "aprovado" ? "success" : "warning"
-                        }
-                      >
-                        {item.status}
-                      </Badge>
-                    ),
-                  },
-                ]}
-              />
+                ))}
+                {!auditLogs.length ? <div className="flex min-h-48 items-center justify-center border border-dashed border-arena-line text-sm text-arena-muted">Nenhuma atividade administrativa registrada.</div> : null}
+                {auditLogs.length ? <Link className="mt-3 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100" to="/admin?module=audit">Ver auditoria completa</Link> : null}
+              </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6">
+            <CardHeader><h2 className="font-display text-xl font-semibold">Ultimos pagamentos</h2><p className="mt-1 text-sm text-arena-muted">Transacoes reais mais recentes no filtro selecionado.</p></CardHeader>
+            <DataTable data={scopedLatestPayments} empty={<div className="p-6 text-sm text-arena-muted">Nenhum pagamento registrado.</div>} columns={[
+              { header: "Equipe", cell: (item) => item.team_name },
+              { header: "Torneio", cell: (item) => item.tournament_name },
+              { header: "Valor", cell: (item) => formatCurrency(item.valor) },
+              { header: "Status", cell: (item) => <Badge tone={item.status === "aprovado" ? "success" : "warning"}>{item.status}</Badge> },
+              { header: "Quando", cell: (item) => formatRelativeDate(item.paid_at || item.created_at) },
+            ]} />
+          </Card>
         </>
       ) : null}
 
@@ -3553,6 +3539,38 @@ function formatCurrency(value: number) {
 
 function formatDateTime(value?: string | null) {
   return value ? new Date(value).toLocaleString("pt-BR") : "data nao informada";
+}
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value);
+  const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" });
+  if (Math.abs(seconds) < 60) return formatter.format(seconds, "second");
+  const minutes = Math.round(seconds / 60);
+  if (Math.abs(minutes) < 60) return formatter.format(minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 24) return formatter.format(hours, "hour");
+  const days = Math.round(hours / 24);
+  if (Math.abs(days) < 30) return formatter.format(days, "day");
+  return date.toLocaleDateString("pt-BR");
+}
+
+function auditActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    "payment.updated": "Pagamento atualizado",
+    "entry.approved": "Inscricao aprovada",
+    "entry.cancelled": "Inscricao cancelada",
+    "player.updated": "Jogador atualizado",
+    "team.updated": "Equipe atualizada",
+    "game.map.created": "Mapa cadastrado",
+    "game.map.updated": "Mapa atualizado",
+    "game.map.deleted": "Mapa excluido",
+    "game.deleted": "Jogo excluido",
+    "account.banned": "Conta banida",
+    "account.unbanned": "Banimento removido",
+    "tournament.updated": "Torneio atualizado",
+  };
+  return labels[action] || action.replaceAll(".", " · ").replaceAll("_", " ");
 }
 
 function stringifyDetails(value: unknown) {
