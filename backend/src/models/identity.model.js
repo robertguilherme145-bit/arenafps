@@ -1,7 +1,7 @@
 import pool from "../config/database.js";
 
 export async function findIdentityAccount(userId) {
-  const [[account]] = await pool.query(`SELECT id,nome,email,nickname,avatar,role,email_verified_at,onboarding_completed_at FROM users WHERE id=? LIMIT 1`, [userId]);
+  const [[account]] = await pool.query(`SELECT id,nome,email,nickname,avatar,role,email_verified_at,onboarding_completed_at,banned_until,banned_permanent,ban_reason,banned_at FROM users WHERE id=? LIMIT 1`, [userId]);
   return account ?? null;
 }
 
@@ -74,7 +74,7 @@ export async function createOrganizationForUser(userId, input) {
 
 export async function listIdentityAccounts() {
   const [rows] = await pool.query(`
-    SELECT u.id,u.nome,u.email,u.nickname,u.avatar,u.email_verified_at,u.onboarding_completed_at,
+    SELECT u.id,u.nome,u.email,u.nickname,u.avatar,u.email_verified_at,u.onboarding_completed_at,u.banned_until,u.banned_permanent,u.ban_reason,u.banned_at,
       GROUP_CONCAT(DISTINCT ur.role ORDER BY ur.role) roles,
       GROUP_CONCAT(DISTINCT ug.game_id ORDER BY ug.is_primary DESC,ug.game_id) game_ids,
       GROUP_CONCAT(DISTINCT CONCAT(tm.team_id,':',tm.cargo) ORDER BY tm.team_id) team_roles

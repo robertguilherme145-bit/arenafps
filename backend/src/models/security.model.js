@@ -42,3 +42,7 @@ export async function revokeCurrentSession(userId, jti) {
   const [result] = await pool.query("UPDATE user_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE token_jti = ? AND user_id = ? AND revoked_at IS NULL", [jti, userId]);
   return result.affectedRows > 0;
 }
+
+export async function revokeAllUserSessions(userId) {
+  await pool.query("UPDATE user_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE user_id=? AND revoked_at IS NULL", [userId]);
+}

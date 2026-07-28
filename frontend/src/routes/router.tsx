@@ -24,6 +24,7 @@ const AdminMixTournamentPage = lazyPage(() => import("../pages/AdminMixTournamen
 const LoginPage = lazyPage(() => import("../pages/AuthPages"), "LoginPage");
 const OAuthCallbackPage = lazyPage(() => import("../pages/AuthPages"), "OAuthCallbackPage");
 const OnboardingPage = lazyPage(() => import("../pages/AuthPages"), "OnboardingPage");
+const OfficialTournamentsPage = lazyPage(() => import("../pages/OfficialTournamentsPage"), "OfficialTournamentsPage");
 const PasswordRecoveryPage = lazyPage(() => import("../pages/AuthPages"), "PasswordRecoveryPage");
 const RegisterPage = lazyPage(() => import("../pages/AuthPages"), "RegisterPage");
 const VerifyEmailPage = lazyPage(() => import("../pages/AuthPages"), "VerifyEmailPage");
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: "/ranking", element: <RankingPage /> },
       { path: "/calendario", element: <CalendarPage /> },
       { path: "/resultados", element: <ResultsPage /> },
+      { path: "/circuito-oficial", element: <OfficialTournamentsPage /> },
       { path: "/jogos", element: <GamesPage /> },
       { path: "/equipes", element: <CommunityDirectoryPage type="teams" /> },
       { path: "/jogadores", element: <CommunityDirectoryPage type="players" /> },

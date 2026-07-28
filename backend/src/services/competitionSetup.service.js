@@ -1,6 +1,9 @@
 import { createAuditLog } from "../models/auditLog.model.js";
 import {
   createGameMap,
+  deleteGameMapRecord,
+  deleteGameRecord,
+  gameUsage,
   createMatchMap,
   createOrOpenVetoSession,
   findGameMap,
@@ -106,6 +109,20 @@ export async function editGameMap(adminUser, mapId, payload) {
 
 export async function deactivateGameMap(adminUser, mapId) {
   return await editGameMap(adminUser, mapId, { ativo: false });
+}
+
+export async function removeGameMap(adminUser,mapId) {
+  const current=await requireMap(mapId);
+  try{await deleteGameMapRecord(current.id);}catch(error){if(error.code==="ER_ROW_IS_REFERENCED_2")throw new Error("Este mapa ja foi usado em torneios ou partidas. Desative-o para preservar o historico.");throw error;}
+  await audit(adminUser,"game.map.deleted","game_map",current.id,current);
+  return {message:"Mapa excluido definitivamente."};
+}
+
+export async function removeCompetitionGame(adminUser,gameId) {
+  const game=await requireGame(gameId);const usage=await gameUsage(game.id);
+  if(usage.teams||usage.tournaments||usage.users)throw new Error(`Este jogo possui vinculos (${usage.teams} equipes, ${usage.tournaments} torneios, ${usage.users} usuarios). Desative-o para preservar o historico.`);
+  try{await deleteGameRecord(game.id);}catch(error){if(error.code==="ER_ROW_IS_REFERENCED_2")throw new Error("Este jogo possui registros vinculados. Desative-o em vez de excluir.");throw error;}
+  await audit(adminUser,"game.deleted","game",game.id,game);return{message:"Jogo excluido definitivamente."};
 }
 
 export async function getTournamentCompetition(tournamentId) {

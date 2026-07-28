@@ -1,0 +1,6 @@
+import { officialEvent, officialEvents, removeOfficialEvent, removeOfficialResult, upsertOfficialEvent, upsertOfficialResult } from "../services/officialTournament.service.js";
+const handle=async(res,fn,status=200)=>{try{return res.status(status).json(await fn());}catch(error){return res.status(error.status||400).json({erro:error.message});}};
+export const publicIndex=(req,res)=>handle(res,()=>officialEvents(false));export const publicShow=(req,res)=>handle(res,()=>officialEvent(Number(req.params.id),false));
+export const adminIndex=(req,res)=>handle(res,()=>officialEvents(true));export const adminShow=(req,res)=>handle(res,()=>officialEvent(Number(req.params.id),true));
+export const createEvent=(req,res)=>handle(res,()=>upsertOfficialEvent(req.user,null,req.body),201);export const updateEvent=(req,res)=>handle(res,()=>upsertOfficialEvent(req.user,Number(req.params.id),req.body));export const deleteEvent=(req,res)=>handle(res,()=>removeOfficialEvent(Number(req.params.id)));
+export const createMatch=(req,res)=>handle(res,()=>upsertOfficialResult(Number(req.params.id),null,req.body),201);export const updateMatch=(req,res)=>handle(res,()=>upsertOfficialResult(Number(req.params.id),Number(req.params.matchId),req.body));export const deleteMatch=(req,res)=>handle(res,()=>removeOfficialResult(Number(req.params.id),Number(req.params.matchId)));

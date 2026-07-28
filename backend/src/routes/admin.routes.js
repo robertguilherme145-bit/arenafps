@@ -32,6 +32,7 @@ import { adminMatchMessage } from "../controllers/captain.controller.js";
 import {
   createMap,
   deleteMap,
+  deleteGame,
   gameSettings,
   games as competitionGames,
   manualMatchMap,
@@ -51,9 +52,10 @@ import {
 } from "../controllers/competitionSetup.controller.js";
 import { create as createAchievement, index as achievements, update as updateAchievement } from "../controllers/achievement.controller.js";
 import { contacts as publicContacts, content as publicContent, createContent, updateContact as updatePublicContact, updateContent } from "../controllers/publicPortal.controller.js";
-import { index as accessAccounts, update as updateAccessAccount } from "../controllers/accessAdmin.controller.js";
+import { ban as banAccessAccount, index as accessAccounts, remove as removeAccessAccount, unban as unbanAccessAccount, update as updateAccessAccount } from "../controllers/accessAdmin.controller.js";
 import { upload as uploadMedia } from "../controllers/media.controller.js";
 import { uploadImage } from "../middleware/imageUpload.middleware.js";
+import { adminIndex as officialTournaments, adminShow as officialTournament, createEvent as createOfficialTournament, createMatch as createOfficialMatch, deleteEvent as deleteOfficialTournament, deleteMatch as deleteOfficialMatch, updateEvent as updateOfficialTournament, updateMatch as updateOfficialMatch } from "../controllers/officialTournament.controller.js";
 
 const router = Router();
 
@@ -69,10 +71,22 @@ router.post("/public-content", createContent);
 router.put("/public-content/:id", updateContent);
 router.get("/public-contacts", publicContacts);
 router.put("/public-contacts/:id", updatePublicContact);
+router.get("/official-tournaments",officialTournaments);
+router.get("/official-tournaments/:id",officialTournament);
+router.post("/official-tournaments",createOfficialTournament);
+router.put("/official-tournaments/:id",updateOfficialTournament);
+router.delete("/official-tournaments/:id",deleteOfficialTournament);
+router.post("/official-tournaments/:id/matches",createOfficialMatch);
+router.put("/official-tournaments/:id/matches/:matchId",updateOfficialMatch);
+router.delete("/official-tournaments/:id/matches/:matchId",deleteOfficialMatch);
 router.get("/access-accounts", accessAccounts);
 router.put("/access-accounts/:id", updateAccessAccount);
+router.patch("/access-accounts/:id/ban", banAccessAccount);
+router.delete("/access-accounts/:id/ban", unbanAccessAccount);
+router.delete("/access-accounts/:id", removeAccessAccount);
 router.get("/competition/games", competitionGames);
 router.put("/competition/games/:gameId/settings", gameSettings);
+router.delete("/competition/games/:gameId", deleteGame);
 router.get("/competition/games/:gameId/maps", maps);
 router.post("/competition/games/:gameId/maps", createMap);
 router.put("/competition/maps/:mapId", updateMap);

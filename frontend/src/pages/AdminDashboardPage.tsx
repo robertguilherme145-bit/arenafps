@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   BadgeDollarSign,
+  Ban,
   CalendarClock,
   CheckCircle2,
   CreditCard,
@@ -18,16 +19,19 @@ import {
   Sparkles,
   Swords,
   Trophy,
+  Trash2,
   Users,
 } from "lucide-react";
 import {
   approveAdminEntry,
+  banAdminAccessAccount,
   cancelAdminEntry,
   createAdminAchievement,
   createAdminPublicContent,
   createAdminDispute,
   createAdminPenalty,
   createAdminTicket,
+  deleteAdminAccessAccount,
   getAdminAuditLogs,
   getAdminAchievements,
   getAdminAccessAccounts,
@@ -57,11 +61,13 @@ import {
   updateAdminPlayer,
   updateAdminTicket,
   updateAdminTeam,
+  unbanAdminAccessAccount,
   updateTournament,
   updateTournamentStatus,
 } from "../services/api";
 import { RevenueChart } from "../components/charts/RevenueChart";
 import { CompetitionOperationsWorkspace } from "../features/admin/CompetitionOperationsWorkspace";
+import { OfficialTournamentsWorkspace } from "../features/admin/OfficialTournamentsWorkspace";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
@@ -168,6 +174,11 @@ const adminModules = [
     id: "content",
     title: "Conteudo do portal",
     description: "Publique noticias, FAQ, parceiros e mensagens institucionais.",
+  },
+  {
+    id: "official",
+    title: "Circuito oficial",
+    description: "Publique campeonatos externos, agenda, transmissao e resultados.",
   },
   {
     id: "access",
@@ -320,6 +331,11 @@ export function AdminDashboardPage() {
     game_ids: [] as number[],
     primary_game_id: null as number | null,
   });
+  const [banForm, setBanForm] = useState({
+    duration: "7_days",
+    reason: "",
+  });
+  const [moderatingAccess, setModeratingAccess] = useState(false);
 
   const filteredTournaments = useMemo(
     () =>
@@ -362,7 +378,7 @@ export function AdminDashboardPage() {
     : "/admin/torneios/novo";
   const activeModuleInfo =
     adminModules.find((module) => module.id === activeModule) ?? adminModules[0];
-  const showsGameFilter = !["content", "audit"].includes(activeModule);
+  const showsGameFilter = !["content", "official", "audit"].includes(activeModule);
   const showsStatusFilter = ["dashboard", "competitions"].includes(activeModule);
   const showsTournamentAction = ["dashboard", "competitions"].includes(activeModule);
 
@@ -1028,6 +1044,72 @@ export function AdminDashboardPage() {
         "Falha ao atualizar acesso",
         err instanceof Error ? err.message : "Tente novamente.",
       );
+    }
+  }
+
+  async function handleBanAccessAccount() {
+    if (!selectedAccessId || !banForm.reason.trim()) {
+      toast.error("Informe o motivo", "O motivo do banimento e obrigatorio.");
+      return;
+    }
+    const durationDays: Record<string, number> = {
+      "1_day": 1,
+      "7_days": 7,
+      "30_days": 30,
+      "90_days": 90,
+      "180_days": 180,
+      "365_days": 365,
+    };
+    const permanent = banForm.duration === "permanent";
+    const bannedUntil = permanent
+      ? null
+      : new Date(Date.now() + durationDays[banForm.duration] * 86400000).toISOString();
+    if (!window.confirm("Confirmar o banimento desta conta e encerrar suas sessoes?")) return;
+    setModeratingAccess(true);
+    try {
+      await banAdminAccessAccount(selectedAccessId, {
+        permanent,
+        banned_until: bannedUntil,
+        reason: banForm.reason.trim(),
+      });
+      setAccessAccounts(await getAdminAccessAccounts());
+      setBanForm((state) => ({ ...state, reason: "" }));
+      toast.success("Conta banida", "O acesso foi bloqueado e as sessoes foram encerradas.");
+    } catch (err) {
+      toast.error("Falha ao banir conta", err instanceof Error ? err.message : "Tente novamente.");
+    } finally {
+      setModeratingAccess(false);
+    }
+  }
+
+  async function handleUnbanAccessAccount() {
+    if (!selectedAccessId || !window.confirm("Liberar novamente o acesso desta conta?")) return;
+    setModeratingAccess(true);
+    try {
+      await unbanAdminAccessAccount(selectedAccessId);
+      setAccessAccounts(await getAdminAccessAccounts());
+      toast.success("Acesso liberado", "A conta pode entrar novamente na plataforma.");
+    } catch (err) {
+      toast.error("Falha ao liberar conta", err instanceof Error ? err.message : "Tente novamente.");
+    } finally {
+      setModeratingAccess(false);
+    }
+  }
+
+  async function handleDeleteAccessAccount() {
+    if (!selectedAccessId) return;
+    const selected = accessAccounts.find((item) => item.id === selectedAccessId);
+    if (!window.confirm(`Excluir definitivamente a conta ${selected?.nickname || selected?.nome || "selecionada"}? Esta acao nao pode ser desfeita.`)) return;
+    setModeratingAccess(true);
+    try {
+      await deleteAdminAccessAccount(selectedAccessId);
+      setAccessAccounts(await getAdminAccessAccounts());
+      setSelectedAccessId(null);
+      toast.success("Conta excluida", "O cadastro sem historico foi removido.");
+    } catch (err) {
+      toast.error("Conta nao pode ser excluida", err instanceof Error ? err.message : "Tente novamente.");
+    } finally {
+      setModeratingAccess(false);
     }
   }
 
@@ -3059,6 +3141,18 @@ export function AdminDashboardPage() {
                 },
                 { header: "Jogos", cell: (item) => item.game_ids.length },
                 {
+                  header: "Acesso",
+                  cell: (item) => (
+                    <Badge tone={item.is_banned ? "danger" : "success"}>
+                      {item.banned_permanent
+                        ? "Ban permanente"
+                        : item.is_banned
+                          ? `Ban ate ${formatDateTime(item.banned_until)}`
+                          : "Ativa"}
+                    </Badge>
+                  ),
+                },
+                {
                   header: "Email",
                   cell: (item) => (
                     <Badge tone={item.email_verified ? "success" : "warning"}>
@@ -3162,6 +3256,97 @@ export function AdminDashboardPage() {
                   >
                     Salvar acessos
                   </Button>
+                  <div className="border-t border-arena-line pt-6">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">Moderacao da conta</p>
+                        <p className="mt-1 text-xs text-arena-muted">
+                          O banimento encerra todas as sessoes e bloqueia novos acessos.
+                        </p>
+                      </div>
+                      {accessAccounts.find((item) => item.id === selectedAccessId)?.is_banned ? (
+                        <Badge tone="danger">Bloqueada</Badge>
+                      ) : (
+                        <Badge tone="success">Ativa</Badge>
+                      )}
+                    </div>
+                    {accessAccounts.find((item) => item.id === selectedAccessId)?.is_banned ? (
+                      <div className="space-y-4">
+                        <div className="border border-red-400/30 bg-red-400/5 p-4 text-sm">
+                          <p className="font-semibold text-red-200">
+                            {accessAccounts.find((item) => item.id === selectedAccessId)?.banned_permanent
+                              ? "Banimento permanente"
+                              : `Banida ate ${formatDateTime(accessAccounts.find((item) => item.id === selectedAccessId)?.banned_until)}`}
+                          </p>
+                          <p className="mt-1 text-arena-muted">
+                            {accessAccounts.find((item) => item.id === selectedAccessId)?.ban_reason || "Motivo nao informado."}
+                          </p>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          loading={moderatingAccess}
+                          icon={<ShieldCheck className="h-4 w-4" />}
+                          onClick={() => void handleUnbanAccessAccount()}
+                        >
+                          Remover banimento
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="ban-duration">Duracao</Label>
+                          <Select
+                            id="ban-duration"
+                            className="mt-2"
+                            value={banForm.duration}
+                            onChange={(event) => setBanForm((state) => ({ ...state, duration: event.target.value }))}
+                          >
+                            <option value="1_day">1 dia</option>
+                            <option value="7_days">1 semana</option>
+                            <option value="30_days">1 mes</option>
+                            <option value="90_days">3 meses</option>
+                            <option value="180_days">6 meses</option>
+                            <option value="365_days">1 ano</option>
+                            <option value="permanent">Permanente</option>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="ban-reason">Motivo</Label>
+                          <Input
+                            id="ban-reason"
+                            className="mt-2"
+                            placeholder="Ex.: conduta antidesportiva"
+                            value={banForm.reason}
+                            onChange={(event) => setBanForm((state) => ({ ...state, reason: event.target.value }))}
+                          />
+                        </div>
+                        <Button
+                          className="sm:col-span-2"
+                          variant="danger"
+                          loading={moderatingAccess}
+                          icon={<Ban className="h-4 w-4" />}
+                          onClick={() => void handleBanAccessAccount()}
+                        >
+                          Banir e encerrar sessoes
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-arena-line pt-6">
+                    <p className="text-sm font-semibold">Excluir cadastro</p>
+                    <p className="mt-1 text-xs text-arena-muted">
+                      Disponivel apenas para contas sem equipe, partidas, inscricoes ou outro historico.
+                    </p>
+                    <Button
+                      className="mt-4"
+                      variant="danger"
+                      loading={moderatingAccess}
+                      icon={<Trash2 className="h-4 w-4" />}
+                      onClick={() => void handleDeleteAccessAccount()}
+                    >
+                      Excluir conta definitivamente
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="py-12 text-center text-sm text-arena-muted">
@@ -3172,6 +3357,8 @@ export function AdminDashboardPage() {
           </Card>
         </div>
       ) : null}
+
+      {activeModule === "official" ? <OfficialTournamentsWorkspace /> : null}
 
       {activeModule === "finance" ? (
         <Card className="mt-6">
@@ -3364,8 +3551,8 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("pt-BR");
+function formatDateTime(value?: string | null) {
+  return value ? new Date(value).toLocaleString("pt-BR") : "data nao informada";
 }
 
 function stringifyDetails(value: unknown) {

@@ -92,6 +92,24 @@ export async function updateGameMap(mapId, data) {
   );
 }
 
+export async function deleteGameMapRecord(mapId) {
+  const [result] = await pool.query(`DELETE FROM game_maps WHERE id=?`, [mapId]);
+  return result.affectedRows > 0;
+}
+
+export async function gameUsage(gameId) {
+  const [[row]] = await pool.query(`SELECT
+    (SELECT COUNT(*) FROM teams WHERE game_id=?) teams,
+    (SELECT COUNT(*) FROM tournament_competition_settings WHERE game_id=?) tournaments,
+    (SELECT COUNT(*) FROM user_games WHERE game_id=?) users`, [gameId,gameId,gameId]);
+  return { teams:Number(row.teams),tournaments:Number(row.tournaments),users:Number(row.users) };
+}
+
+export async function deleteGameRecord(gameId) {
+  const [result] = await pool.query(`DELETE FROM games WHERE id=?`, [gameId]);
+  return result.affectedRows > 0;
+}
+
 export async function getTournamentCompetitionRecord(tournamentId) {
   const [rows] = await pool.query(
     `

@@ -2,6 +2,8 @@ import {
   addGameMap,
   addManualMatchMap,
   deactivateGameMap,
+  removeCompetitionGame,
+  removeGameMap,
   editGameMap,
   getMatchOperations,
   getTournamentCompetition,
@@ -64,11 +66,13 @@ export async function updateMap(req, res) {
 
 export async function deleteMap(req, res) {
   try {
-    return res.json(await deactivateGameMap(req.user, Number(req.params.mapId)));
+    return res.json(await removeGameMap(req.user, Number(req.params.mapId)));
   } catch (error) {
     return res.status(400).json({ erro: error.message });
   }
 }
+
+export async function deleteGame(req,res){try{return res.json(await removeCompetitionGame(req.user,Number(req.params.gameId)));}catch(error){return res.status(400).json({erro:error.message});}}
 
 export async function tournamentCompetition(req, res) {
   try {

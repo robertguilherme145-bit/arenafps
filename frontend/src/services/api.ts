@@ -300,6 +300,8 @@ export async function updateGame(gameId: number, input: Partial<{
   return data;
 }
 
+export async function deleteGame(gameId:number){const{data}=await api.delete<{message:string}>(`/admin/competition/games/${gameId}`);return data;}
+
 export async function getAdminCompetitionGames() {
   const { data } = await api.get<AdminCompetitionGame[]>("/admin/competition/games");
   return data;
@@ -340,6 +342,7 @@ export async function deactivateGameMap(mapId: number) {
   const { data } = await api.delete<GameMap>(`/admin/competition/maps/${mapId}`);
   return data;
 }
+export async function deleteGameMap(mapId:number){const{data}=await api.delete<{message:string}>(`/admin/competition/maps/${mapId}`);return data;}
 
 export async function getTournamentCompetition(tournamentId: number) {
   const { data } = await api.get<TournamentCompetition>(`/admin/competition/tournaments/${tournamentId}`);
@@ -471,6 +474,18 @@ export async function updateAdminAccessAccount(id:number, input:{ roles:string[]
   const { data } = await api.put<AuthUser>(`/admin/access-accounts/${id}`, input);
   return data;
 }
+export async function banAdminAccessAccount(id:number,input:{permanent:boolean;banned_until?:string|null;reason:string}){const{data}=await api.patch<{message:string}>(`/admin/access-accounts/${id}/ban`,input);return data;}
+export async function unbanAdminAccessAccount(id:number){const{data}=await api.delete<{message:string}>(`/admin/access-accounts/${id}/ban`);return data;}
+export async function deleteAdminAccessAccount(id:number){const{data}=await api.delete<{message:string}>(`/admin/access-accounts/${id}`);return data;}
+
+export async function getOfficialTournaments(){const{data}=await api.get<import("../types/api").OfficialTournament[]>("/public/official-tournaments");return data;}
+export async function getOfficialTournament(id:number){const{data}=await api.get<import("../types/api").OfficialTournament>(`/public/official-tournaments/${id}`);return data;}
+export async function getAdminOfficialTournaments(){const{data}=await api.get<import("../types/api").OfficialTournament[]>("/admin/official-tournaments");return data;}
+export async function getAdminOfficialTournament(id:number){const{data}=await api.get<import("../types/api").OfficialTournament>(`/admin/official-tournaments/${id}`);return data;}
+export async function saveAdminOfficialTournament(id:number|null,input:Record<string,unknown>){const{data}=id?await api.put<import("../types/api").OfficialTournament>(`/admin/official-tournaments/${id}`,input):await api.post<import("../types/api").OfficialTournament>("/admin/official-tournaments",input);return data;}
+export async function deleteAdminOfficialTournament(id:number){const{data}=await api.delete(`/admin/official-tournaments/${id}`);return data;}
+export async function saveAdminOfficialMatch(tournamentId:number,id:number|null,input:Record<string,unknown>){const url=`/admin/official-tournaments/${tournamentId}/matches${id?`/${id}`:""}`;const{data}=id?await api.put(url,input):await api.post(url,input);return data;}
+export async function deleteAdminOfficialMatch(tournamentId:number,id:number){const{data}=await api.delete(`/admin/official-tournaments/${tournamentId}/matches/${id}`);return data;}
 
 export async function getAdminAchievements(gameId?: number | null) {
   const { data } = await api.get<AchievementDefinition[]>("/admin/achievements", { params: gameId ? { game_id: gameId } : undefined });

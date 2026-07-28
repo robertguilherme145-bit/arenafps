@@ -81,7 +81,11 @@ export type AdminAccessAccount = {
   id:number; nome:string; email:string; nickname:string | null; avatar:string | null;
   email_verified:boolean; onboarding_completed:boolean; roles:string[]; game_ids:number[];
   team_roles:Array<{ team_id:number; role:string }>;
+  banned_until:string|null; banned_permanent:boolean; ban_reason:string|null; banned_at:string|null; is_banned:boolean;
 };
+
+export type OfficialMatch={id:number;official_tournament_id:number;stage_label:string|null;team_a:string;team_a_logo:string|null;team_b:string;team_b_logo:string|null;score_a:number|null;score_b:number|null;best_of:"bo1"|"bo3"|"bo5";map_summary:string|null;winner_name:string|null;scheduled_at:string|null;status:"agendada"|"ao_vivo"|"finalizada"|"cancelada";stream_url:string|null};
+export type OfficialTournament={id:number;name:string;organizer:string;game_name:string;logo_url:string|null;banner_url:string|null;description:string|null;location:string|null;prize_pool:string|null;format_label:string|null;official_url:string|null;starts_at:string|null;ends_at:string|null;status:"anunciado"|"em_andamento"|"finalizado"|"cancelado";featured:boolean;published:boolean;matches_count?:number;matches?:OfficialMatch[]};
 
 export type GameMap = {
   id: number;

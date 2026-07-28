@@ -30,6 +30,8 @@ import {
   createGame,
   createGameMap,
   createMatch,
+  deleteGame,
+  deleteGameMap,
   deactivateGameMap,
   getAdminCompetitionGames,
   getGameMaps,
@@ -335,6 +337,9 @@ export function CompetitionOperationsWorkspace({
     }
   }
 
+  async function handleDeleteMap(map:GameMap){if(!window.confirm(`Excluir definitivamente o mapa ${map.nome}?`))return;setBusy(`delete-map-${map.id}`);try{await deleteGameMap(map.id);toast.success("Mapa excluido");await Promise.all([loadMaps(map.game_id),loadGames(map.game_id)]);}catch(error){toast.error("Mapa nao excluido",messageOf(error));}finally{setBusy(null);}}
+  async function handleDeleteGame(){if(!selectedGame||!window.confirm(`Excluir definitivamente o jogo ${selectedGame.nome} e seus mapas sem uso?`))return;setBusy("delete-game");try{await deleteGame(selectedGame.id);toast.success("Jogo excluido");setSelectedGameId(null);setMaps([]);await loadGames();}catch(error){toast.error("Jogo nao excluido",messageOf(error));}finally{setBusy(null);}}
+
   async function handleSaveCompetition() {
     if (!activeTournament || !competition || !competition.game_id) return;
     setBusy("save-competition");
@@ -558,6 +563,8 @@ export function CompetitionOperationsWorkspace({
             else if (selectedGame) setSelectedGameId(selectedGame.id);
           }}
           onToggleMap={(map) => void handleToggleMap(map)}
+          onDeleteMap={(map) => void handleDeleteMap(map)}
+          onDeleteGame={() => void handleDeleteGame()}
         />
       ) : null}
 
@@ -662,7 +669,7 @@ type MapForm = ReturnType<typeof blankMapForm>;
 function GameCatalog({
   games, selectedGame, maps, gameForm, mapForm, showNewGame, busy,
   onSelectGame, onShowNewGame, onGameFormChange, onMapFormChange,
-  onCreateGame, onSaveGame, onCreateMap, onToggleMap
+  onCreateGame, onSaveGame, onCreateMap, onToggleMap, onDeleteGame, onDeleteMap
 }: {
   games: AdminCompetitionGame[];
   selectedGame: AdminCompetitionGame | null;
@@ -679,6 +686,8 @@ function GameCatalog({
   onSaveGame: () => void;
   onCreateMap: () => void;
   onToggleMap: (map: GameMap) => void;
+  onDeleteGame: () => void;
+  onDeleteMap: (map: GameMap) => void;
 }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -743,6 +752,7 @@ function GameCatalog({
                 {showNewGame ? "Cadastrar jogo" : "Salvar jogo"}
               </Button>
               {showNewGame ? <Button variant="ghost" onClick={() => onShowNewGame(false)}>Cancelar</Button> : null}
+              {!showNewGame ? <Button variant="danger" loading={busy === "delete-game"} icon={<Trash2 className="h-4 w-4" />} onClick={onDeleteGame}>Excluir jogo</Button> : null}
             </div>
           </CardContent>
         </Card>
@@ -767,7 +777,7 @@ function GameCatalog({
                     <div className="flex h-10 w-10 items-center justify-center border border-arena-line bg-black/25"><MapIcon className="h-4 w-4 text-cyan-200" /></div>
                     <div><p className="font-semibold">{map.nome}</p><p className="text-xs text-arena-muted">#{map.id} · {map.slug}</p></div>
                     <Badge tone={map.ativo ? "success" : "neutral"}>{map.ativo ? "Disponivel" : "Desativado"}</Badge>
-                    <Button className="h-9" loading={busy === `map-${map.id}`} variant={map.ativo ? "danger" : "secondary"} onClick={() => onToggleMap(map)}>{map.ativo ? "Desativar" : "Reativar"}</Button>
+                    <div className="flex gap-2"><Button className="h-9" loading={busy === `map-${map.id}`} variant="secondary" onClick={() => onToggleMap(map)}>{map.ativo ? "Desativar" : "Reativar"}</Button><Button aria-label={`Excluir ${map.nome}`} className="h-9 w-9 px-0" loading={busy === `delete-map-${map.id}`} variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => onDeleteMap(map)} /></div>
                   </div>
                 ))}
                 {!maps.length ? <div className="py-8"><EmptyState title="Este jogo ainda nao tem mapas" description="Adicione os mapas oficiais usados nas competicoes." /></div> : null}

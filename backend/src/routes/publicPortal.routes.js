@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { contact, portal, search, team, tournament } from "../controllers/publicPortal.controller.js";
+import { publicIndex as officialTournaments, publicShow as officialTournament } from "../controllers/officialTournament.controller.js";
 const router=Router();
 router.get("/portal",portal);
 router.get("/search",search);
 router.get("/tournaments/:id",tournament);
 router.get("/teams/:slug",team);
 router.post("/contact",contact);
+router.get("/official-tournaments",officialTournaments);
+router.get("/official-tournaments/:id",officialTournament);
 export default router;

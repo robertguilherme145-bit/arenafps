@@ -82,7 +82,7 @@ export function Navbar() {
               {inWorkspace ? "Workspace" : "Plataforma"}
             </Badge>
           </div>
-          {!inWorkspace ? <nav className="ml-4 hidden items-center gap-5 xl:flex" aria-label="Navegacao publica">{[["Inicio","/"],["Campeonatos","/torneios"],["Ranking","/ranking"],["Equipes","/equipes"],["Jogadores","/jogadores"],["Noticias","/noticias"]].map(([label,href]) => <Link className="text-sm font-semibold text-arena-muted transition hover:text-white" key={href} to={href}>{label}</Link>)}</nav> : null}
+          {!inWorkspace ? <nav className="ml-4 hidden items-center gap-5 xl:flex" aria-label="Navegacao publica">{[["Inicio","/"],["Campeonatos","/torneios"],["Circuito oficial","/circuito-oficial"],["Ranking","/ranking"],["Equipes","/equipes"],["Jogadores","/jogadores"],["Noticias","/noticias"]].map(([label,href]) => <Link className="text-sm font-semibold text-arena-muted transition hover:text-white" key={href} to={href}>{label}</Link>)}</nav> : null}
         </div>
 
         <button

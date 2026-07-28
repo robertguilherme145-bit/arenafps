@@ -7,6 +7,10 @@ export async function resolveUserAccess(userId, fallbackRole = null) {
     findIdentityAccount(userId), findGlobalRoles(userId), findTeamContexts(userId), findSelectedGames(userId), findContextPreference(userId)
   ]);
   if (!account) return null;
+  if (account.banned_permanent || (account.banned_until && new Date(account.banned_until).getTime() > Date.now())) {
+    const until = account.banned_permanent ? "permanentemente" : `ate ${new Date(account.banned_until).toLocaleString("pt-BR")}`;
+    throw new Error(`Conta banida ${until}. ${account.ban_reason || "Entre em contato com o suporte."}`);
+  }
   const roles = new Set(globalRoles);
   if (account.role === "admin") roles.add("admin");
   if (teamContexts.length) roles.add("jogador");

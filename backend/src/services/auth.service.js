@@ -47,6 +47,10 @@ export async function login({ email, password, two_factor_code }, metadata = {})
   const user = await findUserByEmail(String(email || "").trim().toLowerCase());
   if (!user) throw new Error("Usuario nao encontrado.");
   if (!await bcrypt.compare(password, user.senha_hash)) throw new Error("Senha invalida.");
+  if (user.banned_permanent || (user.banned_until && new Date(user.banned_until).getTime() > Date.now())) {
+    const until = user.banned_permanent ? "permanentemente" : `ate ${new Date(user.banned_until).toLocaleString("pt-BR")}`;
+    throw new Error(`Conta banida ${until}. ${user.ban_reason || "Entre em contato com o suporte."}`);
+  }
 
   const twoFactor = await findTwoFactor(user.id);
   if (twoFactor?.enabled && !two_factor_code) return { requires_two_factor:true };

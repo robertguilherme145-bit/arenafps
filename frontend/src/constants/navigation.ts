@@ -11,6 +11,7 @@ import {
   Home,
   LayoutDashboard,
   MessageSquare,
+  RadioTower,
   Medal,
   Newspaper,
   KeyRound,
@@ -30,6 +31,7 @@ export const publicNavigation = [
   { label: "Ranking", href: "/ranking", icon: Medal },
   { label: "Calendario", href: "/calendario", icon: CalendarDays },
   { label: "Resultados", href: "/resultados", icon: Swords },
+  { label: "Circuito oficial", href: "/circuito-oficial", icon: RadioTower },
   { label: "Jogos", href: "/jogos", icon: Gamepad2 }
 ];
 
@@ -50,6 +52,7 @@ export const adminControlNavigation = [
   { label: "Contas e permissoes", href: "/admin?module=access", icon: KeyRound, module: "access" },
   { label: "Conquistas e XP", href: "/admin?module=progression", icon: Medal, module: "progression" },
   { label: "Conteudo do portal", href: "/admin?module=content", icon: Newspaper, module: "content" },
+  { label: "Circuito oficial", href: "/admin?module=official", icon: RadioTower, module: "official" },
   { label: "Financeiro", href: "/admin?module=finance", icon: CreditCard, module: "finance" },
   { label: "Auditoria", href: "/admin?module=audit", icon: History, module: "audit" }
 ];
