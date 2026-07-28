@@ -1,6 +1,7 @@
 import { createAuditLog } from "../models/auditLog.model.js";
 import {
   createGameMap,
+  cancelPendingMatchMaps,
   deleteGameMapRecord,
   deleteGameRecord,
   gameUsage,
@@ -489,6 +490,7 @@ export async function recordMatchMapResult(adminUser, matchMapId, payload) {
   if (matchMap.status === "finalizado") throw new Error("Este mapa ja foi finalizado.");
 
   const match = await requireMatchOperationsBase(matchMap.match_id);
+  if (match.status === "finalizada") throw new Error("A serie ja foi encerrada. Os mapas restantes nao serao disputados.");
   const scoreA = nonNegativeInteger(payload.score_team_a, 0);
   const scoreB = nonNegativeInteger(payload.score_team_b, 0);
   if (scoreA === scoreB) throw new Error("O mapa precisa ter um vencedor.");
@@ -508,6 +510,7 @@ export async function recordMatchMapResult(adminUser, matchMapId, payload) {
   if (winsA >= winsNeeded || winsB >= winsNeeded) {
     const seriesWinner = winsA > winsB ? match.team_a_id : match.team_b_id;
     await finishMatch(match.id, seriesWinner, winsA, winsB);
+    await cancelPendingMatchMaps(match.id);
     await advanceMixBracket(match);
     await dispatchCompetitionEvent(COMPETITION_EVENTS.MATCH_RESULT_SAVED, {
       match_id: match.id,

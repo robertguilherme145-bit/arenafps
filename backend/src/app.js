@@ -62,8 +62,6 @@ app.use(cors({
 app.use(express.json());
 app.use("/uploads", express.static(uploadDirectory, { maxAge:"7d", immutable:true }));
 
-app.use(routes);
-
 if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
  app.use(express.static(publicDirectory, {
   maxAge:process.env.NODE_ENV === "production" ? "1y" : 0,
@@ -71,7 +69,7 @@ if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
   index:false
  }));
  app.use((req,res,next) => {
-  if (req.method === "GET" && req.accepts("html")) {
+  if (req.method === "GET" && String(req.headers.accept || "").includes("text/html")) {
    res.set({
     "Cache-Control":"no-store, no-cache, must-revalidate, proxy-revalidate",
     Pragma:"no-cache",
@@ -83,6 +81,8 @@ if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
   return next();
  });
 }
+
+app.use(routes);
 
 app.use((err,req,res,next) => {
  if (res.headersSent) return next(err);

@@ -437,6 +437,13 @@ export async function saveMatchMapResult(matchMapId, data) {
   );
 }
 
+export async function cancelPendingMatchMaps(matchId) {
+  await pool.query(
+    `UPDATE match_maps SET status='cancelado' WHERE match_id=? AND status IN ('pendente','andamento')`,
+    [matchId]
+  );
+}
+
 export async function getVetoSession(matchId) {
   const [rows] = await pool.query(
     `
