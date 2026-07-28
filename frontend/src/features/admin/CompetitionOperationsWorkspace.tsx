@@ -109,6 +109,8 @@ export function CompetitionOperationsWorkspace({
   const [showNewGame, setShowNewGame] = useState(false);
   const [gameForm, setGameForm] = useState(blankGameForm());
   const [mapForm, setMapForm] = useState(blankMapForm());
+  const [editingMapId, setEditingMapId] = useState<number | null>(null);
+  const [editMapForm, setEditMapForm] = useState(blankMapForm());
   const [matchForm, setMatchForm] = useState({ round: "1", team_a_id: "", team_b_id: "", scheduled_at: "" });
   const [mapScores, setMapScores] = useState<Record<number, { a: string; b: string }>>({});
   const [mapPlayerStats, setMapPlayerStats] = useState<MapPlayerStatDraft>({});
@@ -337,6 +339,32 @@ export function CompetitionOperationsWorkspace({
     }
   }
 
+  function handleStartEditMap(map: GameMap) {
+    setEditingMapId(map.id);
+    setEditMapForm({ nome: map.nome, slug: map.slug, imagem: map.imagem || "", ordem: String(map.ordem) });
+  }
+
+  async function handleSaveMap(map: GameMap) {
+    setBusy(`edit-map-${map.id}`);
+    try {
+      await updateGameMap(map.id, {
+        nome: editMapForm.nome,
+        slug: editMapForm.slug,
+        imagem: editMapForm.imagem || null,
+        ordem: Number(editMapForm.ordem)
+      });
+      toast.success("Mapa atualizado", "Nome, imagem e ordem foram salvos.");
+      setEditingMapId(null);
+      setEditMapForm(blankMapForm());
+      await loadMaps(map.game_id);
+      if (activeTournament) await loadTournamentContext(activeTournament.id);
+    } catch (error) {
+      toast.error("Falha ao atualizar mapa", messageOf(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function handleDeleteMap(map:GameMap){if(!window.confirm(`Excluir definitivamente o mapa ${map.nome}?`))return;setBusy(`delete-map-${map.id}`);try{await deleteGameMap(map.id);toast.success("Mapa excluido");await Promise.all([loadMaps(map.game_id),loadGames(map.game_id)]);}catch(error){toast.error("Mapa nao excluido",messageOf(error));}finally{setBusy(null);}}
   async function handleDeleteGame(){if(!selectedGame||!window.confirm(`Excluir definitivamente o jogo ${selectedGame.nome} e seus mapas sem uso?`))return;setBusy("delete-game");try{await deleteGame(selectedGame.id);toast.success("Jogo excluido");setSelectedGameId(null);setMaps([]);await loadGames();}catch(error){toast.error("Jogo nao excluido",messageOf(error));}finally{setBusy(null);}}
 
@@ -547,6 +575,8 @@ export function CompetitionOperationsWorkspace({
           busy={busy}
           gameForm={gameForm}
           games={games}
+          editingMapId={editingMapId}
+          editMapForm={editMapForm}
           mapForm={mapForm}
           maps={maps}
           selectedGame={selectedGame}
@@ -554,6 +584,7 @@ export function CompetitionOperationsWorkspace({
           onCreateGame={() => void handleCreateGame()}
           onCreateMap={() => void handleCreateMap()}
           onGameFormChange={setGameForm}
+          onEditMapFormChange={setEditMapForm}
           onMapFormChange={setMapForm}
           onSaveGame={() => void handleSaveGame()}
           onSelectGame={setSelectedGameId}
@@ -563,6 +594,9 @@ export function CompetitionOperationsWorkspace({
             else if (selectedGame) setSelectedGameId(selectedGame.id);
           }}
           onToggleMap={(map) => void handleToggleMap(map)}
+          onStartEditMap={handleStartEditMap}
+          onSaveMap={(map) => void handleSaveMap(map)}
+          onCancelEditMap={() => setEditingMapId(null)}
           onDeleteMap={(map) => void handleDeleteMap(map)}
           onDeleteGame={() => void handleDeleteGame()}
         />
@@ -667,25 +701,32 @@ type GameForm = {
 type MapForm = ReturnType<typeof blankMapForm>;
 
 function GameCatalog({
-  games, selectedGame, maps, gameForm, mapForm, showNewGame, busy,
-  onSelectGame, onShowNewGame, onGameFormChange, onMapFormChange,
-  onCreateGame, onSaveGame, onCreateMap, onToggleMap, onDeleteGame, onDeleteMap
+  games, selectedGame, maps, gameForm, mapForm, editingMapId, editMapForm, showNewGame, busy,
+  onSelectGame, onShowNewGame, onGameFormChange, onMapFormChange, onEditMapFormChange,
+  onCreateGame, onSaveGame, onCreateMap, onToggleMap, onStartEditMap, onSaveMap,
+  onCancelEditMap, onDeleteGame, onDeleteMap
 }: {
   games: AdminCompetitionGame[];
   selectedGame: AdminCompetitionGame | null;
   maps: GameMap[];
   gameForm: GameForm;
   mapForm: MapForm;
+  editingMapId: number | null;
+  editMapForm: MapForm;
   showNewGame: boolean;
   busy: string | null;
   onSelectGame: (id: number) => void;
   onShowNewGame: (show: boolean) => void;
   onGameFormChange: (form: GameForm) => void;
   onMapFormChange: (form: MapForm) => void;
+  onEditMapFormChange: (form: MapForm) => void;
   onCreateGame: () => void;
   onSaveGame: () => void;
   onCreateMap: () => void;
   onToggleMap: (map: GameMap) => void;
+  onStartEditMap: (map: GameMap) => void;
+  onSaveMap: (map: GameMap) => void;
+  onCancelEditMap: () => void;
   onDeleteGame: () => void;
   onDeleteMap: (map: GameMap) => void;
 }) {
@@ -777,8 +818,20 @@ function GameCatalog({
                     <div className="flex h-10 w-10 overflow-hidden border border-arena-line bg-black/25">{map.imagem ? <img className="h-full w-full object-cover" src={map.imagem} alt="" /> : <MapIcon className="m-auto h-4 w-4 text-cyan-200" />}</div>
                     <div><p className="font-semibold">{map.nome}</p><p className="text-xs text-arena-muted">#{map.id} · {map.slug}</p></div>
                     <Badge tone={map.ativo ? "success" : "neutral"}>{map.ativo ? "Disponivel" : "Desativado"}</Badge>
-                    <div className="flex gap-2"><Button className="h-9" loading={busy === `map-${map.id}`} variant="secondary" onClick={() => onToggleMap(map)}>{map.ativo ? "Desativar" : "Reativar"}</Button><Button aria-label={`Excluir ${map.nome}`} className="h-9 w-9 px-0" loading={busy === `delete-map-${map.id}`} variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => onDeleteMap(map)} /></div>
-                    {map.imagem ? <MapHoverPreview map={map} /> : null}
+                    <div className="flex flex-wrap gap-2"><Button className="h-9" icon={<PencilLine className="h-4 w-4" />} variant="secondary" onClick={() => onStartEditMap(map)}>Editar</Button><Button className="h-9" loading={busy === `map-${map.id}`} variant="secondary" onClick={() => onToggleMap(map)}>{map.ativo ? "Desativar" : "Reativar"}</Button><Button aria-label={`Excluir ${map.nome}`} className="h-9 w-9 px-0" loading={busy === `delete-map-${map.id}`} variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => onDeleteMap(map)} /></div>
+                    {map.imagem && editingMapId !== map.id ? <MapHoverPreview map={map} /> : null}
+                    {editingMapId === map.id ? <div className="border border-cyan-400/30 bg-cyan-400/[.05] p-4 md:col-span-4">
+                      <div className="grid gap-4 md:grid-cols-[1fr_1fr_120px]">
+                        <Field label="Nome do mapa"><Input value={editMapForm.nome} onChange={(event) => onEditMapFormChange({ ...editMapForm, nome:event.target.value })} /></Field>
+                        <Field label="Slug"><Input value={editMapForm.slug} onChange={(event) => onEditMapFormChange({ ...editMapForm, slug:event.target.value })} /></Field>
+                        <Field label="Ordem"><Input min="0" type="number" value={editMapForm.ordem} onChange={(event) => onEditMapFormChange({ ...editMapForm, ordem:event.target.value })} /></Field>
+                      </div>
+                      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
+                        <Field label="Imagem do mapa"><Input placeholder="URL ou envie uma nova imagem" value={editMapForm.imagem} onChange={(event) => onEditMapFormChange({ ...editMapForm, imagem:event.target.value })} /><div className="mt-2"><ImageUploadField value={editMapForm.imagem} onChange={(imagem)=>onEditMapFormChange({ ...editMapForm, imagem })} label="Substituir imagem" /></div></Field>
+                        <div className="aspect-video overflow-hidden border border-arena-line bg-[#09121d]">{editMapForm.imagem ? <img className="h-full w-full object-cover" src={editMapForm.imagem} alt={`Pre-visualizacao de ${editMapForm.nome}`} /> : <div className="flex h-full items-center justify-center"><MapIcon className="h-7 w-7 text-arena-muted" /></div>}</div>
+                      </div>
+                      <div className="mt-4 flex gap-2"><Button loading={busy === `edit-map-${map.id}`} icon={<Save className="h-4 w-4" />} onClick={() => onSaveMap(map)}>Salvar alteracoes</Button><Button variant="ghost" onClick={onCancelEditMap}>Cancelar</Button></div>
+                    </div> : null}
                   </div>
                 ))}
                 {!maps.length ? <div className="py-8"><EmptyState title="Este jogo ainda nao tem mapas" description="Adicione os mapas oficiais usados nas competicoes." /></div> : null}
