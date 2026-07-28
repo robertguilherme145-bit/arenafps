@@ -8,9 +8,18 @@ export function ImageUploadField({ value, onChange, label = "Enviar imagem" }: {
   const { error } = useToast();
   async function select(file?:File) {
     if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      error("Arquivo muito grande", "Envie uma imagem ou GIF com no maximo 8 MB.");
+      return;
+    }
     setBusy(true);
     try { onChange((await uploadImage(file)).url); }
-    catch (reason) { error("Falha no upload", reason instanceof Error ? reason.message : "Tente novamente."); }
+    catch (reason) {
+      const message = reason instanceof Error && reason.message.includes("timeout")
+        ? "O envio demorou demais. Otimize o GIF ou tente novamente em uma conexao mais estavel."
+        : reason instanceof Error ? reason.message : "Tente novamente.";
+      error("Falha no upload", message);
+    }
     finally { setBusy(false); }
   }
   return <div className="space-y-2">
