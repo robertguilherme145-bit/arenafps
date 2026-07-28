@@ -20,6 +20,7 @@ import captainRoutes from "./captain.routes.js";
 import identityRoutes from "./identity.routes.js";
 import publicPortalRoutes from "./publicPortal.routes.js";
 import mediaRoutes from "./media.routes.js";
+import mixTournamentRoutes from "./mixTournament.routes.js";
 
 const router=Router();
 
@@ -45,5 +46,6 @@ router.use("/captain", captainRoutes);
 router.use("/identity", identityRoutes);
 router.use("/public", publicPortalRoutes);
 router.use("/media", mediaRoutes);
+router.use("/mix", mixTournamentRoutes);
 
 export default router;

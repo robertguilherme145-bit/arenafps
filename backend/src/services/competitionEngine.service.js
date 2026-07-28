@@ -147,7 +147,7 @@ export async function reconcileTournamentOutcome(tournamentId, calculatedRanking
     const pending = context.matches.filter((match) => match.status !== "finalizada");
     if (pending.length) return null;
 
-    const eliminationFormats = new Set(["single_elimination", "double_elimination", "groups_playoffs"]);
+    const eliminationFormats = new Set(["single_elimination", "double_elimination", "group_playoffs", "mix_single_elimination"]);
     let championTeamId;
     let runnerUpTeamId = null;
     let finalMatchId = null;
@@ -167,7 +167,7 @@ export async function reconcileTournamentOutcome(tournamentId, calculatedRanking
     }
 
     await saveTournamentOutcome({ tournament_id:tournamentId, champion_team_id:championTeamId, runner_up_team_id:runnerUpTeamId, final_match_id:finalMatchId });
-    const [members] = await pool.query(`SELECT DISTINCT user_id FROM team_members WHERE team_id=? AND status='ativo'`, [championTeamId]);
+    const [members] = await pool.query(`SELECT DISTINCT user_id FROM team_members WHERE team_id=? AND status='ativo' UNION SELECT user_id FROM mix_registrations WHERE assigned_team_id=? AND status='assigned'`, [championTeamId,championTeamId]);
     await Promise.all(members.map((member) => notify({ user_id:member.user_id, titulo:"Campeoes do torneio", mensagem:`Sua equipe venceu ${context.tournament.nome}.`, tipo:"tournament_champion", link:`/torneios/${tournamentId}`, dedupe_key:`tournament:${tournamentId}:champion:${member.user_id}` })));
     return { champion_team_id:championTeamId, runner_up_team_id:runnerUpTeamId, final_match_id:finalMatchId };
 }

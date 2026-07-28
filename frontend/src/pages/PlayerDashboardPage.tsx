@@ -22,8 +22,9 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { useToast } from "../hooks/useToast";
 import { getPlayerWorkspace } from "../services/api";
 import type { PlayerWorkspace } from "../types/api";
+import { PlayerMixModule } from "../features/player/PlayerMixModule";
 
-const modules = ["dashboard", "profile", "teams", "lineup", "matches", "calendar", "statistics", "career", "messages", "support", "settings"] as const;
+const modules = ["dashboard", "profile", "teams", "mix", "lineup", "matches", "calendar", "statistics", "career", "messages", "support", "settings"] as const;
 type PlayerModule = typeof modules[number];
 
 export function PlayerDashboardPage() {
@@ -73,6 +74,7 @@ export function PlayerDashboardPage() {
     dashboard: <PlayerDashboardModule {...moduleProps} />,
     profile: <PlayerProfileModule {...moduleProps} />,
     teams: <PlayerTeamsModule {...moduleProps} />,
+    mix: <PlayerMixModule />,
     lineup: <PlayerLineupModule {...moduleProps} />,
     matches: <PlayerMatchesModule {...moduleProps} />,
     calendar: <PlayerCalendarModule {...moduleProps} />,

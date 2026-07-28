@@ -16,6 +16,8 @@ import { normalizeGatewayPaymentStatus, preparePixData, resolvePaymentStatusTran
 import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
 import { buildPixDescription, createPixPayment, getPayment } from "./mercadopago.service.js";
 import { notify } from "./notification.service.js";
+import { findPendingMixPayments } from "../models/mixTournament.model.js";
+import { processMixGatewayPayment } from "./mixTournament.service.js";
 
 export async function createEntryPayment(userId, entryId) {
   const [team, user, entry] = await Promise.all([
@@ -77,7 +79,8 @@ export async function processWebhook(paymentId) {
     await findPaymentByExternalReference(gatewayPayment.external_reference);
 
   if (!localPayment) {
-    return { ignored: true, reason: "payment_not_found" };
+    const mixResult = await processMixGatewayPayment(gatewayPayment);
+    return mixResult ?? { ignored: true, reason: "payment_not_found" };
   }
 
   validateGatewayPayment(gatewayPayment, localPayment);
@@ -117,7 +120,11 @@ export async function syncTeamPendingPayments(teamId) {
 
 export async function syncPendingPayments(limit = 50) {
   const payments = await findPendingPayments(limit);
-  return syncPayments(payments);
+  const standard = await syncPayments(payments);
+  const mixPayments = await findPendingMixPayments(limit);
+  const mixResults=[];
+  for(const payment of mixPayments){try{mixResults.push(await processMixGatewayPayment(await getPayment(payment.payment_id)));}catch(error){console.error(`Falha ao sincronizar pagamento Mix #${payment.id}:`,error.message);mixResults.push({error:true});}}
+  return { checked:standard.checked+mixPayments.length,updated:standard.updated+mixResults.filter(item=>item?.status_changed).length,approved:standard.approved+mixResults.filter(item=>item?.status==='aprovado').length };
 }
 
 async function syncPayments(payments) {

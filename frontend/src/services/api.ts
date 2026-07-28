@@ -47,6 +47,7 @@ import type {
   TournamentTeam,
   Tournament,
   UserProfile
+  ,MixTournament
 } from "../types/api";
 
 export const api = axios.create({
@@ -987,3 +988,13 @@ export async function uploadImage(file: File) {
   const { data } = await api.post<{ url:string; filename:string; mime_type:string; size:number }>("/media/images", body);
   return data;
 }
+
+export async function configureMixTournament(tournamentId:number,input:{payment_mode:"free"|"paid";price_per_player:number;team_count:number;players_per_team:number;team_labels?:Array<{name:string;color:string}>}) { const {data}=await api.put<MixTournament>(`/mix/admin/${tournamentId}`,input);return data; }
+export async function getAdminMixTournament(tournamentId:number) { const {data}=await api.get<MixTournament>(`/mix/admin/${tournamentId}`);return data; }
+export async function drawAdminMixTournament(tournamentId:number) { const {data}=await api.post<MixTournament>(`/mix/admin/${tournamentId}/draw`);return data; }
+export async function updateAdminMixRegistration(tournamentId:number,registrationId:number,status:"confirmed"|"cancelled"|"waitlist") { const {data}=await api.patch<MixTournament>(`/mix/admin/${tournamentId}/registrations/${registrationId}`,{status});return data; }
+export async function getMixTournaments() { const {data}=await api.get<MixTournament[]>("/mix");return data; }
+export async function getMixTournament(tournamentId:number) { const {data}=await api.get<MixTournament>(`/mix/${tournamentId}`);return data; }
+export async function registerMixTournament(tournamentId:number) { const {data}=await api.post<{id:number;status:string;payment_status:string;payment_required:boolean}>(`/mix/${tournamentId}/register`);return data; }
+export async function cancelMixTournamentRegistration(tournamentId:number) { const {data}=await api.delete(`/mix/${tournamentId}/register`);return data; }
+export async function createMixTournamentPayment(tournamentId:number) { const {data}=await api.post(`/mix/${tournamentId}/payment`);return data; }

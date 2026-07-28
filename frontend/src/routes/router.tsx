@@ -20,6 +20,7 @@ const StaticPage = lazyPage(() => import("../pages/StaticPage"), "StaticPage");
 const TournamentDetailPage = lazyPage(() => import("../pages/TournamentDetailPage"), "TournamentDetailPage");
 const TournamentsPage = lazyPage(() => import("../pages/TournamentsPage"), "TournamentsPage");
 const TournamentWizardPage = lazyPage(() => import("../pages/TournamentWizardPage"), "TournamentWizardPage");
+const AdminMixTournamentPage = lazyPage(() => import("../pages/AdminMixTournamentPage"), "AdminMixTournamentPage");
 const LoginPage = lazyPage(() => import("../pages/AuthPages"), "LoginPage");
 const OAuthCallbackPage = lazyPage(() => import("../pages/AuthPages"), "OAuthCallbackPage");
 const OnboardingPage = lazyPage(() => import("../pages/AuthPages"), "OnboardingPage");
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       { path: "/capitao", element: <RequireRole role="capitao"><CaptainDashboardPage /></RequireRole> },
       { path: "/jogador", element: <RequireRole role="jogador"><PlayerDashboardPage /></RequireRole> },
       { path: "/admin/torneios/novo", element: <RequireRole role="admin"><TournamentWizardPage /></RequireRole> },
+      { path: "/admin/mix/:id", element: <RequireRole role="admin"><AdminMixTournamentPage /></RequireRole> },
       { path: "/equipe/:slug", element: <ProfilePage type="equipe" /> },
       { path: "/team/:slug", element: <ProfilePage type="equipe" /> },
       { path: "/jogador/:slug", element: <ProfilePage type="jogador" /> },

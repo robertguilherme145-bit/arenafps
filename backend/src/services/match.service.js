@@ -24,6 +24,7 @@ import {
     initializeMatchCompetition,
     listTournamentTeams
 } from "./competitionSetup.service.js";
+import { advanceMixBracket } from "./mixTournament.service.js";
 
 /**
  * Listar partidas do torneio
@@ -168,6 +169,8 @@ export async function finishMatchResult(matchId, data){
         data.score_team_b
 
     );
+
+    await advanceMixBracket(match);
 
     await dispatchCompetitionEvent(
 

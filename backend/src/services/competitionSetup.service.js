@@ -33,6 +33,7 @@ import { finishMatch, replaceMatchMapPlayerStats, replaceMatchPlayerStats } from
 import { findMembershipByUserAndTeam } from "../models/team.model.js";
 import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
 import COMPETITION_EVENTS from "../constants/competitionEvents.js";
+import { advanceMixBracket } from "./mixTournament.service.js";
 
 const BEST_OF_VALUES = ["bo1", "bo3", "bo5"];
 const FORMATS = [
@@ -43,6 +44,7 @@ const FORMATS = [
   "group_playoffs",
   "league",
   "custom"
+  ,"mix_single_elimination"
 ];
 
 export async function listCompetitionGames() {
@@ -486,6 +488,7 @@ export async function recordMatchMapResult(adminUser, matchMapId, payload) {
   if (winsA >= winsNeeded || winsB >= winsNeeded) {
     const seriesWinner = winsA > winsB ? match.team_a_id : match.team_b_id;
     await finishMatch(match.id, seriesWinner, winsA, winsB);
+    await advanceMixBracket(match);
     await dispatchCompetitionEvent(COMPETITION_EVENTS.MATCH_RESULT_SAVED, {
       match_id: match.id,
       tournament_id: match.tournament_id,

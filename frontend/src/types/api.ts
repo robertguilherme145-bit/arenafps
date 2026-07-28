@@ -107,7 +107,7 @@ export type TournamentCompetition = {
   game_id: number | null;
   game_name: string | null;
   game_short_name: string | null;
-  format: "single_elimination" | "double_elimination" | "swiss" | "round_robin" | "group_playoffs" | "league" | "custom";
+  format: "single_elimination" | "double_elimination" | "swiss" | "round_robin" | "group_playoffs" | "league" | "custom" | "mix_single_elimination";
   best_of: "bo1" | "bo3" | "bo5";
   pick_ban_enabled: boolean;
   veto_order: VetoStep[];
@@ -122,6 +122,16 @@ export type TournamentCompetition = {
   map_ids: number[];
   map_pool: GameMap[];
   available_maps: GameMap[];
+};
+
+export type MixTournament = {
+  tournament_id:number; nome:string; descricao:string | null; tournament_status:string; game_name:string | null;
+  inicio:string; fim:string; banner:string | null; premiacao:string | null; payment_mode:"free"|"paid";
+  price_per_player:number; max_players:number; players_per_team:number; team_count:number; draw_status:"pending"|"completed";
+  registered_players:number; confirmed_players:number; registration_id?:number|null; registration_status?:string|null; payment_status?:string|null;
+  qr_code_base64?:string|null; copia_cola?:string|null; gateway_status?:string|null;
+  teams?:Array<{team_id:number;nome:string;color_name:string;color_hex:string;seed_number:number}>;
+  registrations?:Array<{id:number;user_id:number;nome:string;nickname:string|null;avatar:string|null;status:string;payment_status:string;assigned_team_id:number|null;payment_id:number|null;gateway_status:string|null;valor:number|null;qr_code:string|null;qr_code_base64:string|null;copia_cola:string|null}>;
 };
 
 export type TournamentTeam = {
