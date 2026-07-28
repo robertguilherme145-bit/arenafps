@@ -1006,7 +1006,7 @@ export async function uploadImage(file: File) {
   const body = new FormData();
   body.append("image", file);
   const { data } = await api.post<{ url:string; filename:string; mime_type:string; size:number }>("/media/images", body, {
-    timeout: 60000
+    timeout: 180000
   });
   return data;
 }
