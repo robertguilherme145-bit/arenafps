@@ -146,6 +146,8 @@ export function CompetitionOperationsWorkspace({
       nome_curto: selectedGame.nome_curto,
       slug: selectedGame.slug,
       descricao: selectedGame.descricao ?? "",
+      logo: selectedGame.logo ?? "",
+      banner: selectedGame.banner ?? "",
       cor_primaria: selectedGame.cor_primaria ?? "#22d3ee",
       player_id_label: selectedGame.player_id_label,
       player_id_required: selectedGame.player_id_required,
@@ -260,6 +262,8 @@ export function CompetitionOperationsWorkspace({
         nome_curto: gameForm.nome_curto,
         slug: gameForm.slug,
         descricao: gameForm.descricao,
+        logo: gameForm.logo || null,
+        banner: gameForm.banner || null,
         cor_primaria: gameForm.cor_primaria
       });
       await updateGameCompetitionSettings(game.id, {
@@ -287,6 +291,8 @@ export function CompetitionOperationsWorkspace({
           nome_curto: gameForm.nome_curto,
           slug: gameForm.slug,
           descricao: gameForm.descricao,
+          logo: gameForm.logo || null,
+          banner: gameForm.banner || null,
           cor_primaria: gameForm.cor_primaria,
           ativo: gameForm.ativo
         }),
@@ -692,6 +698,8 @@ type GameForm = {
   nome_curto: string;
   slug: string;
   descricao: string;
+  logo: string;
+  banner: string;
   cor_primaria: string;
   player_id_label: string;
   player_id_required: boolean;
@@ -784,6 +792,14 @@ function GameCatalog({
               <Field label="Cor primaria"><Input type="color" value={gameForm.cor_primaria} onChange={(event) => onGameFormChange({ ...gameForm, cor_primaria: event.target.value })} /></Field>
             </div>
             <Field label="Descricao"><Input value={gameForm.descricao} onChange={(event) => onGameFormChange({ ...gameForm, descricao: event.target.value })} /></Field>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
+              <Field label="Banner do jogo"><Input placeholder="URL ou envie uma imagem abaixo" value={gameForm.banner} onChange={(event) => onGameFormChange({ ...gameForm, banner:event.target.value })} /><div className="mt-2"><ImageUploadField value={gameForm.banner} onChange={(banner)=>onGameFormChange({ ...gameForm, banner })} label="Enviar banner do jogo" /></div></Field>
+              <MediaPreview src={gameForm.banner} label="Pre-visualizacao do banner" wide />
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_160px]">
+              <Field label="Logo do jogo"><Input placeholder="URL ou envie uma imagem abaixo" value={gameForm.logo} onChange={(event) => onGameFormChange({ ...gameForm, logo:event.target.value })} /><div className="mt-2"><ImageUploadField value={gameForm.logo} onChange={(logo)=>onGameFormChange({ ...gameForm, logo })} label="Enviar logo do jogo" /></div></Field>
+              <MediaPreview src={gameForm.logo} label="Pre-visualizacao do logo" />
+            </div>
             <div className="flex flex-wrap items-center gap-5">
               <CheckControl checked={gameForm.player_id_required} label="ID do jogador obrigatorio" onChange={(checked) => onGameFormChange({ ...gameForm, player_id_required: checked })} />
               {!showNewGame ? <CheckControl checked={gameForm.ativo} label="Jogo ativo no catalogo" onChange={(checked) => onGameFormChange({ ...gameForm, ativo: checked })} /> : null}
@@ -1114,12 +1130,16 @@ function MapHoverPreview({ map }: { map: GameMap }) {
   return <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 z-50 hidden w-80 overflow-hidden border border-cyan-400/35 bg-[#070b12] shadow-2xl group-hover/map:block"><div className="aspect-video bg-[#09121d]"><img className="h-full w-full object-cover" src={map.imagem || ""} alt="" /></div><div className="p-3"><p className="font-display text-base font-semibold">{map.nome}</p><p className="mt-1 text-xs text-arena-muted">Pre-visualizacao do mapa</p></div></div>;
 }
 
+function MediaPreview({ src, label, wide = false }: { src: string; label: string; wide?: boolean }) {
+  return <div className={cn("overflow-hidden border border-arena-line bg-[#09121d]", wide ? "aspect-video" : "aspect-square")}>{src ? <img className={cn("h-full w-full", wide ? "object-cover" : "object-contain p-3")} src={src} alt={label} /> : <div className="flex h-full flex-col items-center justify-center px-3 text-center text-arena-muted"><Gamepad2 className="h-7 w-7" /><span className="mt-2 text-xs">{label}</span></div>}</div>;
+}
+
 function Metric({ label, value }: { label: string; value: string }) { return <div className="border border-arena-line bg-black/20 p-3"><p className="text-xs uppercase text-arena-muted">{label}</p><p className="mt-2 font-semibold capitalize">{value}</p></div>; }
 function Field({ label, children }: { label: string; children: ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }
 function CheckControl({ checked, label, onChange }: { checked: boolean; label: string; onChange: (checked: boolean) => void }) { return <label className="flex cursor-pointer items-center gap-3 text-sm font-medium"><input checked={checked} className="h-4 w-4 accent-cyan-400" onChange={(event) => onChange(event.target.checked)} type="checkbox" />{label}</label>; }
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) { return <button aria-label={label} className="flex h-9 w-9 items-center justify-center text-arena-muted transition hover:bg-white/[.07] hover:text-white" onClick={onClick} title={label} type="button">{children}</button>; }
 
-function blankGameForm(): GameForm { return { nome: "", nome_curto: "", slug: "", descricao: "", cor_primaria: "#22d3ee", player_id_label: "ID do jogador", player_id_required: true, default_best_of: "bo3", ativo: true }; }
+function blankGameForm(): GameForm { return { nome: "", nome_curto: "", slug: "", descricao: "", logo: "", banner: "", cor_primaria: "#22d3ee", player_id_label: "ID do jogador", player_id_required: true, default_best_of: "bo3", ativo: true }; }
 function blankMapForm() { return { nome: "", slug: "", imagem: "", ordem: "0" }; }
 function buildMapPlayerStatDraft(operations: MatchOperations): MapPlayerStatDraft {
   return Object.fromEntries(operations.maps.map((map) => {
