@@ -95,7 +95,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <Button aria-label="Abrir pesquisa" className="hidden h-10 w-10 px-0 md:inline-flex 2xl:hidden" variant="ghost" icon={<Search className="h-5 w-5" />} onClick={() => setCommandOpen(true)} />
-          <div className="relative">
+          {user ? <div className="relative">
             <Button
               aria-label="Notificacoes"
               variant="ghost"
@@ -108,7 +108,7 @@ export function Navbar() {
                 {unreadCount}
               </span>
             ) : null}
-          </div>
+          </div> : null}
           {user ? (
             <div className="flex items-center gap-2">
               {!user.email_verified ? <Button className="hidden sm:inline-flex" variant="secondary" icon={<MailWarning className="h-4 w-4" />} loading={switching} onClick={() => void resendVerification()}>Verificar email</Button> : null}
