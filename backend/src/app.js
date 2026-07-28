@@ -20,6 +20,7 @@ import { ensureAchievementTables } from "./database/ensureAchievementTables.js";
 import { ensurePublicTables } from "./database/ensurePublicTables.js";
 import { ensureMixTables } from "./database/ensureMixTables.js";
 import { ensureModerationAndOfficialTables } from "./database/ensureModerationAndOfficialTables.js";
+import { ensureMediaTables } from "./database/ensureMediaTables.js";
 import { startPaymentReconciliation } from "./services/paymentReconciliation.service.js";
 
 const app = express();
@@ -106,6 +107,7 @@ async function start() {
   await ensurePublicTables();
   await ensureMixTables();
   await ensureModerationAndOfficialTables();
+  await ensureMediaTables();
 
   console.log("BANCO CONECTADO");
 
