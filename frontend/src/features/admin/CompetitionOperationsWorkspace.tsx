@@ -74,11 +74,11 @@ type Props = {
   onRefreshAdmin: () => Promise<void>;
 };
 
-const sections: Array<{ id: WorkspaceSection; label: string; icon: ReactNode }> = [
-  { id: "games", label: "Jogos e mapas", icon: <Gamepad2 className="h-4 w-4" /> },
-  { id: "rules", label: "Regulamento", icon: <ListChecks className="h-4 w-4" /> },
-  { id: "matches", label: "Partidas", icon: <Swords className="h-4 w-4" /> },
-  { id: "veto", label: "Pick & Ban", icon: <ShieldCheck className="h-4 w-4" /> }
+const sections: Array<{ id: WorkspaceSection; label: string; description: string; icon: ReactNode }> = [
+  { id: "games", label: "Catalogo de jogos", description: "Cadastre os jogos e os mapas oficiais usados nos torneios.", icon: <Gamepad2 className="h-4 w-4" /> },
+  { id: "rules", label: "Regras do torneio", description: "Defina formato, serie, map pool e regras competitivas.", icon: <ListChecks className="h-4 w-4" /> },
+  { id: "matches", label: "Partidas e resultados", description: "Crie confrontos, informe placares e estatisticas por mapa.", icon: <Swords className="h-4 w-4" /> },
+  { id: "veto", label: "Sala de Pick & Ban", description: "Libere e acompanhe as escolhas dos capitaes em tempo real.", icon: <ShieldCheck className="h-4 w-4" /> }
 ];
 
 export function CompetitionOperationsWorkspace({
@@ -499,14 +499,16 @@ export function CompetitionOperationsWorkspace({
   }
 
   const canCreateMatch = Boolean(activeTournament && ["fechado", "em_andamento"].includes(activeTournament.status));
+  const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
   return (
     <div className="mt-6 space-y-5">
-      <div className="flex flex-wrap gap-2 border-b border-arena-line pb-3">
+      <div className="border-b border-arena-line">
+        <div className="flex gap-1 overflow-x-auto">
         {sections.map((item) => (
           <button
             className={cn(
-              "flex h-10 items-center gap-2 border-b-2 px-3 text-sm font-semibold transition",
+              "flex h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-semibold transition",
               section === item.id
                 ? "border-cyan-300 text-white"
                 : "border-transparent text-arena-muted hover:text-white"
@@ -525,6 +527,14 @@ export function CompetitionOperationsWorkspace({
             {item.label}
           </button>
         ))}
+        </div>
+      </div>
+      <div className="flex items-start gap-3 border-l-2 border-cyan-400 bg-cyan-400/[.06] px-4 py-3">
+        <span className="mt-0.5 text-cyan-200">{activeSection.icon}</span>
+        <div>
+          <p className="font-semibold">{activeSection.label}</p>
+          <p className="mt-1 text-sm text-arena-muted">{activeSection.description}</p>
+        </div>
       </div>
 
       {section === "games" ? (

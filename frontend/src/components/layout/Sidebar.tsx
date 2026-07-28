@@ -31,7 +31,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed bottom-0 left-0 top-16 z-30 hidden border-r border-arena-line bg-arena-bg/92 p-3 backdrop-blur-xl transition-[width] lg:block",
+        "fixed bottom-0 left-0 top-16 z-30 hidden overflow-y-auto border-r border-arena-line bg-arena-bg/92 p-3 backdrop-blur-xl transition-[width] scrollbar-thin lg:block",
         collapsed ? "w-[76px]" : "w-64"
       )}
     >
@@ -171,8 +171,8 @@ function getSections(area: string) {
   switch (area) {
     case "admin":
       return [
-        { title: "Gestao", items: adminNavigation },
-        { title: "Controle", items: adminControlNavigation },
+        { title: "Competicao", items: adminNavigation },
+        { title: "Plataforma", items: adminControlNavigation },
         { title: "Acoes", items: adminActionNavigation }
       ];
     case "leader":

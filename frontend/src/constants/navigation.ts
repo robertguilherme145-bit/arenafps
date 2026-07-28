@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Medal,
   Newspaper,
+  KeyRound,
   Settings2,
   Shield,
   Shuffle,
@@ -40,12 +41,15 @@ export const footerNavigation = [
 
 export const adminNavigation = [
   { label: "Visao geral", href: "/admin?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Competicoes", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
-  { label: "Operacoes", href: "/admin?module=operations", icon: Swords, module: "operations" },
-  { label: "Comunidade", href: "/admin?module=community", icon: Users, module: "community" }
+  { label: "Torneios e inscricoes", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
+  { label: "Central de partidas", href: "/admin?module=operations", icon: Swords, module: "operations" }
 ];
 
 export const adminControlNavigation = [
+  { label: "Equipes e jogadores", href: "/admin?module=community", icon: Users, module: "community" },
+  { label: "Contas e permissoes", href: "/admin?module=access", icon: KeyRound, module: "access" },
+  { label: "Conquistas e XP", href: "/admin?module=progression", icon: Medal, module: "progression" },
+  { label: "Conteudo do portal", href: "/admin?module=content", icon: Newspaper, module: "content" },
   { label: "Financeiro", href: "/admin?module=finance", icon: CreditCard, module: "finance" },
   { label: "Auditoria", href: "/admin?module=audit", icon: History, module: "audit" }
 ];

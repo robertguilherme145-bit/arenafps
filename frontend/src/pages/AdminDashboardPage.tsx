@@ -141,48 +141,48 @@ const statusLabels: Record<Tournament["status"], string> = {
 const adminModules = [
   {
     id: "dashboard",
-    title: "Dashboard",
-    description: "Indicadores, gargalos e radar operacional.",
+    title: "Visao geral",
+    description: "Acompanhe indicadores, pendencias e o ritmo da plataforma.",
   },
   {
     id: "competitions",
-    title: "Competicoes",
-    description: "Torneio, inscricoes e lineups.",
+    title: "Torneios e inscricoes",
+    description: "Configure torneios, aprove equipes e organize as lineups.",
   },
   {
     id: "operations",
-    title: "Operacoes",
-    description: "Jogos, partidas e resultados.",
+    title: "Central de partidas",
+    description: "Cadastre jogos e mapas, prepare partidas, Pick & Ban e resultados.",
   },
   {
     id: "community",
-    title: "Comunidade",
-    description: "Equipes, jogadores e notificacoes.",
+    title: "Equipes e jogadores",
+    description: "Gerencie a comunidade, comunicados, penalidades e disputas.",
   },
   {
     id: "progression",
-    title: "Progressao",
-    description: "Conquistas, metas e recompensas de XP.",
+    title: "Conquistas e XP",
+    description: "Crie metas competitivas e recompensas para os jogadores.",
   },
   {
     id: "content",
-    title: "Conteudo",
-    description: "Noticias, parceiros, depoimentos e FAQ.",
+    title: "Conteudo do portal",
+    description: "Publique noticias, FAQ, parceiros e mensagens institucionais.",
   },
   {
     id: "access",
-    title: "Acessos",
-    description: "Contas, papeis, jogos e verificacao.",
+    title: "Contas e permissoes",
+    description: "Controle papeis, jogos vinculados e verificacao das contas.",
   },
   {
     id: "finance",
     title: "Financeiro",
-    description: "Pagamentos e leitura de receita.",
+    description: "Acompanhe pagamentos, confirmacoes e receita dos torneios.",
   },
   {
     id: "audit",
     title: "Auditoria",
-    description: "Historico de alteracoes do admin.",
+    description: "Consulte o historico de alteracoes administrativas.",
   },
 ] as const;
 
@@ -360,6 +360,11 @@ export function AdminDashboardPage() {
   const newTournamentHref = selectedGame
     ? `/admin/torneios/novo?game=${selectedGame.id}`
     : "/admin/torneios/novo";
+  const activeModuleInfo =
+    adminModules.find((module) => module.id === activeModule) ?? adminModules[0];
+  const showsGameFilter = !["content", "audit"].includes(activeModule);
+  const showsStatusFilter = ["dashboard", "competitions"].includes(activeModule);
+  const showsTournamentAction = ["dashboard", "competitions"].includes(activeModule);
 
   const filteredEntries = useMemo(
     () =>
@@ -1236,17 +1241,17 @@ export function AdminDashboardPage() {
     <section className="px-4 pb-12 lg:px-8">
       <PageHeader
         eyebrow="Admin"
-        title="Centro de operacoes"
-        description="Painel administrativo real da plataforma: torneios, inscricoes, lineups, pagamentos, equipes, jogadores e auditoria."
+        title={activeModuleInfo.title}
+        description={activeModuleInfo.description}
         action={
-          <Link to={newTournamentHref}>
+          showsTournamentAction ? <Link to={newTournamentHref}>
             <Button icon={<Plus className="h-4 w-4" />}>Novo torneio</Button>
-          </Link>
+          </Link> : undefined
         }
       />
 
-      <div className="mb-5 grid gap-4 border-y border-arena-line bg-black/15 py-4 lg:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_minmax(260px,1.3fr)] lg:items-end">
-        <Field label="Filtrar por jogo">
+      {showsGameFilter ? <div className={`mb-6 grid gap-4 border-y border-arena-line bg-black/15 py-4 ${showsStatusFilter ? "lg:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_minmax(260px,1.2fr)]" : "lg:grid-cols-[minmax(260px,.8fr)_minmax(300px,1.2fr)]"} lg:items-end`}>
+        <Field label="Jogo">
           <Select
             value={gameFilter}
             onChange={(event) => {
@@ -1262,7 +1267,7 @@ export function AdminDashboardPage() {
             ))}
           </Select>
         </Field>
-        <Field label="Filtrar por status">
+        {showsStatusFilter ? <Field label="Status do torneio">
           <Select
             value={tournamentStatusFilter}
             onChange={(event) => {
@@ -1278,7 +1283,7 @@ export function AdminDashboardPage() {
               </option>
             ))}
           </Select>
-        </Field>
+        </Field> : null}
         <div className="flex min-h-11 items-center gap-3 border border-arena-line bg-arena-panel/60 px-4 py-3">
           <Gamepad2 className="h-5 w-5 shrink-0 text-cyan-300" />
           <div className="min-w-0">
@@ -1286,46 +1291,23 @@ export function AdminDashboardPage() {
               {selectedGame?.nome ?? "Todos os jogos"}
             </p>
             <p className="text-xs text-arena-muted">
-              {filteredTournaments.length}{" "}
-              {filteredTournaments.length === 1
-                ? "torneio encontrado"
-                : "torneios encontrados"}
-              {tournamentStatusFilter !== "all"
-                ? `: ${statusLabels[tournamentStatusFilter].toLowerCase()}`
-                : ""}
+              {activeModule === "community"
+                ? `${filteredTeams.length} equipes · ${filteredPlayers.length} jogadores`
+                : activeModule === "progression"
+                  ? `${filteredAchievements.length} conquistas configuradas`
+                  : activeModule === "access"
+                    ? `${filteredAccessAccounts.length} contas encontradas`
+                    : activeModule === "finance"
+                      ? `${payments.length} pagamentos registrados`
+                      : activeModule === "operations"
+                        ? `${games.length} jogos no catalogo`
+                        : `${filteredTournaments.length} ${filteredTournaments.length === 1 ? "torneio encontrado" : "torneios encontrados"}${tournamentStatusFilter !== "all" ? `: ${statusLabels[tournamentStatusFilter].toLowerCase()}` : ""}`}
             </p>
           </div>
         </div>
-      </div>
+      </div> : null}
 
-      <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-5">
-        {adminModules.map((module) => (
-          <button
-            key={module.id}
-            type="button"
-            onClick={() => {
-              setActiveModule(module.id);
-              const next = new URLSearchParams(searchParams);
-              next.set("module", module.id);
-              if (module.id !== "operations") next.delete("section");
-              setSearchParams(next);
-            }}
-            className={[
-              "rounded-arena border p-4 text-left transition",
-              activeModule === module.id
-                ? "border-cyan-400/60 bg-cyan-400/10 shadow-glow"
-                : "border-arena-line bg-arena-panel/70 hover:bg-white/[.04]",
-            ].join(" ")}
-          >
-            <p className="font-semibold">{module.title}</p>
-            <p className="mt-2 text-sm text-arena-muted">
-              {module.description}
-            </p>
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {activeModule === "dashboard" ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Torneios no filtro"
           value={String(filteredTournaments.length)}
@@ -1358,7 +1340,7 @@ export function AdminDashboardPage() {
               : (activeTournament?.nome ?? "Sem torneio no filtro")
           }
         />
-      </div>
+      </div> : null}
 
       {activeModule === "dashboard" ? (
         <>
