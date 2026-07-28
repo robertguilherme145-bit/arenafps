@@ -22,9 +22,9 @@ export function Modal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/72 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className={cn("mx-auto mt-16 w-full rounded-arena border border-arena-line bg-arena-panel shadow-panel", size === "wide" ? "max-w-5xl" : "max-w-lg")}>
-        <div className="flex items-start justify-between border-b border-arena-line p-5">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-hidden bg-black/72 p-3 backdrop-blur-sm sm:p-4" role="dialog" aria-modal="true">
+      <div className={cn("my-2 flex max-h-[calc(100dvh-1rem)] w-full flex-col overflow-hidden rounded-arena border border-arena-line bg-arena-panel shadow-panel sm:my-8 sm:max-h-[calc(100dvh-4rem)]", size === "wide" ? "max-w-5xl" : "max-w-lg")}>
+        <div className="flex shrink-0 items-start justify-between border-b border-arena-line p-5">
           <div>
             <h2 className="font-display text-2xl font-semibold">{title}</h2>
             {description ? <p className="mt-2 text-sm text-arena-muted">{description}</p> : null}
@@ -33,7 +33,7 @@ export function Modal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="min-h-0 overflow-y-auto overscroll-contain p-5">{children}</div>
       </div>
     </div>
   );
