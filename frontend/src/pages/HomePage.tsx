@@ -32,9 +32,9 @@ export function HomePage() {
       <div className="relative mx-auto flex min-h-[calc(100svh-7.5rem)] max-w-[1500px] items-center px-4 py-14 lg:px-8">
         <motion.div className="max-w-3xl" initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5 }}>
           <Badge tone="info">Competicoes em tempo real</Badge>
-          <h1 className="mt-5 font-display text-5xl font-bold leading-tight md:text-7xl">Arena Camp</h1>
+          <h1 className="mt-5 font-display text-4xl font-bold leading-tight min-[360px]:text-5xl md:text-7xl">Arena Camp</h1>
           <p className="mt-5 max-w-2xl text-xl font-semibold text-white">Organize. Compita. Evolua.</p>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">A plataforma completa para gerenciamento de competicoes de eSports, com carreira competitiva, estatisticas por mapa e chaveamentos ao vivo.</p>
+          <p className="mt-3 max-w-2xl text-base leading-6 text-slate-300 min-[360px]:leading-7 md:text-lg">A plataforma completa para gerenciamento de competicoes de eSports, com carreira competitiva, estatisticas por mapa e chaveamentos ao vivo.</p>
           <div className="mt-8 flex flex-wrap gap-3">{user ? <Link to={dashboardHref}><Button icon={<ShieldCheck className="h-4 w-4" />}>Abrir workspace</Button></Link> : <Link to="/criar-conta"><Button icon={<UserRound className="h-4 w-4" />}>Criar conta</Button></Link>}<Link to="/torneios"><Button variant="secondary" icon={<Trophy className="h-4 w-4" />}>Explorar campeonatos</Button></Link></div>
           <div className="mt-10 grid max-w-3xl grid-cols-2 gap-px border border-white/15 bg-white/15 sm:grid-cols-4">
             <HeroMetric label="Ao vivo" value={portal?.stats.live_matches ?? 0} /><HeroMetric label="Jogadores" value={portal?.stats.players ?? 0} /><HeroMetric label="Equipes" value={portal?.stats.teams ?? 0} /><HeroMetric label="Premiacoes" value={currency(portal?.stats.prize_pool ?? 0)} />
