@@ -377,7 +377,7 @@ export type PublicTournamentCenter = {
   matches:Array<Match & { team_a:string; team_a_logo:string | null; team_b:string; team_b_logo:string | null; winner:string | null; current_map_name:string | null; current_map_image:string | null }>;
   map_pool:GameMap[];
   match_maps:Array<{ id:number; match_id:number; map_number:number; status:string; score_team_a:number; score_team_b:number; winner_team_id:number | null; map_name:string; map_image:string | null; winner:string | null }>;
-  map_player_stats:Array<{ id:number; match_map_id:number; match_id:number; player_id:number; team_id:number; kills:number; deaths:number; assists:number; headshots:number; mvp:boolean; nick:string; foto:string | null; team_name:string }>;
+  map_player_stats:Array<{ id:number; match_map_id:number; match_id:number; player_id:number; team_id:number; kills:number; deaths:number; assists:number; headshots:number; mvp:boolean; nick:string; foto:string | null; team_name:string; team_logo:string | null }>;
   result:{ tournament_id:number; champion_team_id:number; champion_name:string; champion_tag:string | null; champion_logo:string | null; runner_up_team_id:number | null; runner_up_name:string | null; runner_up_tag:string | null; runner_up_logo:string | null; final_match_id:number | null; decided_at:string } | null;
   standings:TeamRanking[];
 };

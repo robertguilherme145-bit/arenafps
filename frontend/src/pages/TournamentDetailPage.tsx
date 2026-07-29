@@ -114,9 +114,7 @@ export function TournamentDetailPage() {
               <p className="text-xs font-semibold uppercase text-amber-200">
                 Campeao oficial
               </p>
-              <h2 className="mt-1 font-display text-3xl font-bold">
-                {center.result.champion_name}
-              </h2>
+              <div className="mt-2 flex items-center gap-3">{center.result.champion_logo ? <img className="h-14 w-14 object-contain" src={center.result.champion_logo} alt={`Logo ${center.result.champion_name}`} /> : null}<h2 className="font-display text-3xl font-bold">{center.result.champion_name}</h2></div>
               <p className="mt-1 text-sm text-arena-muted">
                 Vice-campeao: {center.result.runner_up_name || "Nao definido"}
               </p>
@@ -302,6 +300,7 @@ export function TournamentDetailPage() {
                         >
                           <BracketTeam
                             name={match.team_a}
+                            logo={match.team_a_logo}
                             score={
                               match.status === "finalizada"
                                 ? match.score_team_a
@@ -312,6 +311,7 @@ export function TournamentDetailPage() {
                           <div className="my-2 h-px bg-arena-line" />
                           <BracketTeam
                             name={match.team_b}
+                            logo={match.team_b_logo}
                             score={
                               match.status === "finalizada"
                                 ? match.score_team_b
@@ -350,32 +350,7 @@ export function TournamentDetailPage() {
                 {
                   header: "Confronto",
                   cell: (match) => (
-                    <div>
-                      <span
-                        className={
-                          match.winner_team_id === match.team_a_id
-                            ? "font-bold text-emerald-300"
-                            : ""
-                        }
-                      >
-                        {match.team_a}
-                      </span>
-                      <span className="text-arena-muted"> vs </span>
-                      <span
-                        className={
-                          match.winner_team_id === match.team_b_id
-                            ? "font-bold text-emerald-300"
-                            : ""
-                        }
-                      >
-                        {match.team_b}
-                      </span>
-                      {match.winner ? (
-                        <p className="mt-1 text-xs font-semibold text-emerald-300">
-                          Vencedor: {match.winner}
-                        </p>
-                      ) : null}
-                    </div>
+                    <div className="space-y-2"><TeamIdentity name={match.team_a} logo={match.team_a_logo} winner={match.winner_team_id === match.team_a_id} /><TeamIdentity name={match.team_b} logo={match.team_b_logo} winner={match.winner_team_id === match.team_b_id} /></div>
                   ),
                 },
                 {
@@ -656,6 +631,7 @@ function MatchMapDetails({
             </h3>
             {selectedMap?.status === "finalizado" ? (
               <>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-8"><TeamIdentity large name={match?.team_a || "Equipe A"} logo={match?.team_a_logo} winner={selectedMap.winner_team_id === match?.team_a_id} /><TeamIdentity large name={match?.team_b || "Equipe B"} logo={match?.team_b_logo} winner={selectedMap.winner_team_id === match?.team_b_id} /></div>
                 <p className="mt-3 font-display text-4xl font-bold">
                   {selectedMap.score_team_a} x {selectedMap.score_team_b}
                 </p>
@@ -724,12 +700,7 @@ function MatchMapDetails({
                 {
                   header: "Jogador",
                   cell: (item) => (
-                    <div>
-                      <strong>{item.nick}</strong>
-                      <p className="text-xs text-arena-muted">
-                        {item.team_name}
-                      </p>
-                    </div>
+                    <div className="flex items-center gap-3">{item.foto ? <img className="h-9 w-9 object-cover" src={item.foto} alt="" /> : <TeamLogo logo={item.team_logo} name={item.team_name} size="sm" />}<div><strong>{item.nick}</strong><div className="mt-1 flex items-center gap-2"><TeamLogo logo={item.team_logo} name={item.team_name} size="xs" /><p className={`text-xs ${selectedMap?.winner_team_id === item.team_id ? "font-semibold text-emerald-300" : "text-arena-muted"}`}>{item.team_name}{selectedMap?.winner_team_id === item.team_id ? " · Vencedora" : ""}</p></div></div></div>
                   ),
                 },
                 { header: "Kills", cell: (item) => item.kills },
@@ -772,10 +743,12 @@ function MatchMapDetails({
 
 function BracketTeam({
   name,
+  logo,
   score,
   winner,
 }: {
   name: string;
+  logo: string | null;
   score: number | null;
   winner: boolean;
 }) {
@@ -783,10 +756,17 @@ function BracketTeam({
     <div
       className={`flex items-center justify-between gap-3 ${winner ? "text-emerald-300" : ""}`}
     >
-      <span className="truncate font-semibold">{name}</span>
+      <span className="flex min-w-0 items-center gap-2"><TeamLogo logo={logo} name={name} size="sm" /><span className="truncate font-semibold">{name}</span>{winner ? <Crown className="h-4 w-4 shrink-0" aria-label="Vencedor" /> : null}</span>
       <strong>{score ?? "-"}</strong>
     </div>
   );
+}
+function TeamIdentity({ name, logo, winner, large = false }: { name: string; logo: string | null | undefined; winner?: boolean; large?: boolean }) {
+  return <div className={`flex items-center gap-3 ${winner ? "text-emerald-300" : "text-arena-text"}`}><TeamLogo logo={logo} name={name} size={large ? "lg" : "sm"} /><span className={`${large ? "max-w-40 text-base" : "text-sm"} font-semibold`}>{name}</span>{winner ? <Badge tone="success"><Crown className="mr-1 h-3 w-3" /> Vencedor</Badge> : null}</div>;
+}
+function TeamLogo({ logo, name, size }: { logo: string | null | undefined; name: string; size: "xs" | "sm" | "lg" }) {
+  const classes = size === "lg" ? "h-16 w-16" : size === "sm" ? "h-9 w-9" : "h-5 w-5";
+  return logo ? <img className={`${classes} shrink-0 object-contain`} src={logo} alt={`Logo ${name}`} /> : <span className={`${classes} flex shrink-0 items-center justify-center border border-arena-line bg-black/30 text-[10px] font-bold text-arena-muted`}>{name.slice(0, 2).toUpperCase()}</span>;
 }
 function Metric({ label, value }: { label: string; value: string }) {
   return (
