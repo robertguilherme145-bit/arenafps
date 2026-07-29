@@ -1138,28 +1138,23 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
                   <Badge tone={selectedStatsMap.status === "finalizado" ? "success" : "warning"}>{selectedStatsMap.status}</Badge>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <div className="min-w-[900px]">
-                    <div className="grid grid-cols-[80px_1.4fr_1.4fr_repeat(4,90px)_70px] gap-2 border-b border-arena-line pb-2 text-xs font-semibold uppercase text-arena-muted">
-                      <span>ID</span><span>Jogador</span><span>ID no jogo</span><span>Kills</span><span>Mortes</span><span>Assist.</span><span>HS</span><span>MVP</span>
-                    </div>
-                    {operations.rosters.filter((player) => player.in_lineup).map((player) => {
-                      const stat = playerStats[player.id] ?? { kills: "0", deaths: "0", assists: "0", headshots: "0", mvp: false };
-                      return (
-                        <div className="grid grid-cols-[80px_1.4fr_1.4fr_repeat(4,90px)_70px] items-center gap-2 border-b border-arena-line py-3" key={player.id}>
-                          <span className="font-mono text-sm">#{player.id}</span>
-                          <span><span className="block text-sm font-semibold">{player.nick}</span><span className="text-xs text-arena-muted">{player.team_name}</span></span>
-                          <span className="font-mono text-sm text-arena-muted">{player.game_uid || "Nao informado"}</span>
-                          {(["kills", "deaths", "assists", "headshots"] as const).map((field) => (
-                            <Input disabled={selectedStatsMap.status !== "finalizado"} key={field} min="0" type="number" value={stat[field]} onChange={(event) => onStatChange(player.id, field, event.target.value)} />
-                          ))}
-                          <label className="flex justify-center">
-                            <input checked={stat.mvp} className="h-4 w-4 accent-cyan-400" disabled={selectedStatsMap.status !== "finalizado"} onChange={(event) => onStatChange(player.id, "mvp", event.target.checked)} type="checkbox" />
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <TeamPlayerStatsTable
+                    accent="cyan"
+                    disabled={selectedStatsMap.status !== "finalizado"}
+                    onStatChange={onStatChange}
+                    playerStats={playerStats}
+                    players={teamARoster.filter((player) => player.in_lineup)}
+                    title={operations.match.team_a}
+                  />
+                  <TeamPlayerStatsTable
+                    accent="amber"
+                    disabled={selectedStatsMap.status !== "finalizado"}
+                    onStatChange={onStatChange}
+                    playerStats={playerStats}
+                    players={teamBRoster.filter((player) => player.in_lineup)}
+                    title={operations.match.team_b}
+                  />
                 </div>
               </>
             ) : null}
@@ -1170,6 +1165,54 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
       </CardContent>
     </Card>
   </div>;
+}
+
+function TeamPlayerStatsTable({ accent, disabled, onStatChange, playerStats, players, title }: {
+  accent: "cyan" | "amber";
+  disabled: boolean;
+  onStatChange: (playerId: number, field: keyof PlayerStatDraft[number], value: string | boolean) => void;
+  playerStats: PlayerStatDraft;
+  players: MatchOperations["rosters"];
+  title: string;
+}) {
+  const accentClass = accent === "cyan" ? "border-cyan-400/45 bg-cyan-400/[.07]" : "border-amber-400/45 bg-amber-400/[.07]";
+  const badgeClass = accent === "cyan" ? "border-cyan-400/35 text-cyan-200" : "border-amber-400/35 text-amber-200";
+
+  return (
+    <section className={cn("min-w-0 border", accentClass)}>
+      <div className="flex min-h-16 items-center justify-between gap-3 border-b border-arena-line px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-arena-muted">Sumula da equipe</p>
+          <h4 className="mt-1 text-base font-semibold">{title}</h4>
+        </div>
+        <span className={cn("border px-2 py-1 text-xs font-semibold", badgeClass)}>{players.length} jogadores</span>
+      </div>
+      <div className="overflow-x-auto bg-black/25">
+        <div className="min-w-[720px] px-4">
+          <div className="grid grid-cols-[52px_1.2fr_1.2fr_repeat(4,68px)_48px] gap-2 border-b border-arena-line py-2 text-xs font-semibold uppercase text-arena-muted">
+            <span>ID</span><span>Jogador</span><span>ID no jogo</span><span>Kills</span><span>Mortes</span><span>Assist.</span><span>HS</span><span>MVP</span>
+          </div>
+          {players.map((player) => {
+            const stat = playerStats[player.id] ?? { kills: "0", deaths: "0", assists: "0", headshots: "0", mvp: false };
+            return (
+              <div className="grid grid-cols-[52px_1.2fr_1.2fr_repeat(4,68px)_48px] items-center gap-2 border-b border-arena-line py-3 last:border-b-0" key={player.id}>
+                <span className="font-mono text-sm">#{player.id}</span>
+                <span className="text-sm font-semibold">{player.nick}</span>
+                <span className="truncate font-mono text-xs text-arena-muted" title={player.game_uid || "Nao informado"}>{player.game_uid || "Nao informado"}</span>
+                {(["kills", "deaths", "assists", "headshots"] as const).map((field) => (
+                  <Input disabled={disabled} key={field} min="0" type="number" value={stat[field]} onChange={(event) => onStatChange(player.id, field, event.target.value)} />
+                ))}
+                <label className="flex justify-center" title={`Marcar ${player.nick} como MVP`}>
+                  <input checked={stat.mvp} className="h-4 w-4 accent-cyan-400" disabled={disabled} onChange={(event) => onStatChange(player.id, "mvp", event.target.checked)} type="checkbox" />
+                </label>
+              </div>
+            );
+          })}
+          {!players.length ? <p className="py-8 text-center text-sm text-arena-muted">Nenhum jogador na lineup desta equipe.</p> : null}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function Roster({ title, players }: { title: string; players: MatchOperations["rosters"] }) {
