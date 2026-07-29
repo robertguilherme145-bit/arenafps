@@ -812,6 +812,11 @@ export async function createLeaderTicket(input: Record<string, unknown>) {
   return data;
 }
 
+export async function replyLeaderTicket(ticketId: number, message: string) {
+  const { data } = await api.post(`/leader/tickets/${ticketId}/replies`, { message });
+  return data;
+}
+
 export async function createLeaderCompetitionRequest(input: Record<string, unknown>) {
   const { data } = await api.post<{ id: number; mensagem: string }>("/leader/competition-requests", input);
   return data;

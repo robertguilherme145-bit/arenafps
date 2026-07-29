@@ -500,6 +500,24 @@ export async function createLeaderTicket(userId, data) {
   return result.insertId;
 }
 
+export async function replyLeaderTicket(ticketId, userId, message) {
+  const [tickets] = await pool.query(
+    `SELECT id FROM support_tickets WHERE id = ? AND user_id = ? LIMIT 1`,
+    [ticketId, userId]
+  );
+  if (!tickets[0]) return false;
+
+  await pool.query(
+    `INSERT INTO support_ticket_messages (ticket_id, user_id, role, message) VALUES (?, ?, 'user', ?)`,
+    [ticketId, userId, message]
+  );
+  await pool.query(
+    `UPDATE support_tickets SET status = 'aberto', updated_at = NOW() WHERE id = ?`,
+    [ticketId]
+  );
+  return true;
+}
+
 export async function createLeaderDocument(teamId, userId, data) {
   const [result] = await pool.query(
     `INSERT INTO team_documents (team_id, uploaded_by, name, type, url) VALUES (?, ?, ?, ?, ?)`,
@@ -680,7 +698,31 @@ async function queryEvents(teamId, userId) {
 }
 async function queryNotifications(userId) { const [rows] = await pool.query(`SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`, [userId]); return rows; }
 async function queryDisputes(teamId) { const [rows] = await pool.query(`SELECT d.*, t.nome AS tournament_name FROM disputes d LEFT JOIN tournaments t ON t.id = d.tournament_id WHERE d.team_id = ? ORDER BY d.created_at DESC`, [teamId]); return rows; }
-async function queryTickets(userId) { const [rows] = await pool.query(`SELECT * FROM support_tickets WHERE user_id = ? ORDER BY created_at DESC`, [userId]); return rows; }
+async function queryTickets(userId) {
+  const [rows] = await pool.query(
+    `SELECT * FROM support_tickets WHERE user_id = ? ORDER BY updated_at DESC, created_at DESC`,
+    [userId]
+  );
+  if (!rows.length) return rows;
+
+  const [messages] = await pool.query(
+    `
+    SELECT stm.*, u.nome
+    FROM support_ticket_messages stm
+    LEFT JOIN users u ON u.id = stm.user_id
+    WHERE stm.ticket_id IN (?)
+    ORDER BY stm.created_at ASC, stm.id ASC
+    `,
+    [rows.map((ticket) => ticket.id)]
+  );
+  const byTicket = new Map();
+  for (const message of messages) {
+    const list = byTicket.get(Number(message.ticket_id)) ?? [];
+    list.push(message);
+    byTicket.set(Number(message.ticket_id), list);
+  }
+  return rows.map((ticket) => ({ ...ticket, messages: byTicket.get(Number(ticket.id)) ?? [] }));
+}
 async function queryTeamMessages(teamId) { const [rows] = await pool.query(`SELECT tm.*, u.nome, u.nickname, u.avatar FROM team_messages tm INNER JOIN users u ON u.id = tm.user_id WHERE tm.team_id = ? ORDER BY tm.created_at DESC LIMIT 50`, [teamId]); return rows.reverse(); }
 async function queryTournamentMessages(teamId) { const [rows] = await pool.query(`SELECT tm.*, u.nome, u.nickname, u.avatar, t.nome AS tournament_name FROM tournament_messages tm INNER JOIN users u ON u.id = tm.user_id INNER JOIN tournaments t ON t.id = tm.tournament_id WHERE tm.team_id = ? ORDER BY tm.created_at DESC LIMIT 50`, [teamId]); return rows.reverse(); }
 async function queryDocuments(teamId) { const [rows] = await pool.query(`SELECT * FROM team_documents WHERE team_id = ? ORDER BY created_at DESC`, [teamId]); return rows; }

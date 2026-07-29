@@ -13,6 +13,7 @@ import {
   openLeaderDispute,
   openLeaderCompetitionRequest,
   openLeaderTicket,
+  replyToLeaderTicket,
   performLeaderVeto,
   registerLeaderEntry,
   removeLeaderEvent,
@@ -53,6 +54,7 @@ export async function teamMessage(req, res) { return handle(res, () => sendLeade
 export async function tournamentMessage(req, res) { return handle(res, () => sendLeaderTournamentMessage(req.user, req.params.tournamentId, req.body), 201); }
 export async function dispute(req, res) { return handle(res, () => openLeaderDispute(req.user, req.body), 201); }
 export async function ticket(req, res) { return handle(res, () => openLeaderTicket(req.user, req.body), 201); }
+export async function ticketReply(req, res) { return handle(res, () => replyToLeaderTicket(req.user, req.params.ticketId, req.body), 201); }
 export async function competitionRequest(req, res) { return handle(res, () => openLeaderCompetitionRequest(req.user, req.body), 201); }
 export async function document(req, res) { return handle(res, () => addLeaderDocument(req.user, req.body), 201); }
 export async function preferences(req, res) { return handle(res, () => updateLeaderPreferences(req.user, req.body)); }

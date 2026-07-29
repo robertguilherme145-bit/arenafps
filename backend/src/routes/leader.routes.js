@@ -22,6 +22,7 @@ import {
   syncPayments,
   teamMessage,
   ticket,
+  ticketReply,
   tournamentMessage,
   tournamentCenter,
   transfer,
@@ -61,6 +62,7 @@ router.post("/messages/team", teamMessage);
 router.post("/messages/tournament/:tournamentId", tournamentMessage);
 router.post("/disputes", dispute);
 router.post("/tickets", ticket);
+router.post("/tickets/:ticketId/replies", ticketReply);
 router.post("/competition-requests", competitionRequest);
 router.post("/documents", document);
 router.put("/preferences", preferences);

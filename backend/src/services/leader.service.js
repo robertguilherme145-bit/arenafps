@@ -8,6 +8,7 @@ import {
   createLeaderEvent,
   createLeaderMessage,
   createLeaderTicket,
+  replyLeaderTicket,
   createTeamInvitation,
   decideTeamRequest,
   deleteLeaderEvent,
@@ -363,6 +364,17 @@ export async function openLeaderTicket(user, payload) {
     message: requiredText(payload.message, "Descreva sua solicitacao.", 5000)
   });
   return { id, mensagem: "Ticket aberto." };
+}
+
+export async function replyToLeaderTicket(user, ticketId, payload) {
+  await requireLeaderTeam(user.id);
+  const replied = await replyLeaderTicket(
+    Number(ticketId),
+    user.id,
+    requiredText(payload.message, "Escreva uma mensagem para o suporte.", 5000)
+  );
+  if (!replied) throw new Error("Chamado nao encontrado.");
+  return { mensagem: "Resposta enviada ao suporte." };
 }
 
 export async function openLeaderCompetitionRequest(user, payload) {
