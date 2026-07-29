@@ -18,6 +18,7 @@ import { getTournamentTeamRanking } from "./ranking.service.js";
 import { getTournamentPlayerStatistics } from "./statistics.service.js";
 import { getTournamentOutcomeContext, saveTournamentOutcome } from "../models/tournamentOutcome.model.js";
 import { notify } from "./notification.service.js";
+import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
 
 export async function dispatchCompetitionEvent(event, payload = {}) {
 
@@ -96,6 +97,8 @@ async function handlePaymentApproved({ entry_id }) {
     if(!tournament){
         throw new Error("Torneio nao encontrado para o evento de pagamento.");
     }
+
+    await notifyTournamentRegulationToTeam(tournament.id, entry.team_id);
 
     const confirmedEntries = await countConfirmedEntries(tournament.id);
     const actions = ["entry_confirmed"];

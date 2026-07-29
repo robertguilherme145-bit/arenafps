@@ -8,7 +8,8 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { TournamentRegulationPanel } from "../components/tournament/TournamentRegulationPanel";
 import { Badge } from "../components/ui/Badge";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -25,11 +26,12 @@ import type { PublicTournamentCenter } from "../types/api";
 
 export function TournamentDetailPage() {
   const id = Number(useParams().id);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { error } = useToast();
   const [center, setCenter] = useState<PublicTournamentCenter | null>(null);
   const [tab, setTab] = useState<
-    "overview" | "standings" | "bracket" | "matches" | "statistics"
-  >("overview");
+    "overview" | "standings" | "bracket" | "matches" | "statistics" | "rules"
+  >(searchParams.get("tab") === "rules" ? "rules" : "overview");
   const [selectedMatch, setSelectedMatch] = useState<
     PublicTournamentCenter["matches"][number] | null
   >(null);
@@ -158,11 +160,12 @@ export function TournamentDetailPage() {
             ["bracket", "Chaveamento"],
             ["matches", "Partidas"],
             ["statistics", "Estatisticas"],
+            ["rules", "Regulamento"],
           ].map(([value, label]) => (
             <button
               className={`shrink-0 border px-4 py-2 text-sm font-semibold ${tab === value ? "border-cyan-400 bg-cyan-400/10 text-white" : "border-arena-line text-arena-muted"}`}
               key={value}
-              onClick={() => setTab(value as typeof tab)}
+              onClick={() => { setTab(value as typeof tab); setSearchParams(value === "overview" ? {} : { tab: value }); }}
             >
               {label}
             </button>
@@ -256,6 +259,7 @@ export function TournamentDetailPage() {
             </Card>
           </div>
         ) : null}
+        {tab === "rules" ? <Card className="mt-6"><CardHeader><h2 className="font-display text-xl font-semibold">Regulamento oficial</h2><p className="mt-1 text-sm text-arena-muted">Este documento permanece disponivel durante toda a competicao.</p></CardHeader><CardContent><TournamentRegulationPanel tournament={tournament} mapPool={center.map_pool} /></CardContent></Card> : null}
         {tab === "standings" ? (
           <Card className="mt-6">
             <CardHeader>

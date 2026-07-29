@@ -18,6 +18,7 @@ import { findPlayersByIds, findPlayer, updatePlayerAdmin } from "../models/playe
 import { findTeamWithContext, updateTeamAdmin } from "../models/team.model.js";
 import { findTournament } from "../models/tournament.model.js";
 import { createNotification } from "../models/notification.model.js";
+import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
 import {
   createDispute,
   createPenalty,
@@ -74,6 +75,7 @@ export async function approveAdminEntry(adminUser, entryId) {
     "entry_approved",
     `/torneios/${entry.tournament_id}`
   );
+  await notifyTournamentRegulationToTeam(entry.tournament_id, entry.team_id);
 
   await audit(adminUser.id, "entry.approved", "entry", entry.id, {
     previous_status: entry.status,

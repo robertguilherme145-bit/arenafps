@@ -1,4 +1,5 @@
-import { countEntries, findEntryByTeamAndTournament } from "../models/entry.model.js";
+import { countEntries, findEntryByTeamAndTournament, updateEntryStatus } from "../models/entry.model.js";
+import { getTournamentCompetitionRecord } from "../models/competitionSetup.model.js";
 import {
   createEntryFromLineup,
   createLeaderCompetitionRequest,
@@ -44,6 +45,7 @@ import { notify } from "./notification.service.js";
 import { createEntryPayment, syncTeamPendingPayments } from "./payment.service.js";
 import { getTeamPlayerRanking } from "./teamRanking.service.js";
 import { getPlayerCareerSummary } from "./playerWorkspace.service.js";
+import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
 
 const MEMBER_ROLES = ["captain", "manager", "player"];
 const MEMBER_STATUSES = ["ativo", "inativo"];
@@ -246,7 +248,13 @@ export async function registerLeaderEntry(user, payload) {
 
   const entryId = await createEntryFromLineup({ teamId: team.id, tournamentId: tournament.id, lineupId: lineup.id });
   await setLineupStatus(lineup.id, "congelada");
-  return { id: entryId, mensagem: "Equipe inscrita. A lineup foi congelada para auditoria." };
+  const competition = await getTournamentCompetitionRecord(tournament.id);
+  const automaticFreeEntry = Number(tournament.valor || 0) <= 0 && competition?.registration_approval === "automatic";
+  if (automaticFreeEntry) {
+    await updateEntryStatus(entryId, "confirmado");
+    await notifyTournamentRegulationToTeam(tournament.id, team.id);
+  }
+  return { id: entryId, mensagem: automaticFreeEntry ? "Inscricao confirmada. O regulamento foi enviado para a equipe." : "Equipe inscrita. A lineup foi congelada para auditoria." };
 }
 
 export async function createLeaderPayment(user, entryId) {
