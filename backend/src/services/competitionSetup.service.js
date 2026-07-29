@@ -7,6 +7,7 @@ import {
   gameUsage,
   createMatchMap,
   createOrOpenVetoSession,
+  countTournamentMatches,
   findGameMap,
   findGameMapBySlug,
   findMatchMap,
@@ -38,8 +39,10 @@ import { findMembershipByUserAndTeam } from "../models/team.model.js";
 import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
 import COMPETITION_EVENTS from "../constants/competitionEvents.js";
 import { advanceMixBracket } from "./mixTournament.service.js";
+import { advanceTournamentFormat } from "./tournamentFormat.service.js";
 
 const BEST_OF_VALUES = ["bo1", "bo3", "bo5"];
+const FAIR_TIEBREAKERS = "Pontos, confronto direto, percentual de vitorias, saldo medio de rounds por mapa, rounds medios por mapa";
 const FORMATS = [
   "single_elimination",
   "double_elimination",
@@ -47,8 +50,8 @@ const FORMATS = [
   "round_robin",
   "group_playoffs",
   "league",
-  "custom"
-  ,"mix_single_elimination"
+  "custom",
+  "mix_single_elimination"
 ];
 
 export async function listCompetitionGames() {
@@ -190,6 +193,20 @@ export async function saveTournamentCompetition(adminUser, tournamentId, payload
     throw new Error("O map pool contem mapas que nao pertencem ao jogo selecionado.");
   }
 
+  const matchCount = await countTournamentMatches(tournamentId);
+  if (matchCount > 0) {
+    const previousMaps = (await getTournamentMapPool(tournamentId)).map((map) => Number(map.id)).sort((a, b) => a - b);
+    const nextMaps = [...mapIds].sort((a, b) => a - b);
+    const structureChanged =
+      Number(game.id) !== Number(tournament.game_id ?? tournament.legacy_game_id) ||
+      format !== (tournament.format ?? "single_elimination") ||
+      bestOf !== (tournament.best_of ?? "bo3") ||
+      JSON.stringify(previousMaps) !== JSON.stringify(nextMaps);
+    if (structureChanged) {
+      throw new Error("Jogo, formato, serie e map pool ficam bloqueados depois que a primeira partida e criada.");
+    }
+  }
+
   const requiredMaps = bestOfNumber(bestOf);
   const pickBanEnabled = payload.pick_ban_enabled !== false;
 
@@ -216,7 +233,7 @@ export async function saveTournamentCompetition(adminUser, tournamentId, payload
     initial_side: String(payload.initial_side ?? "knife").trim() || "knife",
     pause_minutes: nonNegativeInteger(payload.pause_minutes, 5),
     walkover_minutes: nonNegativeInteger(payload.walkover_minutes, 15),
-    tiebreakers: String(payload.tiebreakers ?? "").trim() || null,
+    tiebreakers: FAIR_TIEBREAKERS,
     seed_mode: payload.seed_mode === "manual" ? "manual" : "automatic",
     registration_approval: payload.registration_approval === "automatic" ? "automatic" : "manual"
   };
@@ -512,6 +529,7 @@ export async function recordMatchMapResult(adminUser, matchMapId, payload) {
     await finishMatch(match.id, seriesWinner, winsA, winsB);
     await cancelPendingMatchMaps(match.id);
     await advanceMixBracket(match);
+    await advanceTournamentFormat(match.tournament_id);
     await dispatchCompetitionEvent(COMPETITION_EVENTS.MATCH_RESULT_SAVED, {
       match_id: match.id,
       tournament_id: match.tournament_id,

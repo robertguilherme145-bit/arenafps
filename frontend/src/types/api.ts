@@ -677,6 +677,16 @@ export type TeamRanking = {
   score_against: number;
   score_balance: number;
   win_rate: number;
+  team_name?: string | null;
+  points?: number;
+  maps_played?: number;
+  rounds_for?: number;
+  rounds_against?: number;
+  round_balance?: number;
+  round_balance_per_map?: number;
+  rounds_for_per_map?: number;
+  head_to_head_points?: number;
+  byes?: number;
 };
 
 export type PlayerStatistics = {

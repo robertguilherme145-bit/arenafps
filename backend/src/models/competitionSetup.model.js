@@ -158,6 +158,14 @@ export async function getTournamentMapPool(tournamentId) {
   return rows.map((row) => ({ ...row, ativo: Boolean(row.ativo) }));
 }
 
+export async function countTournamentMatches(tournamentId) {
+  const [[row]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM matches WHERE tournament_id = ?`,
+    [tournamentId]
+  );
+  return Number(row?.total ?? 0);
+}
+
 export async function saveTournamentCompetitionRecord(tournamentId, data, mapIds) {
   const connection = await pool.getConnection();
 

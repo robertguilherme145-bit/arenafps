@@ -366,6 +366,11 @@ export async function getTournamentCompetitionTeams(tournamentId: number) {
   return data;
 }
 
+export async function generateTournamentStructure(tournamentId: number) {
+  const { data } = await api.post(`/admin/competition/tournaments/${tournamentId}/structure`);
+  return data;
+}
+
 export async function getMatchOperations(matchId: number) {
   const { data } = await api.get<MatchOperations>(`/admin/competition/matches/${matchId}`);
   return data;

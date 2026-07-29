@@ -366,10 +366,28 @@ export async function findFinishedTournamentMatches(tournament_id){
 
     const [rows] = await pool.query(
         `
-        SELECT *
-        FROM matches
-        WHERE tournament_id = ?
-        AND status = 'finalizada'
+        SELECT
+            m.*,
+            ta.nome AS team_a_name,
+            tb.nome AS team_b_name,
+            COALESCE(mm.maps_played, 0) AS maps_played,
+            COALESCE(mm.rounds_for_a, 0) AS rounds_for_a,
+            COALESCE(mm.rounds_for_b, 0) AS rounds_for_b
+        FROM matches m
+        INNER JOIN teams ta ON ta.id = m.team_a_id
+        INNER JOIN teams tb ON tb.id = m.team_b_id
+        LEFT JOIN (
+            SELECT
+                match_id,
+                COUNT(*) AS maps_played,
+                SUM(score_team_a) AS rounds_for_a,
+                SUM(score_team_b) AS rounds_for_b
+            FROM match_maps
+            WHERE status = 'finalizado'
+            GROUP BY match_id
+        ) mm ON mm.match_id = m.id
+        WHERE m.tournament_id = ?
+        AND m.status = 'finalizada'
         ORDER BY finished_at ASC, id ASC
         `,
         [tournament_id]
@@ -377,6 +395,17 @@ export async function findFinishedTournamentMatches(tournament_id){
 
     return rows;
 
+}
+
+export async function findTournamentByes(tournament_id){
+    const [rows] = await pool.query(`
+        SELECT tb.round,tb.team_id,t.nome AS team_name
+        FROM tournament_byes tb
+        INNER JOIN teams t ON t.id=tb.team_id
+        WHERE tb.tournament_id=?
+        ORDER BY tb.round
+    `, [tournament_id]);
+    return rows;
 }
 
 /**

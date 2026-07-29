@@ -255,4 +255,27 @@ export async function ensureCompetitionTables() {
         FOREIGN KEY (team_id) REFERENCES teams(id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  await ensureColumn("matches", "stage", "VARCHAR(30) NOT NULL DEFAULT 'main'");
+  await ensureColumn("matches", "group_code", "VARCHAR(20) NULL");
+  await ensureColumn("matches", "leg", "TINYINT NOT NULL DEFAULT 1");
+  await pool.query(`CREATE TABLE IF NOT EXISTS tournament_byes (
+    tournament_id INT NOT NULL,
+    round INT NOT NULL,
+    team_id INT NOT NULL,
+    reason VARCHAR(30) NOT NULL DEFAULT 'odd_teams',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (tournament_id, round),
+    UNIQUE KEY uq_tournament_bye_team (tournament_id, team_id),
+    CONSTRAINT fk_tournament_bye_tournament FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tournament_bye_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+}
+
+async function ensureColumn(table, column, definition) {
+  const [rows] = await pool.query(
+    `SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?`,
+    [table, column]
+  );
+  if (!rows.length) await pool.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
 }

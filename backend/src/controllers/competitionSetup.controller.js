@@ -20,6 +20,7 @@ import {
   saveMatchPlayerStatistics,
   saveTournamentCompetition
 } from "../services/competitionSetup.service.js";
+import { generateTournamentStructure } from "../services/tournamentFormat.service.js";
 
 export async function games(req, res) {
   try {
@@ -86,6 +87,14 @@ export async function updateTournamentCompetition(req, res) {
   try {
     const data = await saveTournamentCompetition(req.user, Number(req.params.tournamentId), req.body);
     return res.json(data);
+  } catch (error) {
+    return res.status(400).json({ erro: error.message });
+  }
+}
+
+export async function generateStructure(req, res) {
+  try {
+    return res.status(201).json(await generateTournamentStructure(req.user, Number(req.params.tournamentId)));
   } catch (error) {
     return res.status(400).json({ erro: error.message });
   }

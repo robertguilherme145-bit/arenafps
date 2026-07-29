@@ -38,6 +38,7 @@ import {
   getMatchOperations,
   getTournamentCompetition,
   getTournamentCompetitionTeams,
+  generateTournamentStructure,
   openMatchVeto,
   performMatchVetoAction,
   resetMatchVeto,
@@ -448,6 +449,20 @@ export function CompetitionOperationsWorkspace({
     }
   }
 
+  async function handleGenerateStructure() {
+    if (!activeTournament) return;
+    setBusy("generate-structure");
+    try {
+      await generateTournamentStructure(activeTournament.id);
+      await Promise.all([onReloadMatches(activeTournament.id), onRefreshAdmin()]);
+      toast.success("Estrutura gerada", "Rodadas e confrontos foram criados pelo formato selecionado.");
+    } catch (error) {
+      toast.error("Falha ao gerar estrutura", messageOf(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function mutateOperations(key: string, callback: () => Promise<MatchOperations>) {
     setBusy(key);
     try {
@@ -638,6 +653,7 @@ export function CompetitionOperationsWorkspace({
           matches={matches}
           tournaments={tournaments}
           onCreate={() => void handleCreateMatch()}
+          onGenerate={() => void handleGenerateStructure()}
           onFormChange={setMatchForm}
           onOpen={(matchId) => {
             setSelectedMatchId(matchId);
@@ -911,6 +927,7 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
               <Select value={competition.format} onChange={(event) => change("format", event.target.value as TournamentCompetition["format"])}>
                 <option value="single_elimination">Eliminação simples</option><option value="double_elimination">Eliminação dupla</option><option value="swiss">Sistema suíço</option><option value="round_robin">Todos contra todos</option><option value="group_playoffs">Fase de grupos + eliminatórias</option><option value="league">Liga</option><option value="custom">Personalizado</option>
               </Select>
+              <p className="mt-2 text-xs leading-5 text-arena-muted">{FORMAT_EXPLANATIONS[competition.format]}</p>
             </Field>
             <Field label="Serie"><Select value={competition.best_of} onChange={(event) => change("best_of", event.target.value as TournamentCompetition["best_of"])}><option value="bo1">MD1</option><option value="bo3">MD3</option><option value="bo5">MD5</option></Select></Field>
             <Field label="Seed"><Select value={competition.seed_mode} onChange={(event) => change("seed_mode", event.target.value as TournamentCompetition["seed_mode"])}><option value="automatic">Automatico</option><option value="manual">Manual</option></Select></Field>
@@ -920,7 +937,7 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
             <Field label="Aprovacao de inscricao"><Select value={competition.registration_approval} onChange={(event) => change("registration_approval", event.target.value as TournamentCompetition["registration_approval"])}><option value="manual">Manual</option><option value="automatic">Automatica</option></Select></Field>
           </div>
           <div className="flex flex-wrap gap-6"><CheckControl checked={competition.pick_ban_enabled} label="Pick & Ban ativo" onChange={(checked) => change("pick_ban_enabled", checked)} /><CheckControl checked={competition.auto_decider} label="Decider automatico" onChange={(checked) => change("auto_decider", checked)} /><CheckControl checked={competition.overtime_enabled} label="Overtime permitido" onChange={(checked) => change("overtime_enabled", checked)} /></div>
-          <Field label="Criterios de desempate"><Input value={competition.tiebreakers} onChange={(event) => change("tiebreakers", event.target.value)} /></Field>
+          <Field label="Criterios oficiais de desempate"><Input readOnly value="Pontos, confronto direto, percentual de vitorias, saldo medio de rounds por mapa e rounds medios por mapa" /><p className="text-xs text-arena-muted">Regra protegida pelo motor. Mapas nao disputados nunca entram como vitoria ou saldo.</p></Field>
         </CardContent>
       </Card>
 
@@ -956,17 +973,31 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
   );
 }
 
-function MatchSchedule({ tournaments, activeTournament, confirmedTeams, matches, matchForm, loading, busy, canCreate, onTournamentChange, onFormChange, onCreate, onOpen, onReload }: {
-  tournaments: Tournament[]; activeTournament: Tournament | null; confirmedTeams: TournamentTeam[]; matches: Match[]; matchForm: { round: string; team_a_id: string; team_b_id: string; scheduled_at: string }; loading: boolean; busy: string | null; canCreate: boolean; onTournamentChange: (id: number) => void; onFormChange: (form: { round: string; team_a_id: string; team_b_id: string; scheduled_at: string }) => void; onCreate: () => void; onOpen: (id: number) => void; onReload: () => void;
+const FORMAT_EXPLANATIONS: Record<TournamentCompetition["format"], string> = {
+  single_elimination: "Eliminacao simples: perdeu uma serie, esta eliminado. O vencedor avanca ate a final.",
+  double_elimination: "Eliminacao dupla: a equipe sai somente apos a segunda derrota.",
+  swiss: "Sistema suico: equipes com campanhas parecidas se enfrentam, sem repetir adversarios quando possivel.",
+  round_robin: "Todos contra todos: cada equipe enfrenta todas as outras uma vez. A classificacao e por pontos.",
+  group_playoffs: "Grupos + eliminatorias: todos contra todos dentro do grupo; os dois melhores avancam ao mata-mata.",
+  league: "Liga: todos se enfrentam em turno e returno. A classificacao final e por pontos.",
+  custom: "Personalizado: confrontos e rodadas sao criados manualmente pela administracao.",
+  mix_single_elimination: "Mix individual: jogadores sao sorteados em equipes e disputam eliminacao simples em MD1."
+};
+
+function MatchSchedule({ tournaments, activeTournament, confirmedTeams, matches, matchForm, loading, busy, canCreate, onTournamentChange, onFormChange, onCreate, onGenerate, onOpen, onReload }: {
+  tournaments: Tournament[]; activeTournament: Tournament | null; confirmedTeams: TournamentTeam[]; matches: Match[]; matchForm: { round: string; team_a_id: string; team_b_id: string; scheduled_at: string }; loading: boolean; busy: string | null; canCreate: boolean; onTournamentChange: (id: number) => void; onFormChange: (form: { round: string; team_a_id: string; team_b_id: string; scheduled_at: string }) => void; onCreate: () => void; onGenerate: () => void; onOpen: (id: number) => void; onReload: () => void;
 }) {
   return <div className="grid gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
-    <Card><CardHeader><h2 className="font-display text-lg font-semibold">Criar partida</h2><p className="mt-1 text-sm text-arena-muted">As equipes vem das inscricoes confirmadas.</p></CardHeader><CardContent className="space-y-4">
+    <Card><CardHeader><h2 className="font-display text-lg font-semibold">Estrutura competitiva</h2><p className="mt-1 text-sm text-arena-muted">Gere o formato automaticamente ou crie um confronto excepcional.</p></CardHeader><CardContent className="space-y-4">
       <Field label="Torneio"><Select value={activeTournament?.id ?? ""} onChange={(event) => onTournamentChange(Number(event.target.value))}>{tournaments.map((tournament) => <option key={tournament.id} value={tournament.id}>{tournament.nome}</option>)}</Select></Field>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="Rodada"><Input min="1" type="number" value={matchForm.round} onChange={(event) => onFormChange({ ...matchForm, round: event.target.value })} /></Field><Field label="Agendamento"><Input type="datetime-local" value={matchForm.scheduled_at} onChange={(event) => onFormChange({ ...matchForm, scheduled_at: event.target.value })} /></Field></div>
       <Field label="Equipe A"><Select value={matchForm.team_a_id} onChange={(event) => onFormChange({ ...matchForm, team_a_id: event.target.value })}><option value="">Selecione</option>{confirmedTeams.map((team) => <option disabled={String(team.team_id) === matchForm.team_b_id} key={team.team_id} value={team.team_id}>#{team.team_id} · {team.team_name} ({team.lineup_size} jogadores)</option>)}</Select></Field>
       <Field label="Equipe B"><Select value={matchForm.team_b_id} onChange={(event) => onFormChange({ ...matchForm, team_b_id: event.target.value })}><option value="">Selecione</option>{confirmedTeams.map((team) => <option disabled={String(team.team_id) === matchForm.team_a_id} key={team.team_id} value={team.team_id}>#{team.team_id} · {team.team_name} ({team.lineup_size} jogadores)</option>)}</Select></Field>
       {!canCreate ? <div className="border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">Feche as inscricoes ou inicie o torneio antes de criar confrontos.</div> : null}
+      {!matches.length ? <Button disabled={!canCreate || confirmedTeams.length < 2} loading={busy === "generate-structure"} icon={<Swords className="h-4 w-4" />} onClick={onGenerate}>Gerar estrutura do torneio</Button> : null}
+      <div className="border-t border-arena-line pt-4"><p className="mb-3 text-xs font-bold uppercase text-arena-muted">Confronto manual</p>
       <Button disabled={!canCreate || !matchForm.team_a_id || !matchForm.team_b_id} loading={busy === "create-match"} icon={<Swords className="h-4 w-4" />} onClick={onCreate}>Criar partida</Button>
+      </div>
     </CardContent></Card>
     <Card><CardHeader className="flex items-center justify-between gap-3"><div><h2 className="font-display text-lg font-semibold">Cronograma de partidas</h2><p className="mt-1 text-sm text-arena-muted">Abra uma partida para operar mapas, veto e lineups.</p></div><IconButton label="Atualizar partidas" onClick={onReload}><RefreshCw className="h-4 w-4" /></IconButton></CardHeader><CardContent className="p-0">
       <div className="divide-y divide-arena-line">{matches.map((match) => <div className="grid items-center gap-4 px-5 py-4 md:grid-cols-[90px_1fr_130px_auto]" key={match.id}><div><p className="text-xs uppercase text-arena-muted">Partida</p><p className="font-bold">#{match.id} · R{match.round}</p></div><div><p className="font-semibold">{match.team_a} <span className="text-arena-muted">vs</span> {match.team_b}</p><p className="mt-1 text-xs text-arena-muted">{match.scheduled_at ? new Date(match.scheduled_at).toLocaleString("pt-BR") : "Sem horario definido"}</p></div><Badge tone={match.status === "finalizada" ? "success" : match.status === "andamento" ? "warning" : "info"}>{match.status}</Badge><Button className="h-9" icon={<PencilLine className="h-4 w-4" />} variant="secondary" onClick={() => onOpen(match.id)}>Operar</Button></div>)}</div>

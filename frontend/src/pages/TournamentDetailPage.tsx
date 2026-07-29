@@ -28,7 +28,7 @@ export function TournamentDetailPage() {
   const { error } = useToast();
   const [center, setCenter] = useState<PublicTournamentCenter | null>(null);
   const [tab, setTab] = useState<
-    "overview" | "bracket" | "matches" | "statistics"
+    "overview" | "standings" | "bracket" | "matches" | "statistics"
   >("overview");
   const [selectedMatch, setSelectedMatch] = useState<
     PublicTournamentCenter["matches"][number] | null
@@ -154,6 +154,7 @@ export function TournamentDetailPage() {
         <div className="mt-6 flex gap-2 overflow-x-auto border-b border-arena-line pb-3">
           {[
             ["overview", "Visao geral"],
+            ["standings", "Classificacao"],
             ["bracket", "Chaveamento"],
             ["matches", "Partidas"],
             ["statistics", "Estatisticas"],
@@ -254,6 +255,25 @@ export function TournamentDetailPage() {
               </CardContent>
             </Card>
           </div>
+        ) : null}
+        {tab === "standings" ? (
+          <Card className="mt-6">
+            <CardHeader>
+              <h2 className="font-display text-xl font-semibold">Classificacao oficial</h2>
+              <p className="mt-1 text-sm text-arena-muted">3 pontos por vitoria de serie. Mapas nao disputados nao geram saldo.</p>
+            </CardHeader>
+            <DataTable data={center.standings} columns={[
+              { header: "#", cell: (team) => team.position },
+              { header: "Equipe", cell: (team) => <strong>{team.team_name || `Equipe #${team.team_id}`}</strong> },
+              { header: "Pontos", cell: (team) => <strong>{team.points ?? team.wins * 3}</strong> },
+              { header: "Series", cell: (team) => team.matches },
+              { header: "V-D", cell: (team) => `${team.wins}-${team.losses}` },
+              { header: "Mapas", cell: (team) => `${team.score_for}-${team.score_against}` },
+              { header: "Mapas jogados", cell: (team) => team.maps_played ?? 0 },
+              { header: "Saldo medio de rounds", cell: (team) => Number(team.round_balance_per_map ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) },
+              { header: "Aproveitamento", cell: (team) => `${team.win_rate}%` },
+            ]} />
+          </Card>
         ) : null}
         {tab === "bracket" ? (
           <div className="mt-6 overflow-x-auto pb-4">

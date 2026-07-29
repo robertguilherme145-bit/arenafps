@@ -34,6 +34,7 @@ import {
   deleteMap,
   deleteGame,
   gameSettings,
+  generateStructure,
   games as competitionGames,
   manualMatchMap,
   maps,
@@ -94,6 +95,7 @@ router.delete("/competition/maps/:mapId", deleteMap);
 
 router.get("/competition/tournaments/:tournamentId", tournamentCompetition);
 router.put("/competition/tournaments/:tournamentId", updateTournamentCompetition);
+router.post("/competition/tournaments/:tournamentId/structure", generateStructure);
 router.get("/competition/tournaments/:tournamentId/teams", tournamentTeams);
 
 router.get("/competition/matches/:matchId", matchOperations);
