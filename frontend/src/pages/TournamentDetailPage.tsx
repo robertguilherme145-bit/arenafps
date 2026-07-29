@@ -631,7 +631,7 @@ function MatchMapDetails({
             </h3>
             {selectedMap?.status === "finalizado" ? (
               <>
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-8"><TeamIdentity large name={match?.team_a || "Equipe A"} logo={match?.team_a_logo} winner={selectedMap.winner_team_id === match?.team_a_id} /><TeamIdentity large name={match?.team_b || "Equipe B"} logo={match?.team_b_logo} winner={selectedMap.winner_team_id === match?.team_b_id} /></div>
+                <div className="mx-auto mt-4 grid w-full max-w-3xl grid-cols-1 gap-2 sm:grid-cols-2"><TeamIdentity large name={match?.team_a || "Equipe A"} logo={match?.team_a_logo} winner={selectedMap.winner_team_id === match?.team_a_id} /><TeamIdentity large name={match?.team_b || "Equipe B"} logo={match?.team_b_logo} winner={selectedMap.winner_team_id === match?.team_b_id} /></div>
                 <p className="mt-3 font-display text-4xl font-bold">
                   {selectedMap.score_team_a} x {selectedMap.score_team_b}
                 </p>
@@ -652,7 +652,7 @@ function MatchMapDetails({
             <button
               type="button"
               aria-pressed={selectedMap?.id === map.id}
-              className={`min-h-32 border p-4 text-left transition ${selectedMap?.id === map.id ? "border-cyan-400 bg-cyan-400/10" : "border-arena-line bg-black/20 hover:border-cyan-400/60"}`}
+              className={`min-h-32 border p-4 text-left transition ${selectedMap?.id === map.id ? "border-cyan-400 bg-cyan-400/10" : map.winner_team_id ? "border-emerald-400/25 bg-emerald-400/[0.06] hover:border-emerald-400/50" : "border-arena-line bg-black/20 hover:border-cyan-400/60"}`}
               key={map.id}
               onClick={() => onSelectMap(map.id)}
             >
@@ -762,7 +762,7 @@ function BracketTeam({
   );
 }
 function TeamIdentity({ name, logo, winner, large = false }: { name: string; logo: string | null | undefined; winner?: boolean; large?: boolean }) {
-  return <div className={`flex items-center gap-3 ${winner ? "text-emerald-300" : "text-arena-text"}`}><TeamLogo logo={logo} name={name} size={large ? "lg" : "sm"} /><span className={`${large ? "max-w-40 text-base" : "text-sm"} font-semibold`}>{name}</span>{winner ? <Badge tone="success"><Crown className="mr-1 h-3 w-3" /> Vencedor</Badge> : null}</div>;
+  return <div className={`flex items-center gap-3 transition-colors ${large ? "min-h-20 border px-4 py-3" : winner ? "-mx-2 border border-emerald-400/20 bg-emerald-400/[0.06] px-2 py-1.5" : ""} ${large && winner ? "border-emerald-400/35 bg-emerald-400/[0.11] text-emerald-200" : large ? "border-white/10 bg-black/25 text-arena-text" : winner ? "text-emerald-300" : "text-arena-text"}`}><TeamLogo logo={logo} name={name} size={large ? "lg" : "sm"} /><span className={`${large ? "min-w-0 flex-1 text-base" : "text-sm"} font-semibold`}>{name}</span>{winner ? <Badge tone="success"><Crown className="mr-1 h-3 w-3" /> Vencedor</Badge> : null}</div>;
 }
 function TeamLogo({ logo, name, size }: { logo: string | null | undefined; name: string; size: "xs" | "sm" | "lg" }) {
   const classes = size === "lg" ? "h-16 w-16" : size === "sm" ? "h-9 w-9" : "h-5 w-5";
