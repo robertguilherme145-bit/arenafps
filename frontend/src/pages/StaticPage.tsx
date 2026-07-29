@@ -17,7 +17,7 @@ import type { PublicPortalData } from "../types/api";
 const headings = {
   sobre: [
     "Sobre a Arena Camp",
-    "Infraestrutura competitiva para transformar partidas em historico confiavel.",
+    "Infraestrutura competitiva para transformar partidas em histórico confiavel.",
   ],
   contato: [
     "Contato",
@@ -33,7 +33,7 @@ const headings = {
   ],
   termos: [
     "Termos de Uso",
-    "Regras para uma operacao competitiva justa, segura e auditavel.",
+    "Regras para uma operação competitiva justa, segura e auditavel.",
   ],
   noticias: [
     "Noticias",
@@ -102,7 +102,7 @@ function News({ data }: { data: PublicPortalData | null }) {
                 className="mt-4 inline-block text-sm font-semibold text-cyan-200"
                 href={item.link_url}
               >
-                Ler publicacao
+                Ler publicação
               </a>
             ) : null}
           </div>
@@ -229,18 +229,18 @@ function About({ data }: { data: PublicPortalData | null }) {
       <div className="grid gap-4 md:grid-cols-3">
         <Value
           icon={<Trophy />}
-          title="Competicao"
-          text="Regras, chaves, mapas, placares e estatisticas em uma operacao auditavel."
+          title="Competição"
+          text="Regras, chaves, mapas, placares e estatísticas em uma operação auditavel."
         />
         <Value
           icon={<ShieldCheck />}
           title="Confianca"
-          text="Permissoes por papel, historico administrativo e dados oficiais por partida."
+          text="Permissões por papel, histórico administrativo e dados oficiais por partida."
         />
         <Value
           icon={<CheckCircle2 />}
           title="Carreira"
-          text="Cada resultado contribui para rankings, conquistas e historico publico."
+          text="Cada resultado contribui para rankings, conquistas e histórico público."
         />
       </div>
       <div className="grid grid-cols-2 gap-px border border-arena-line bg-arena-line md:grid-cols-4">
@@ -262,20 +262,20 @@ function Legal({ type }: { type: "privacidade" | "termos" }) {
           ],
           [
             "Finalidades",
-            "Autenticacao, operacao de torneios, prevencao a fraude, rankings, suporte e cumprimento de obrigacoes.",
+            "Autenticacao, operação de torneios, prevencao a fraude, rankings, suporte e cumprimento de obrigacoes.",
           ],
           [
             "Seus controles",
-            "Preferencias de notificacao, privacidade do perfil, sessoes ativas e autenticacao em dois fatores ficam disponiveis na conta.",
+            "Preferências de notificacao, privacidade do perfil, sessoes ativas e autenticacao em dois fatores ficam disponiveis na conta.",
           ],
           [
             "Retencao e seguranca",
-            "Os registros seguem o tempo necessario para historico competitivo, auditoria, disputas e obrigacoes aplicaveis.",
+            "Os registros seguem o tempo necessario para histórico competitivo, auditoria, disputas e obrigacoes aplicaveis.",
           ],
         ]
       : [
           [
-            "Conta e permissoes",
+            "Conta e permissões",
             "Cada pessoa utiliza uma conta unica. Os recursos disponiveis dependem dos papeis concedidos na plataforma e nas equipes.",
           ],
           [
@@ -283,11 +283,11 @@ function Legal({ type }: { type: "privacidade" | "termos" }) {
             "Fraude, manipulacao de resultado, abuso e descumprimento de regulamento podem gerar penalidades e suspensoes.",
           ],
           [
-            "Pagamentos e inscricoes",
+            "Pagamentos e inscrições",
             "Valores, prazos, cancelamentos e reembolsos seguem as condicoes publicadas em cada torneio.",
           ],
           [
-            "Conteudo e evidencias",
+            "Conteúdo e evidencias",
             "Materiais enviados em disputas e suporte devem ser verdadeiros, pertinentes e respeitar direitos de terceiros.",
           ],
         ];

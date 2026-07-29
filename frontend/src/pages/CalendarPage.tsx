@@ -17,11 +17,11 @@ export function CalendarPage() {
 
   return (
     <section className="px-4 pb-12 lg:px-8">
-      <PageHeader eyebrow="Agenda" title="Calendario competitivo" description={`Torneios e eventos oficiais de ${monthName}.`} />
+      <PageHeader eyebrow="Agenda" title="Calendário competitivo" description={`Torneios e eventos oficiais de ${monthName}.`} />
       <Card>
         <CardContent>
-          {isLoading ? <p className="py-8 text-center text-sm text-arena-muted">Carregando calendario oficial.</p> : null}
-          {isError ? <p className="py-8 text-center text-sm text-arena-muted">Nao foi possivel consultar o calendario neste momento.</p> : null}
+          {isLoading ? <p className="py-8 text-center text-sm text-arena-muted">Carregando calendário oficial.</p> : null}
+          {isError ? <p className="py-8 text-center text-sm text-arena-muted">Não foi possivel consultar o calendário neste momento.</p> : null}
           {!isLoading && !isError ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-7">
             {days.map((day) => {
               const dayEvents = events.filter((event) => event.date.getDate() === day);

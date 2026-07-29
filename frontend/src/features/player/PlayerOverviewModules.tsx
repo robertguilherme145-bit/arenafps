@@ -75,7 +75,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
           value={
             data.career.totals.global_rank
               ? `#${data.career.totals.global_rank}`
-              : "Sem posicao"
+              : "Sem posição"
           }
           helper={`${data.career.totals.matches} partidas oficiais`}
           icon={<Medal className="h-5 w-5" />}
@@ -104,10 +104,10 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-display text-xl font-semibold">
-                  Proxima partida
+                  Próxima partida
                 </h2>
                 <p className="mt-1 text-sm text-arena-muted">
-                  Sala, presenca e informacoes oficiais.
+                  Sala, presença e informações oficiais.
                 </p>
               </div>
               {next ? <StatusBadge value={next.status} /> : null}
@@ -136,7 +136,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Metric label="Mapas" value={next.maps || "A definir"} />
                   <Metric
-                    label="Presenca"
+                    label="Presença"
                     value={
                       next.attendance_status
                         ? String(next.attendance_status)
@@ -196,7 +196,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
                 <div className="grid grid-cols-2 gap-3">
                   <Metric label="Elenco" value={String(data.members.length)} />
                   <Metric
-                    label="Sua posicao"
+                    label="Sua posição"
                     value={
                       data.current_team.lineup_status === "titular"
                         ? "Titular"
@@ -222,7 +222,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
               </div>
             ) : (
               <EmptyState
-                title="Voce esta sem equipe"
+                title="Você está sem equipe"
                 description="Pesquise equipes abertas ou responda a um convite para iniciar sua jornada competitiva."
               />
             )}
@@ -515,7 +515,7 @@ export function PlayerProfileModule({ data, busy, run }: PlayerModuleProps) {
                     <div>
                       <p className="font-semibold">{game.nome}</p>
                       <p className="text-xs text-arena-muted">
-                        {game.selected ? "Vinculado" : "Nao vinculado"}
+                        {game.selected ? "Vinculado" : "Não vinculado"}
                       </p>
                     </div>
                   </div>
@@ -654,7 +654,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
                 </h2>
                 <p className="mt-1 text-sm text-arena-muted">
                   {data.current_team.game_name} ·{" "}
-                  {data.current_team.team_region || "Regiao nao informada"}
+                  {data.current_team.team_region || "Regiao não informada"}
                 </p>
               </div>
               <Link to={`/equipe/${data.current_team.team_slug}`}>
@@ -662,7 +662,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
                   variant="secondary"
                   icon={<Shield className="h-4 w-4" />}
                 >
-                  Perfil publico
+                  Perfil público
                 </Button>
               </Link>
             </div>
@@ -739,7 +739,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
                     <p className="font-semibold">{invite.team_name}</p>
                     <p className="text-sm text-arena-muted">
                       {invite.game_name} · convite de{" "}
-                      {invite.invited_by_name || "Lider da equipe"}
+                      {invite.invited_by_name || "Líder da equipe"}
                     </p>
                   </div>
                   <StatusBadge value={invite.status} />
@@ -940,7 +940,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
               Sair da equipe
             </h2>
             <p className="mt-1 text-sm text-arena-muted">
-              Seu historico competitivo sera preservado. O lider e o capitao
+              Seu histórico competitivo será preservado. O líder e o capitão
               serao avisados.
             </p>
           </CardHeader>
@@ -966,7 +966,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
         onClose={() => setRequestTeam(null)}
       >
         <div className="space-y-4">
-          <Field label="Mensagem para o lider">
+          <Field label="Mensagem para o líder">
             <Textarea
               placeholder="Conte sobre sua funcao, experiencia e disponibilidade."
               value={message}
@@ -986,7 +986,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
       <Modal
         open={leaveOpen}
         title="Sair da equipe"
-        description="Esta acao remove voce do elenco ativo, mas mantem estatisticas e historico."
+        description="Esta ação remove você do elenco ativo, mas mantem estatísticas e histórico."
         onClose={() => setLeaveOpen(false)}
       >
         <div className="space-y-4">
@@ -1011,7 +1011,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
                     leaveName,
                     data.current_team?.team_id,
                   ),
-                "Voce saiu da equipe",
+                "Você saiu da equipe",
               ).then((ok) => {
                 if (ok) setLeaveOpen(false);
               })

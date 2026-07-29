@@ -46,6 +46,7 @@ import { TournamentRegulationPanel } from "../components/tournament/TournamentRe
 import { ImageUploadField } from "../components/ui/ImageUploadField";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
+import { setArenaTheme } from "../utils/theme";
 import {
   archiveLeaderTeam,
   createLeaderCompetitionRequest,
@@ -152,7 +153,7 @@ export function LeaderDashboardPage() {
         if (result.updated > 0) {
           toast.success(
             "Pagamento atualizado",
-            "A confirmacao do Mercado Pago foi recebida automaticamente.",
+            "A confirmação do Mercado Pago foi recebida automaticamente.",
           );
           await Promise.all([load(), refreshSession()]);
         }
@@ -176,7 +177,7 @@ export function LeaderDashboardPage() {
       if (refresh) await load();
       return true;
     } catch (error) {
-      toast.error("Operacao nao concluida", messageOf(error));
+      toast.error("Operação não concluida", messageOf(error));
       return false;
     } finally {
       setBusy(null);
@@ -230,7 +231,7 @@ export function LeaderDashboardPage() {
   return (
     <section className="px-4 pb-12 lg:px-8">
       <PageHeader
-        eyebrow="Lider da equipe"
+        eyebrow="Líder da equipe"
         title={workspace.team.nome}
         description={`${workspace.team.game_name} · ${workspace.team.tag || "Sem tag"} · Gestao competitiva da equipe`}
         action={
@@ -239,7 +240,7 @@ export function LeaderDashboardPage() {
               icon={<ExternalLink className="h-4 w-4" />}
               variant="secondary"
             >
-              Pagina publica
+              Pagina pública
             </Button>
           </Link>
         }
@@ -301,7 +302,7 @@ function TeamOnboarding({
       <PageHeader
         eyebrow="Primeiro passo"
         title="Criar sua equipe"
-        description="Defina a identidade principal para liberar elenco, lineups, inscricoes e partidas."
+        description="Defina a identidade principal para liberar elenco, lineups, inscrições e partidas."
       />
       <div className="grid gap-5 xl:grid-cols-[1fr_.7fr]">
         <Card>
@@ -381,7 +382,7 @@ function TeamOnboarding({
               />
             </Field>
             <div className="md:col-span-2">
-              <Field label="Descricao">
+              <Field label="Descrição">
                 <Textarea
                   value={form.descricao}
                   onChange={(event) =>
@@ -460,7 +461,7 @@ function TeamContext({
         icon={<Users className="h-5 w-5" />}
       />
       <StatCard
-        label="Proxima partida"
+        label="Próxima partida"
         value={
           nextMatch ? formatShortDate(nextMatch.scheduled_at) : "Sem agenda"
         }
@@ -534,7 +535,7 @@ function DashboardModule({
       module: "lineups" as const,
     },
     {
-      label: "Inscricao confirmada",
+      label: "Inscrição confirmada",
       done: data.entries.some((entry) => entry.status === "confirmado"),
       module: "tournaments" as const,
     },
@@ -638,7 +639,7 @@ function DashboardModule({
         </Card>
         <Card>
           <CardHeader>
-            <h2 className="font-display text-xl font-semibold">Notificacoes</h2>
+            <h2 className="font-display text-xl font-semibold">Notificações</h2>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.notifications.slice(0, 6).map((item) => (
@@ -698,7 +699,7 @@ function TeamModule({ data, busy, run }: ModuleProps) {
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Metric label="Regiao" value={team.regiao || "Nao definida"} />
+              <Metric label="Regiao" value={team.regiao || "Não definida"} />
               <Metric label="Criada ha" value={`${team.age_days} dias`} />
               <Metric label="Win rate" value={`${data.statistics.win_rate}%`} />
               <Metric
@@ -794,7 +795,7 @@ function TeamModule({ data, busy, run }: ModuleProps) {
             />
           </Field>
           <div className="md:col-span-2">
-            <Field label="Descricao">
+            <Field label="Descrição">
               <Textarea
                 value={form.descricao}
                 onChange={(e) =>
@@ -846,8 +847,8 @@ function TeamModule({ data, busy, run }: ModuleProps) {
               onClick={() =>
                 confirmAction(
                   team.ativo
-                    ? "Arquivar a equipe? O historico sera preservado."
-                    : "Reativar esta equipe?",
+                    ? "Arquivar a equipe? O histórico será preservado."
+                    : "Reativar está equipe?",
                   () =>
                     run(
                       "team-archive",
@@ -964,7 +965,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
               header: "Cargo",
               cell: (member) =>
                 member.cargo === "leader" ? (
-                  <Badge tone="info">Lider</Badge>
+                  <Badge tone="info">Líder</Badge>
                 ) : (
                   <Select
                     value={drafts[member.id]?.cargo ?? member.cargo}
@@ -975,7 +976,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
                       }))
                     }
                   >
-                    <option value="captain">Capitao</option>
+                    <option value="captain">Capitão</option>
                     <option value="manager">Manager</option>
                     <option value="player">Jogador</option>
                   </Select>
@@ -1027,7 +1028,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
               cell: (member) =>
                 (drafts[member.id]?.cargo ?? member.cargo) !== "captain" ? (
                   <span className="text-xs text-arena-muted">
-                    Somente capitao
+                    Somente capitão
                   </span>
                 ) : (
                   <div className="space-y-2">
@@ -1073,10 +1074,10 @@ function RosterModule({ data, busy, run }: ModuleProps) {
               cell: (member) =>
                 member.last_seen_at
                   ? formatDate(member.last_seen_at)
-                  : "Ainda nao registrado",
+                  : "Ainda não registrado",
             },
             {
-              header: "Acoes",
+              header: "Ações",
               cell: (member) =>
                 member.cargo === "leader" ? (
                   <span className="text-xs text-arena-muted">
@@ -1113,7 +1114,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
                         )
                       }
                     >
-                      Lider
+                      Líder
                     </Button>
                     <Button
                       className="h-8 px-3 text-xs"
@@ -1198,7 +1199,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
                         void run(
                           `request-${request.id}`,
                           () => decideLeaderRequest(request.id, "block"),
-                          "Usuario bloqueado",
+                          "Usuário bloqueado",
                         )
                       }
                     >
@@ -1468,8 +1469,8 @@ function TournamentsModule({
         />
         <Select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="todos">Todos os status</option>
-          <option value="aberto">Inscricoes abertas</option>
-          <option value="fechado">Inscricoes encerradas</option>
+          <option value="aberto">Inscrições abertas</option>
+          <option value="fechado">Inscrições encerradas</option>
           <option value="em_andamento">Em andamento</option>
           <option value="finalizado">Finalizado</option>
         </Select>
@@ -1498,11 +1499,11 @@ function TournamentsModule({
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <Metric
-                  label="Premiacao"
+                  label="Premiação"
                   value={tournament.premiacao || "A definir"}
                 />
                 <Metric
-                  label="Inscricao"
+                  label="Inscrição"
                   value={formatCurrency(tournament.valor)}
                 />
                 <Metric
@@ -1547,7 +1548,7 @@ function TournamentsModule({
       </div>
       <Modal
         open={Boolean(target)}
-        title="Confirmar inscricao"
+        title="Confirmar inscrição"
         description={target ? target.nome : undefined}
         onClose={() => setTarget(null)}
       >
@@ -1586,7 +1587,7 @@ function TournamentsModule({
             />
             <span>
               Li e aceito o regulamento, o congelamento da lineup e as regras da
-              competicao.
+              competição.
             </span>
           </label>
           <Button
@@ -1609,7 +1610,7 @@ function TournamentsModule({
               })
             }
           >
-            Confirmar inscricao
+            Confirmar inscrição
           </Button>
         </div>
       </Modal>
@@ -1649,7 +1650,7 @@ function TournamentCenterPanel({
             {center.tournament.nome}
           </h2>
           <p className="mt-1 text-sm text-arena-muted">
-            Acompanhamento oficial da inscricao, chaveamento e regulamento.
+            Acompanhamento oficial da inscrição, chaveamento e regulamento.
           </p>
         </div>
         <div className="flex gap-2">
@@ -1703,7 +1704,7 @@ function TournamentCenterPanel({
                 value={`${center.participants.length}/${center.tournament.max_teams}`}
               />
               <Metric
-                label="Sua inscricao"
+                label="Sua inscrição"
                 value={statusLabel(ownEntry?.status || "pendente")}
               />
             </div>
@@ -1727,7 +1728,7 @@ function TournamentCenterPanel({
                   </div>
                 ))}
                 {!center.matches.length ? (
-                  <InlineEmpty text="O chaveamento ainda nao foi publicado." />
+                  <InlineEmpty text="O chaveamento ainda não foi publicado." />
                 ) : null}
               </div>
             </div>
@@ -1741,7 +1742,7 @@ function TournamentCenterPanel({
                 ))}
                 {!center.map_pool.length ? (
                   <span className="text-sm text-arena-muted">
-                    Mapas ainda nao publicados.
+                    Mapas ainda não publicados.
                   </span>
                 ) : null}
               </div>
@@ -1788,7 +1789,7 @@ function TournamentCenterPanel({
               </div>
             ))}
             {!rounds.length ? (
-              <InlineEmpty text="A administracao ainda nao gerou o chaveamento." />
+              <InlineEmpty text="A administracao ainda não gerou o chaveamento." />
             ) : null}
           </div>
         ) : null}
@@ -1797,7 +1798,7 @@ function TournamentCenterPanel({
             data={center.standings}
             columns={[
               {
-                header: "Posicao",
+                header: "Posição",
                 cell: (row) => `#${center.standings.indexOf(row) + 1}`,
               },
               {
@@ -1861,7 +1862,7 @@ function TournamentCenterPanel({
                   ),
                 },
                 {
-                  header: "Confirmacao",
+                  header: "Confirmação",
                   cell: (player) => (
                     <StatusBadge
                       value={player.confirmado ? "confirmado" : "pendente"}
@@ -1930,7 +1931,7 @@ function MatchesModule({ data, busy, run }: ModuleProps) {
           action: operations.veto.expected_step!.action,
           game_map_id: mapId,
         }),
-      "Acao registrada",
+      "Ação registrada",
       false,
     );
     if (ok) {
@@ -2249,7 +2250,7 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
                         `attendance-${event.id}`,
                         () =>
                           updateLeaderEventAttendance(event.id, "confirmado"),
-                        "Presenca confirmada",
+                        "Presença confirmada",
                       )
                     }
                   >
@@ -2264,7 +2265,7 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
                       void run(
                         `attendance-${event.id}`,
                         () => updateLeaderEventAttendance(event.id, "talvez"),
-                        "Presenca atualizada",
+                        "Presença atualizada",
                       )
                     }
                   >
@@ -2283,7 +2284,7 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
                       )
                     }
                   >
-                    Nao vou
+                    Não vou
                   </Button>
                 </div>
               </div>
@@ -2333,7 +2334,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
         <StatCard
           label="Pagamentos"
           value={String(data.payments.length)}
-          helper="Historico da equipe"
+          helper="Histórico da equipe"
           icon={<CreditCard className="h-5 w-5" />}
         />
         <StatCard
@@ -2351,14 +2352,14 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
               .filter((item) => item.status === "aprovado")
               .reduce((sum, item) => sum + Number(item.valor), 0),
           )}
-          helper="Inscricoes aprovadas"
+          helper="Inscrições aprovadas"
           icon={<Trophy className="h-5 w-5" />}
         />
       </div>
       <Card>
         <CardHeader>
           <h2 className="font-display text-xl font-semibold">
-            Inscricoes e pagamentos
+            Inscrições e pagamentos
           </h2>
         </CardHeader>
         <DataTable
@@ -2377,7 +2378,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
             },
             { header: "Valor", cell: (entry) => formatCurrency(entry.valor) },
             {
-              header: "Inscricao",
+              header: "Inscrição",
               cell: (entry) => <StatusBadge value={entry.status} />,
             },
             {
@@ -2385,7 +2386,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
               cell: (entry) => <StatusBadge value={entry.payment_status} />,
             },
             {
-              header: "Acao",
+              header: "Ação",
               cell: (entry) =>
                 entry.payment_status === "aguardando" &&
                 Number(entry.valor) > 0 ? (
@@ -2404,7 +2405,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
                   </Button>
                 ) : (
                   <span className="text-xs text-arena-muted">
-                    Sem acao pendente
+                    Sem ação pendente
                   </span>
                 ),
             },
@@ -2432,7 +2433,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
               ) : null}
               <div>
                 <p className="text-sm text-arena-muted">
-                  Copie o codigo abaixo para concluir o pagamento.
+                  Copie o código abaixo para concluir o pagamento.
                 </p>
                 <div className="mt-3 break-all border border-arena-line bg-black/20 p-3 font-mono text-xs">
                   {payment.copia_cola}
@@ -2445,7 +2446,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
                     void navigator.clipboard.writeText(payment.copia_cola!)
                   }
                 >
-                  Copiar codigo
+                  Copiar código
                 </Button>
               </div>
             </CardContent>
@@ -2495,7 +2496,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
             </h2>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label="Inscricao paga">
+            <Field label="Inscrição paga">
               <Select
                 value={refund.tournament_id}
                 onChange={(e) =>
@@ -3064,7 +3065,7 @@ function CommunicationModule({ data, busy, run }: ModuleProps) {
                             <p className="text-[11px] font-semibold uppercase text-arena-muted">
                               {message.role === "admin"
                                 ? "Equipe Arena Camp"
-                                : "Voce"}{" "}
+                                : "Você"}{" "}
                               · {formatDate(message.created_at)}
                             </p>
                             <p className="mt-2 whitespace-pre-wrap text-sm">
@@ -3087,7 +3088,7 @@ function CommunicationModule({ data, busy, run }: ModuleProps) {
                         ) : null}
                         <Field label="Responder ao atendimento">
                           <Textarea
-                            placeholder="Escreva sua resposta ou envie mais informacoes"
+                            placeholder="Escreva sua resposta ou envie mais informações"
                             value={ticketReply}
                             onChange={(event) =>
                               setTicketReply(event.target.value)
@@ -3180,7 +3181,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
       <Card>
         <CardHeader>
           <h2 className="font-display text-xl font-semibold">
-            Historico de confrontos
+            Histórico de confrontos
           </h2>
         </CardHeader>
         <DataTable
@@ -3262,7 +3263,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
             </div>
           ))}
           {!data.statistics.achievements.length ? (
-            <InlineEmpty text="A primeira conquista sera liberada com uma vitoria oficial." />
+            <InlineEmpty text="A primeira conquista será liberada com uma vitoria oficial." />
           ) : null}
         </CardContent>
       </Card>
@@ -3293,7 +3294,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
       <Card>
         <CardHeader>
           <h2 className="font-display text-xl font-semibold">
-            Historico de gestao do elenco
+            Histórico de gestao do elenco
           </h2>
         </CardHeader>
         <DataTable
@@ -3301,7 +3302,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
           columns={[
             { header: "Quando", cell: (item) => formatDate(item.created_at) },
             {
-              header: "Acao",
+              header: "Ação",
               cell: (item) => formatHistoryAction(item.action),
             },
             { header: "Responsavel", cell: (item) => item.actor_name },
@@ -3315,6 +3316,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
 
 function SettingsModule({ data, busy, run }: ModuleProps) {
   const [preferences, setPreferences] = useState({ ...data.preferences });
+  useEffect(() => setArenaTheme(preferences.theme), [preferences.theme]);
   const [document, setDocument] = useState({
     name: "",
     type: "outro",
@@ -3324,7 +3326,7 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
     <div className="grid gap-5 xl:grid-cols-2">
       <Card>
         <CardHeader>
-          <h2 className="font-display text-xl font-semibold">Preferencias</h2>
+          <h2 className="font-display text-xl font-semibold">Preferências</h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <Field label="Idioma">
@@ -3334,9 +3336,9 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
                 setPreferences((s) => ({ ...s, language: e.target.value }))
               }
             >
-              <option value="pt-BR">Portugues</option>
+              <option value="pt-BR">Português</option>
               <option value="en-US">English</option>
-              <option value="es-ES">Espanol</option>
+              <option value="es-ES">Español</option>
             </Select>
           </Field>
           <Field label="Tema">
@@ -3355,9 +3357,9 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
             </Select>
           </Field>
           {[
-            ["email_notifications", "Notificacoes por email"],
-            ["discord_notifications", "Notificacoes pelo Discord"],
-            ["profile_public", "Perfil publico"],
+            ["email_notifications", "Notificações por email"],
+            ["discord_notifications", "Notificações pelo Discord"],
+            ["profile_public", "Perfil público"],
           ].map(([key, label]) => (
             <label
               className="flex items-center gap-3 text-sm font-semibold"
@@ -3388,11 +3390,11 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
                     discord_notifications: preferences.discord_notifications,
                     profile_public: preferences.profile_public,
                   }),
-                "Preferencias salvas",
+                "Preferências salvas",
               )
             }
           >
-            Salvar preferencias
+            Salvar preferências
           </Button>
         </CardContent>
       </Card>
@@ -3857,7 +3859,7 @@ function formatHistoryAction(value: string) {
         convite_enviado: "Convite enviado",
         solicitacao_accept: "Entrada aprovada",
         solicitacao_reject: "Solicitacao recusada",
-        solicitacao_block: "Usuario bloqueado",
+        solicitacao_block: "Usuário bloqueado",
         solicitacao_cancel: "Convite cancelado",
         membro_atualizado: "Cargo ou status alterado",
         lideranca_transferida: "Lideranca transferida",

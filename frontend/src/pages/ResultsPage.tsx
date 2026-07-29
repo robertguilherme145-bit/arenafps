@@ -16,7 +16,7 @@ export function ResultsPage() {
         <CardHeader><h2 className="font-display text-xl font-semibold">Partidas finalizadas</h2></CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? <EmptyResults text="Carregando resultados oficiais." /> : null}
-          {isError ? <EmptyResults text="Nao foi possivel consultar os resultados neste momento." /> : null}
+          {isError ? <EmptyResults text="Não foi possivel consultar os resultados neste momento." /> : null}
           {!isLoading && !isError && results.length === 0 ? <EmptyResults text="Nenhuma partida finalizada foi publicada." /> : null}
           {results.map((result) => (
             <div className="flex flex-col gap-4 border border-arena-line bg-black/20 p-4 md:flex-row md:items-center md:justify-between" key={result.id}>

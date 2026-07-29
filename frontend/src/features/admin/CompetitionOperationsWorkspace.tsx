@@ -78,9 +78,9 @@ type Props = {
 };
 
 const sections: Array<{ id: WorkspaceSection; label: string; description: string; icon: ReactNode }> = [
-  { id: "games", label: "Catalogo de jogos", description: "Cadastre os jogos e os mapas oficiais usados nos torneios.", icon: <Gamepad2 className="h-4 w-4" /> },
+  { id: "games", label: "Catálogo de jogos", description: "Cadastre os jogos e os mapas oficiais usados nos torneios.", icon: <Gamepad2 className="h-4 w-4" /> },
   { id: "rules", label: "Regras do torneio", description: "Defina formato, serie, map pool e regras competitivas.", icon: <ListChecks className="h-4 w-4" /> },
-  { id: "matches", label: "Partidas e resultados", description: "Crie confrontos, informe placares e estatisticas por mapa.", icon: <Swords className="h-4 w-4" /> },
+  { id: "matches", label: "Partidas e resultados", description: "Crie confrontos, informe placares e estatísticas por mapa.", icon: <Swords className="h-4 w-4" /> },
   { id: "veto", label: "Sala de Pick & Ban", description: "Libere e acompanhe as escolhas dos capitaes em tempo real.", icon: <ShieldCheck className="h-4 w-4" /> }
 ];
 
@@ -247,7 +247,7 @@ export function CompetitionOperationsWorkspace({
       setCompetition(config);
       setTournamentTeams(teams);
     } catch (error) {
-      toast.error("Falha ao carregar configuracao competitiva", messageOf(error));
+      toast.error("Falha ao carregar configuração competitiva", messageOf(error));
     }
   }
 
@@ -286,7 +286,7 @@ export function CompetitionOperationsWorkspace({
       toast.success("Jogo cadastrado", `${game.nome} agora pode receber mapas e torneios.`);
       await loadGames(game.id);
     } catch (error) {
-      toast.error("Nao foi possivel cadastrar o jogo", messageOf(error));
+      toast.error("Não foi possivel cadastrar o jogo", messageOf(error));
     } finally {
       setBusy(null);
     }
@@ -333,7 +333,7 @@ export function CompetitionOperationsWorkspace({
         ordem: Number(mapForm.ordem)
       });
       setMapForm(blankMapForm());
-      toast.success("Mapa adicionado", "O mapa ja esta disponivel para os map pools deste jogo.");
+      toast.success("Mapa adicionado", "O mapa já está disponivel para os map pools deste jogo.");
       await Promise.all([loadMaps(selectedGame.id), loadGames(selectedGame.id)]);
       if (activeTournament) await loadTournamentContext(activeTournament.id);
     } catch (error) {
@@ -382,8 +382,8 @@ export function CompetitionOperationsWorkspace({
     }
   }
 
-  async function handleDeleteMap(map:GameMap){if(!window.confirm(`Excluir definitivamente o mapa ${map.nome}?`))return;setBusy(`delete-map-${map.id}`);try{await deleteGameMap(map.id);toast.success("Mapa excluido");await Promise.all([loadMaps(map.game_id),loadGames(map.game_id)]);}catch(error){toast.error("Mapa nao excluido",messageOf(error));}finally{setBusy(null);}}
-  async function handleDeleteGame(){if(!selectedGame||!window.confirm(`Excluir definitivamente o jogo ${selectedGame.nome} e seus mapas sem uso?`))return;setBusy("delete-game");try{await deleteGame(selectedGame.id);toast.success("Jogo excluido");setSelectedGameId(null);setMaps([]);await loadGames();}catch(error){toast.error("Jogo nao excluido",messageOf(error));}finally{setBusy(null);}}
+  async function handleDeleteMap(map:GameMap){if(!window.confirm(`Excluir definitivamente o mapa ${map.nome}?`))return;setBusy(`delete-map-${map.id}`);try{await deleteGameMap(map.id);toast.success("Mapa excluido");await Promise.all([loadMaps(map.game_id),loadGames(map.game_id)]);}catch(error){toast.error("Mapa não excluido",messageOf(error));}finally{setBusy(null);}}
+  async function handleDeleteGame(){if(!selectedGame||!window.confirm(`Excluir definitivamente o jogo ${selectedGame.nome} e seus mapas sem uso?`))return;setBusy("delete-game");try{await deleteGame(selectedGame.id);toast.success("Jogo excluido");setSelectedGameId(null);setMaps([]);await loadGames();}catch(error){toast.error("Jogo não excluido",messageOf(error));}finally{setBusy(null);}}
 
   async function handleSaveCompetition() {
     if (!activeTournament || !competition || !competition.game_id) return;
@@ -473,7 +473,7 @@ export function CompetitionOperationsWorkspace({
       const data = await callback();
       setOperations(data);
     } catch (error) {
-      toast.error("Operacao nao concluida", messageOf(error));
+      toast.error("Operação não concluida", messageOf(error));
     } finally {
       setBusy(null);
     }
@@ -536,7 +536,7 @@ export function CompetitionOperationsWorkspace({
         veto_action_seconds: Number(roomForm.veto_action_seconds)
       });
       setOperations(data);
-      toast.success("Sala atualizada", "Os capitaes ja podem consultar servidor, senha e regras desta partida.");
+      toast.success("Sala atualizada", "Os capitaes já podem consultar servidor, senha e regras desta partida.");
     } catch (error) {
       toast.error("Falha ao atualizar a sala", messageOf(error));
     } finally {
@@ -769,7 +769,7 @@ function GameCatalog({
       <Card>
         <CardHeader className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-lg font-semibold">Catalogo de jogos</h2>
+            <h2 className="font-display text-lg font-semibold">Catálogo de jogos</h2>
             <p className="mt-1 text-sm text-arena-muted">{games.length} cadastrados</p>
           </div>
           <Button className="h-9 px-3" icon={<Plus className="h-4 w-4" />} onClick={() => onShowNewGame(true)}>Novo</Button>
@@ -801,7 +801,7 @@ function GameCatalog({
       <div className="space-y-5">
         <Card>
           <CardHeader>
-            <h2 className="font-display text-lg font-semibold">{showNewGame ? "Cadastrar jogo" : "Configuracao do jogo"}</h2>
+            <h2 className="font-display text-lg font-semibold">{showNewGame ? "Cadastrar jogo" : "Configuração do jogo"}</h2>
             <p className="mt-1 text-sm text-arena-muted">O ID exigido dos jogadores e o formato padrao pertencem ao jogo.</p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -817,7 +817,7 @@ function GameCatalog({
               </Field>
               <Field label="Cor primaria"><Input type="color" value={gameForm.cor_primaria} onChange={(event) => onGameFormChange({ ...gameForm, cor_primaria: event.target.value })} /></Field>
             </div>
-            <Field label="Descricao"><Input value={gameForm.descricao} onChange={(event) => onGameFormChange({ ...gameForm, descricao: event.target.value })} /></Field>
+            <Field label="Descrição"><Input value={gameForm.descricao} onChange={(event) => onGameFormChange({ ...gameForm, descricao: event.target.value })} /></Field>
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
               <Field label="Banner do jogo"><Input placeholder="URL ou envie uma imagem abaixo" value={gameForm.banner} onChange={(event) => onGameFormChange({ ...gameForm, banner:event.target.value })} /><div className="mt-2"><ImageUploadField value={gameForm.banner} onChange={(banner)=>onGameFormChange({ ...gameForm, banner })} label="Enviar banner do jogo" /></div></Field>
               <MediaPreview src={gameForm.banner} label="Pre-visualizacao do banner" wide />
@@ -828,7 +828,7 @@ function GameCatalog({
             </div>
             <div className="flex flex-wrap items-center gap-5">
               <CheckControl checked={gameForm.player_id_required} label="ID do jogador obrigatorio" onChange={(checked) => onGameFormChange({ ...gameForm, player_id_required: checked })} />
-              {!showNewGame ? <CheckControl checked={gameForm.ativo} label="Jogo ativo no catalogo" onChange={(checked) => onGameFormChange({ ...gameForm, ativo: checked })} /> : null}
+              {!showNewGame ? <CheckControl checked={gameForm.ativo} label="Jogo ativo no catálogo" onChange={(checked) => onGameFormChange({ ...gameForm, ativo: checked })} /> : null}
             </div>
             <div className="flex gap-3">
               <Button loading={busy === (showNewGame ? "create-game" : "save-game")} icon={showNewGame ? <Plus className="h-4 w-4" /> : <Save className="h-4 w-4" />} onClick={showNewGame ? onCreateGame : onSaveGame}>
@@ -876,7 +876,7 @@ function GameCatalog({
                     </div> : null}
                   </div>
                 ))}
-                {!maps.length ? <div className="py-8"><EmptyState title="Este jogo ainda nao tem mapas" description="Adicione os mapas oficiais usados nas competicoes." /></div> : null}
+                {!maps.length ? <div className="py-8"><EmptyState title="Este jogo ainda não tem mapas" description="Adicione os mapas oficiais usados nas competicoes." /></div> : null}
               </div>
             </CardContent>
           </Card>
@@ -896,7 +896,7 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
   onChange: (value: TournamentCompetition) => void;
   onSave: () => void;
 }) {
-  if (!competition) return <EmptyState title="Selecione um torneio" description="O regulamento competitivo sera configurado por torneio." />;
+  if (!competition) return <EmptyState title="Selecione um torneio" description="O regulamento competitivo será configurado por torneio." />;
 
   function change<K extends keyof TournamentCompetition>(key: K, value: TournamentCompetition[K]) {
     onChange({ ...competition!, [key]: value });
@@ -914,7 +914,7 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
     <div className="space-y-5">
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <div><h2 className="font-display text-lg font-semibold">Regulamento competitivo</h2><p className="mt-1 text-sm text-arena-muted">Formato, serie, regras e mapas usados pelo motor da competicao.</p></div>
+          <div><h2 className="font-display text-lg font-semibold">Regulamento competitivo</h2><p className="mt-1 text-sm text-arena-muted">Formato, serie, regras e mapas usados pelo motor da competição.</p></div>
           <Select className="w-full md:w-80" value={competition.tournament_id} onChange={(event) => onTournamentChange(Number(event.target.value))}>
             {tournaments.map((tournament) => <option key={tournament.id} value={tournament.id}>{tournament.nome}</option>)}
           </Select>
@@ -938,10 +938,10 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
             <Field label="Side inicial"><Select value={competition.initial_side} onChange={(event) => change("initial_side", event.target.value)}><option value="knife">Knife round</option><option value="random">Sorteio</option><option value="higher_seed">Melhor seed escolhe</option><option value="home_team">Equipe A escolhe</option></Select></Field>
             <Field label="Pausa (min)"><Input min="0" type="number" value={competition.pause_minutes} onChange={(event) => change("pause_minutes", Number(event.target.value))} /></Field>
             <Field label="W.O. (min)"><Input min="0" type="number" value={competition.walkover_minutes} onChange={(event) => change("walkover_minutes", Number(event.target.value))} /></Field>
-            <Field label="Aprovacao de inscricao"><Select value={competition.registration_approval} onChange={(event) => change("registration_approval", event.target.value as TournamentCompetition["registration_approval"])}><option value="manual">Manual</option><option value="automatic">Automatica</option></Select></Field>
+            <Field label="Aprovacao de inscrição"><Select value={competition.registration_approval} onChange={(event) => change("registration_approval", event.target.value as TournamentCompetition["registration_approval"])}><option value="manual">Manual</option><option value="automatic">Automatica</option></Select></Field>
           </div>
           <div className="flex flex-wrap gap-6"><CheckControl checked={competition.pick_ban_enabled} label="Pick & Ban ativo" onChange={(checked) => change("pick_ban_enabled", checked)} /><CheckControl checked={competition.auto_decider} label="Decider automatico" onChange={(checked) => change("auto_decider", checked)} /><CheckControl checked={competition.overtime_enabled} label="Overtime permitido" onChange={(checked) => change("overtime_enabled", checked)} /></div>
-          <Field label="Criterios oficiais de desempate"><Input readOnly value="Pontos, confronto direto, percentual de vitorias, saldo medio de rounds por mapa e rounds medios por mapa" /><p className="text-xs text-arena-muted">Regra protegida pelo motor. Mapas nao disputados nunca entram como vitoria ou saldo.</p></Field>
+          <Field label="Criterios oficiais de desempate"><Input readOnly value="Pontos, confronto direto, percentual de vitorias, saldo medio de rounds por mapa e rounds medios por mapa" /><p className="text-xs text-arena-muted">Regra protegida pelo motor. Mapas não disputados nunca entram como vitoria ou saldo.</p></Field>
         </CardContent>
       </Card>
 
@@ -978,12 +978,12 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
 }
 
 const FORMAT_EXPLANATIONS: Record<TournamentCompetition["format"], string> = {
-  single_elimination: "Eliminacao simples: perdeu uma serie, esta eliminado. O vencedor avanca ate a final.",
+  single_elimination: "Eliminacao simples: perdeu uma serie, está eliminado. O vencedor avanca até a final.",
   double_elimination: "Eliminacao dupla: a equipe sai somente apos a segunda derrota.",
   swiss: "Sistema suico: equipes com campanhas parecidas se enfrentam, sem repetir adversarios quando possivel.",
-  round_robin: "Todos contra todos: cada equipe enfrenta todas as outras uma vez. A classificacao e por pontos.",
+  round_robin: "Todos contra todos: cada equipe enfrenta todas as outras uma vez. A classificação e por pontos.",
   group_playoffs: "Grupos + eliminatorias: todos contra todos dentro do grupo; os dois melhores avancam ao mata-mata.",
-  league: "Liga: todos se enfrentam em turno e returno. A classificacao final e por pontos.",
+  league: "Liga: todos se enfrentam em turno e returno. A classificação final e por pontos.",
   custom: "Personalizado: confrontos e rodadas sao criados manualmente pela administracao.",
   mix_single_elimination: "Mix individual: jogadores sao sorteados em equipes e disputam eliminacao simples em MD1."
 };
@@ -997,7 +997,7 @@ function MatchSchedule({ tournaments, activeTournament, confirmedTeams, matches,
       <div className="grid gap-4 sm:grid-cols-2"><Field label="Rodada"><Input min="1" type="number" value={matchForm.round} onChange={(event) => onFormChange({ ...matchForm, round: event.target.value })} /></Field><Field label="Agendamento"><Input type="datetime-local" value={matchForm.scheduled_at} onChange={(event) => onFormChange({ ...matchForm, scheduled_at: event.target.value })} /></Field></div>
       <Field label="Equipe A"><Select value={matchForm.team_a_id} onChange={(event) => onFormChange({ ...matchForm, team_a_id: event.target.value })}><option value="">Selecione</option>{confirmedTeams.map((team) => <option disabled={String(team.team_id) === matchForm.team_b_id} key={team.team_id} value={team.team_id}>#{team.team_id} · {team.team_name} ({team.lineup_size} jogadores)</option>)}</Select></Field>
       <Field label="Equipe B"><Select value={matchForm.team_b_id} onChange={(event) => onFormChange({ ...matchForm, team_b_id: event.target.value })}><option value="">Selecione</option>{confirmedTeams.map((team) => <option disabled={String(team.team_id) === matchForm.team_a_id} key={team.team_id} value={team.team_id}>#{team.team_id} · {team.team_name} ({team.lineup_size} jogadores)</option>)}</Select></Field>
-      {!canCreate ? <div className="border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">Feche as inscricoes ou inicie o torneio antes de criar confrontos.</div> : null}
+      {!canCreate ? <div className="border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">Feche as inscrições ou inicie o torneio antes de criar confrontos.</div> : null}
       {!matches.length ? <Button disabled={!canCreate || confirmedTeams.length < 2} loading={busy === "generate-structure"} icon={<Swords className="h-4 w-4" />} onClick={onGenerate}>Gerar estrutura do torneio</Button> : null}
       <div className="border-t border-arena-line pt-4"><p className="mb-3 text-xs font-bold uppercase text-arena-muted">Confronto manual</p>
       <Button disabled={!canCreate || !matchForm.team_a_id || !matchForm.team_b_id} loading={busy === "create-match"} icon={<Swords className="h-4 w-4" />} onClick={onCreate}>Criar partida</Button>
@@ -1057,23 +1057,23 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
   return <div className="space-y-5">
     <Card><CardContent className="flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-4"><div className="flex h-11 w-11 items-center justify-center border border-cyan-400/30 bg-cyan-400/10"><Swords className="h-5 w-5 text-cyan-200" /></div><div><p className="text-xs uppercase text-arena-muted">Central da partida</p><h2 className="font-display text-xl font-semibold">{operations.match.team_a} vs {operations.match.team_b}</h2><p className="mt-1 text-sm text-arena-muted">Partida #{operations.match.id} · Rodada {operations.match.round} · {operations.match.best_of.toUpperCase()}</p></div></div><Select className="w-full md:w-72" value={selectedMatchId ?? ""} onChange={(event) => onSelectMatch(Number(event.target.value))}>{matches.map((match) => <option key={match.id} value={match.id}>#{match.id} · {match.team_a} vs {match.team_b}</option>)}</Select></CardContent></Card>
     <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-      <Card><CardHeader><h3 className="font-display text-lg font-semibold">Sala e regras do capitao</h3><p className="mt-1 text-sm text-arena-muted">Dados privados que aparecem apenas para as equipes desta partida.</p></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><Field label="IP ou endereco do servidor"><Input placeholder="play.arenacamp.gg:27015" value={roomForm.server_address} onChange={(event) => onRoomFormChange({ ...roomForm, server_address: event.target.value })} /></Field><Field label="Senha da sala"><Input placeholder="Senha privada" value={roomForm.server_password} onChange={(event) => onRoomFormChange({ ...roomForm, server_password: event.target.value })} /></Field><Field label="Tempo por acao do Pick & Ban"><div className="flex items-center gap-2"><Input max="120" min="10" type="number" value={roomForm.veto_action_seconds} onChange={(event) => onRoomFormChange({ ...roomForm, veto_action_seconds: event.target.value })} /><span className="text-sm text-arena-muted">segundos</span></div></Field><div className="flex items-end"><CheckControl checked={roomForm.captain_confirmation_enabled} label="Permitir confirmacao do resultado pelo capitao" onChange={(checked) => onRoomFormChange({ ...roomForm, captain_confirmation_enabled: checked })} /></div></div><Button loading={busy === "save-room"} icon={<Save className="h-4 w-4" />} onClick={onSaveRoom}>Salvar dados da sala</Button></CardContent></Card>
+      <Card><CardHeader><h3 className="font-display text-lg font-semibold">Sala e regras do capitão</h3><p className="mt-1 text-sm text-arena-muted">Dados privados que aparecem apenas para as equipes desta partida.</p></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><Field label="IP ou endereco do servidor"><Input placeholder="play.arenacamp.gg:27015" value={roomForm.server_address} onChange={(event) => onRoomFormChange({ ...roomForm, server_address: event.target.value })} /></Field><Field label="Senha da sala"><Input placeholder="Senha privada" value={roomForm.server_password} onChange={(event) => onRoomFormChange({ ...roomForm, server_password: event.target.value })} /></Field><Field label="Tempo por ação do Pick & Ban"><div className="flex items-center gap-2"><Input max="120" min="10" type="number" value={roomForm.veto_action_seconds} onChange={(event) => onRoomFormChange({ ...roomForm, veto_action_seconds: event.target.value })} /><span className="text-sm text-arena-muted">segundos</span></div></Field><div className="flex items-end"><CheckControl checked={roomForm.captain_confirmation_enabled} label="Permitir confirmação do resultado pelo capitão" onChange={(checked) => onRoomFormChange({ ...roomForm, captain_confirmation_enabled: checked })} /></div></div><Button loading={busy === "save-room"} icon={<Save className="h-4 w-4" />} onClick={onSaveRoom}>Salvar dados da sala</Button></CardContent></Card>
       <Card><CardHeader><h3 className="font-display text-lg font-semibold">Aviso da organizacao</h3><p className="mt-1 text-sm text-arena-muted">Publicado no chat exclusivo da partida.</p></CardHeader><CardContent className="space-y-3"><Input placeholder="Mensagem para os capitaes" value={matchNotice.message} onChange={(event) => onMatchNoticeChange({ ...matchNotice, message: event.target.value })} /><Input placeholder="URL de anexo (opcional)" value={matchNotice.attachment_url} onChange={(event) => onMatchNoticeChange({ ...matchNotice, attachment_url: event.target.value })} /><Button disabled={!matchNotice.message.trim()} loading={busy === "match-notice"} icon={<Send className="h-4 w-4" />} onClick={onSendMatchNotice}>Enviar aviso</Button></CardContent></Card>
     </div>
     <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
-      <Card><CardHeader className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-display text-lg font-semibold">Pick & Ban de mapas</h3><p className="mt-1 text-sm text-arena-muted">Toda escolha fica registrada no historico da partida.</p></div><div className="flex gap-2">{operations.veto.status === "aguardando" ? <Button loading={busy === "open-veto"} icon={<Play className="h-4 w-4" />} onClick={onOpenVeto}>Liberar</Button> : null}<Button loading={busy === "reset-veto"} icon={<RotateCcw className="h-4 w-4" />} variant="secondary" onClick={onResetVeto}>Refazer</Button></div></CardHeader><CardContent className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-3"><Metric label="Status" value={operations.veto.status} /><Metric label="Proxima acao" value={expected ? expected.action.toUpperCase() : "Concluido"} /><Metric label="Responsavel" value={expectedTeam} /></div>
+      <Card><CardHeader className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-display text-lg font-semibold">Pick & Ban de mapas</h3><p className="mt-1 text-sm text-arena-muted">Toda escolha fica registrada no histórico da partida.</p></div><div className="flex gap-2">{operations.veto.status === "aguardando" ? <Button loading={busy === "open-veto"} icon={<Play className="h-4 w-4" />} onClick={onOpenVeto}>Liberar</Button> : null}<Button loading={busy === "reset-veto"} icon={<RotateCcw className="h-4 w-4" />} variant="secondary" onClick={onResetVeto}>Refazer</Button></div></CardHeader><CardContent className="space-y-5">
+        <div className="grid gap-3 sm:grid-cols-3"><Metric label="Status" value={operations.veto.status} /><Metric label="Próxima ação" value={expected ? expected.action.toUpperCase() : "Concluido"} /><Metric label="Responsavel" value={expectedTeam} /></div>
         <div><p className="mb-3 text-xs font-semibold uppercase text-arena-muted">Mapas disponiveis</p><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{available.map((map) => <button className="group overflow-hidden border border-arena-line bg-black/20 text-left transition hover:border-cyan-400/50 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-50" disabled={operations.veto.status !== "liberado" && operations.match.pick_ban_enabled} key={map.id} onClick={() => operations.match.pick_ban_enabled ? onPerformAction(map.id) : onAddManualMap(map.id)} type="button"><div className="aspect-video overflow-hidden bg-[#09121d]">{map.imagem ? <img className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" src={map.imagem} alt={`Mapa ${map.nome}`} /> : <div className="flex h-full items-center justify-center"><MapIcon className="h-7 w-7 text-cyan-200" /></div>}</div><div className="p-3"><p className="font-semibold">{map.nome}</p><p className="mt-1 text-xs text-arena-muted">#{map.id} · {operations.match.pick_ban_enabled ? expected?.action ?? "aguardando" : "adicionar manualmente"}</p></div></button>)}</div>{!available.length ? <p className="text-sm text-arena-muted">Nenhum mapa restante no pool.</p> : null}</div>
-        <div><p className="mb-3 text-xs font-semibold uppercase text-arena-muted">Historico do veto</p><div className="space-y-2">{operations.veto.actions.map((action) => <div className="grid items-center gap-3 border-l-2 border-cyan-400 bg-white/[.03] px-3 py-2 sm:grid-cols-[36px_90px_1fr_1fr]" key={action.id}><span className="text-sm font-bold">{action.sequence_number}</span><Badge tone={action.action === "ban" ? "danger" : "info"}>{action.action}</Badge><span className="font-semibold">{action.map_name}</span><span className="text-sm text-arena-muted">{action.team_name ?? "Sistema"}</span></div>)}{!operations.veto.actions.length ? <p className="text-sm text-arena-muted">O historico comeca quando o primeiro ban ou pick for executado.</p> : null}</div></div>
+        <div><p className="mb-3 text-xs font-semibold uppercase text-arena-muted">Histórico do veto</p><div className="space-y-2">{operations.veto.actions.map((action) => <div className="grid items-center gap-3 border-l-2 border-cyan-400 bg-white/[.03] px-3 py-2 sm:grid-cols-[36px_90px_1fr_1fr]" key={action.id}><span className="text-sm font-bold">{action.sequence_number}</span><Badge tone={action.action === "ban" ? "danger" : "info"}>{action.action}</Badge><span className="font-semibold">{action.map_name}</span><span className="text-sm text-arena-muted">{action.team_name ?? "Sistema"}</span></div>)}{!operations.veto.actions.length ? <p className="text-sm text-arena-muted">O histórico comeca quando o primeiro ban ou pick for executado.</p> : null}</div></div>
       </CardContent></Card>
       <Card><CardHeader><h3 className="font-display text-lg font-semibold">Jogadores elegiveis</h3><p className="mt-1 text-sm text-arena-muted">ID interno e ID oficial do jogo ficam visiveis para conferencia.</p></CardHeader><CardContent className="grid gap-5 md:grid-cols-2 xl:grid-cols-1"><Roster title={operations.match.team_a} players={teamARoster} /><Roster title={operations.match.team_b} players={teamBRoster} /></CardContent></Card>
     </div>
-    <Card><CardHeader><h3 className="font-display text-lg font-semibold">1. Placar do mapa</h3><p className="mt-1 text-sm text-arena-muted">Salve o placar atual. O proximo mapa so e liberado depois da sumula dos jogadores.</p></CardHeader><CardContent className="space-y-3">{operations.maps.map((map) => { const cancelled = map.status === "cancelado" || (operations.match.status === "finalizada" && map.status !== "finalizado"); const locked = Boolean(requiredMap && requiredMap.id !== map.id); return <div className={cn("grid items-center gap-4 border p-4 lg:grid-cols-[70px_1fr_130px_130px_auto]", requiredMap?.id === map.id ? "border-cyan-400/50 bg-cyan-400/[0.07]" : "border-arena-line bg-black/20", locked && map.status !== "finalizado" ? "opacity-55" : "")} key={map.id}><div><p className="text-xs uppercase text-arena-muted">Mapa {map.map_number}</p><p className="font-bold">#{map.id}</p></div><div><p className="font-semibold">{map.map_name}</p><p className="text-xs text-arena-muted">{map.selection_type === "pick" ? `Pick de ${map.selected_by_team}` : map.selection_type === "decider" ? "Decider" : "Escolha manual"}</p></div><Field label={operations.match.team_a}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.a ?? ""} onChange={(event) => onScoreChange(map.id, "a", event.target.value)} /></Field><Field label={operations.match.team_b}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.b ?? ""} onChange={(event) => onScoreChange(map.id, "b", event.target.value)} /></Field>{map.status === "finalizado" ? <div><Badge tone={(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "success" : "warning"}>{map.score_team_a} x {map.score_team_b}</Badge><p className="mt-1 text-xs text-arena-muted">{(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "Placar e sumula salvos" : "Aguardando sumula"}</p></div> : cancelled ? <Badge>Não disputado</Badge> : <Button disabled={locked} loading={busy === `result-${map.id}`} icon={<Save className="h-4 w-4" />} onClick={() => onMapResult(map.id)}>Salvar placar</Button>}</div>})}{!operations.maps.length ? <EmptyState title="Mapas ainda nao definidos" description={operations.match.pick_ban_enabled ? "Conclua os picks para formar a serie." : "Adicione os mapas manualmente."} /> : null}</CardContent></Card>
+    <Card><CardHeader><h3 className="font-display text-lg font-semibold">1. Placar do mapa</h3><p className="mt-1 text-sm text-arena-muted">Salve o placar atual. O próximo mapa so e liberado depois da sumula dos jogadores.</p></CardHeader><CardContent className="space-y-3">{operations.maps.map((map) => { const cancelled = map.status === "cancelado" || (operations.match.status === "finalizada" && map.status !== "finalizado"); const locked = Boolean(requiredMap && requiredMap.id !== map.id); return <div className={cn("grid items-center gap-4 border p-4 lg:grid-cols-[70px_1fr_130px_130px_auto]", requiredMap?.id === map.id ? "border-cyan-400/50 bg-cyan-400/[0.07]" : "border-arena-line bg-black/20", locked && map.status !== "finalizado" ? "opacity-55" : "")} key={map.id}><div><p className="text-xs uppercase text-arena-muted">Mapa {map.map_number}</p><p className="font-bold">#{map.id}</p></div><div><p className="font-semibold">{map.map_name}</p><p className="text-xs text-arena-muted">{map.selection_type === "pick" ? `Pick de ${map.selected_by_team}` : map.selection_type === "decider" ? "Decider" : "Escolha manual"}</p></div><Field label={operations.match.team_a}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.a ?? ""} onChange={(event) => onScoreChange(map.id, "a", event.target.value)} /></Field><Field label={operations.match.team_b}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.b ?? ""} onChange={(event) => onScoreChange(map.id, "b", event.target.value)} /></Field>{map.status === "finalizado" ? <div><Badge tone={(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "success" : "warning"}>{map.score_team_a} x {map.score_team_b}</Badge><p className="mt-1 text-xs text-arena-muted">{(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "Placar e sumula salvos" : "Aguardando sumula"}</p></div> : cancelled ? <Badge>Não disputado</Badge> : <Button disabled={locked} loading={busy === `result-${map.id}`} icon={<Save className="h-4 w-4" />} onClick={() => onMapResult(map.id)}>Salvar placar</Button>}</div>})}{!operations.maps.length ? <EmptyState title="Mapas ainda não definidos" description={operations.match.pick_ban_enabled ? "Conclua os picks para formar a serie." : "Adicione os mapas manualmente."} /> : null}</CardContent></Card>
     <Card>
       <CardHeader className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 className="font-display text-lg font-semibold">2. Sumula dos jogadores</h3>
-          <p className="mt-1 text-sm text-arena-muted">Preencha as estatisticas do mapa atual para liberar o proximo mapa ou confronto.</p>
+          <p className="mt-1 text-sm text-arena-muted">Preencha as estatísticas do mapa atual para liberar o próximo mapa ou confronto.</p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Select className="min-w-56 flex-1" disabled={!operations.maps.length} value={selectedStatsMapId ?? ""} onChange={(event) => onSelectStatsMap(Number(event.target.value))}>
@@ -1086,7 +1086,7 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
       <CardContent className="space-y-4">
         {hasLegacyTotals ? (
           <div className="border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
-            Esta partida possui um total antigo sem divisao por mapas. Ele sera substituido pelos totais detalhados quando a primeira sumula de mapa for salva.
+            Esta partida possui um total antigo sem divisao por mapas. Ele será substituido pelos totais detalhados quando a primeira sumula de mapa for salva.
           </div>
         ) : null}
 
@@ -1112,7 +1112,7 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
                     <span>
                       <span className="block text-xs uppercase text-arena-muted">Mapa {map.map_number}</span>
                       <span className="mt-1 block font-semibold">{map.map_name}</span>
-                      <span className="mt-1 block text-xs text-arena-muted">{map.status === "finalizado" ? `${map.score_team_a} x ${map.score_team_b}` : map.status === "cancelado" ? "Nao disputado" : "Aguardando placar"}</span>
+                      <span className="mt-1 block text-xs text-arena-muted">{map.status === "finalizado" ? `${map.score_team_a} x ${map.score_team_b}` : map.status === "cancelado" ? "Não disputado" : "Aguardando placar"}</span>
                     </span>
                     <Badge tone={completedPlayers ? "success" : map.status === "finalizado" ? "warning" : "neutral"}>
                       {completedPlayers}/{operations.rosters.filter((player) => player.in_lineup).length}
@@ -1131,8 +1131,8 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
                       {selectedStatsMap.status === "finalizado"
                         ? `Placar oficial ${operations.match.team_a} ${selectedStatsMap.score_team_a} x ${selectedStatsMap.score_team_b} ${operations.match.team_b}`
                         : selectedStatsMap.status === "cancelado"
-                          ? "Este mapa nao foi disputado porque a serie ja tinha um vencedor."
-                          : "O preenchimento sera liberado depois que o resultado deste mapa for salvo."}
+                          ? "Este mapa não foi disputado porque a serie já tinha um vencedor."
+                          : "O preenchimento será liberado depois que o resultado deste mapa for salvo."}
                     </p>
                   </div>
                   <Badge tone={selectedStatsMap.status === "finalizado" ? "success" : "warning"}>{selectedStatsMap.status}</Badge>
@@ -1160,7 +1160,7 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
             ) : null}
           </>
         ) : (
-          <EmptyState title="Nenhum mapa para preencher" description="Conclua o Pick & Ban ou adicione um mapa manualmente antes de registrar estatisticas." />
+          <EmptyState title="Nenhum mapa para preencher" description="Conclua o Pick & Ban ou adicione um mapa manualmente antes de registrar estatísticas." />
         )}
       </CardContent>
     </Card>
@@ -1198,7 +1198,7 @@ function TeamPlayerStatsTable({ accent, disabled, onStatChange, playerStats, pla
               <div className="grid grid-cols-[52px_1.2fr_1.2fr_repeat(4,68px)_48px] items-center gap-2 border-b border-arena-line py-3 last:border-b-0" key={player.id}>
                 <span className="font-mono text-sm">#{player.id}</span>
                 <span className="text-sm font-semibold">{player.nick}</span>
-                <span className="truncate font-mono text-xs text-arena-muted" title={player.game_uid || "Nao informado"}>{player.game_uid || "Nao informado"}</span>
+                <span className="truncate font-mono text-xs text-arena-muted" title={player.game_uid || "Não informado"}>{player.game_uid || "Não informado"}</span>
                 {(["kills", "deaths", "assists", "headshots"] as const).map((field) => (
                   <Input disabled={disabled} key={field} min="0" type="number" value={stat[field]} onChange={(event) => onStatChange(player.id, field, event.target.value)} />
                 ))}
@@ -1216,7 +1216,7 @@ function TeamPlayerStatsTable({ accent, disabled, onStatChange, playerStats, pla
 }
 
 function Roster({ title, players }: { title: string; players: MatchOperations["rosters"] }) {
-  return <div><h4 className="mb-2 font-semibold">{title}</h4><div className="divide-y divide-arena-line border-y border-arena-line">{players.map((player) => <div className="grid grid-cols-[32px_1fr_auto] items-center gap-3 py-3" key={player.id}><UserRound className="h-4 w-4 text-arena-muted" /><div><p className="text-sm font-semibold">{player.nick}</p><p className="text-xs text-arena-muted">ID interno #{player.id} · ID do jogo: {player.game_uid || "nao informado"}</p></div><Badge tone={player.in_lineup ? "success" : "warning"}>{player.in_lineup ? (player.titular ? "Titular" : "Reserva") : "Fora da lineup"}</Badge></div>)}</div></div>;
+  return <div><h4 className="mb-2 font-semibold">{title}</h4><div className="divide-y divide-arena-line border-y border-arena-line">{players.map((player) => <div className="grid grid-cols-[32px_1fr_auto] items-center gap-3 py-3" key={player.id}><UserRound className="h-4 w-4 text-arena-muted" /><div><p className="text-sm font-semibold">{player.nick}</p><p className="text-xs text-arena-muted">ID interno #{player.id} · ID do jogo: {player.game_uid || "não informado"}</p></div><Badge tone={player.in_lineup ? "success" : "warning"}>{player.in_lineup ? (player.titular ? "Titular" : "Reserva") : "Fora da lineup"}</Badge></div>)}</div></div>;
 }
 
 function MapHoverPreview({ map }: { map: GameMap }) {

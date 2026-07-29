@@ -61,7 +61,7 @@ export function OfficialTournamentsWorkspace() {
       const saved = await saveAdminOfficialTournament(selectedId, eventForm);
       setSelectedId(saved.id);
       await reload(saved.id);
-      toast.success("Campeonato salvo", eventForm.published ? "O evento esta disponivel no portal publico." : "O evento ficou como rascunho.");
+      toast.success("Campeonato salvo", eventForm.published ? "O evento está disponivel no portal público." : "O evento ficou como rascunho.");
     } catch (error) { toast.error("Falha ao salvar campeonato", message(error)); }
     finally { setBusy(false); }
   }
@@ -84,8 +84,8 @@ export function OfficialTournamentsWorkspace() {
     finally { setBusy(false); }
   }
   async function removeMatch(id: number) {
-    if (!selectedId || !window.confirm("Excluir esta partida do evento?")) return;
-    try { await deleteAdminOfficialMatch(selectedId, id); await reload(selectedId); toast.success("Partida excluida", "A grade publica foi atualizada."); }
+    if (!selectedId || !window.confirm("Excluir está partida do evento?")) return;
+    try { await deleteAdminOfficialMatch(selectedId, id); await reload(selectedId); toast.success("Partida excluida", "A grade pública foi atualizada."); }
     catch (error) { toast.error("Falha ao excluir partida", message(error)); }
   }
 
@@ -100,18 +100,18 @@ export function OfficialTournamentsWorkspace() {
           {events.length ? events.map((item) => <button key={item.id} onClick={() => void selectEvent(item)} className={`w-full border p-3 text-left transition ${selectedId === item.id ? "border-cyan-400 bg-cyan-400/10" : "border-arena-line hover:bg-white/[.04]"}`}>
             <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{item.name}</p><p className="mt-1 text-xs text-arena-muted">{item.organizer} · {item.game_name}</p></div><span className="text-xs text-arena-muted">{item.matches_count || 0} partidas</span></div>
             <p className="mt-2 text-xs uppercase text-cyan-200">{statusLabel(item.status)}{item.published ? " · publicado" : " · rascunho"}</p>
-          </button>) : <EmptyState title="Nenhum evento oficial" description="Cadastre o primeiro campeonato externo para o publico acompanhar." />}
+          </button>) : <EmptyState title="Nenhum evento oficial" description="Cadastre o primeiro campeonato externo para o público acompanhar." />}
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><h2 className="font-display text-xl font-semibold">{selectedId ? "Editar campeonato" : "Novo campeonato oficial"}</h2><p className="mt-1 text-sm text-arena-muted">Este cadastro e informativo e nao aceita inscricoes ou pagamentos.</p></CardHeader>
+        <CardHeader><h2 className="font-display text-xl font-semibold">{selectedId ? "Editar campeonato" : "Novo campeonato oficial"}</h2><p className="mt-1 text-sm text-arena-muted">Este cadastro e informativo e não aceita inscrições ou pagamentos.</p></CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">{field("Nome", "name", eventForm, setEventForm)}{field("Organizadora", "organizer", eventForm, setEventForm)}{field("Jogo", "game_name", eventForm, setEventForm)}</div>
-          <div className="grid gap-4 md:grid-cols-2"><div><Label>Logo</Label><div className="mt-2"><ImageUploadField label="Enviar logo" value={eventForm.logo_url} onChange={(logo_url) => setEventForm((state) => ({ ...state, logo_url }))} /></div></div><div><Label>Banner publico</Label><div className="mt-2"><ImageUploadField label="Enviar banner" value={eventForm.banner_url} onChange={(banner_url) => setEventForm((state) => ({ ...state, banner_url }))} /></div></div></div>
-          <div><Label>Descricao</Label><textarea className="mt-2 min-h-24 w-full border border-arena-line bg-black/25 p-3 text-sm" value={eventForm.description} onChange={(event) => setEventForm((state) => ({ ...state, description: event.target.value }))} /></div>
-          <div className="grid gap-4 md:grid-cols-4">{field("Local", "location", eventForm, setEventForm)}{field("Premiacao", "prize_pool", eventForm, setEventForm)}{field("Formato", "format_label", eventForm, setEventForm)}{field("Site oficial", "official_url", eventForm, setEventForm, "url")}</div>
+          <div className="grid gap-4 md:grid-cols-2"><div><Label>Logo</Label><div className="mt-2"><ImageUploadField label="Enviar logo" value={eventForm.logo_url} onChange={(logo_url) => setEventForm((state) => ({ ...state, logo_url }))} /></div></div><div><Label>Banner público</Label><div className="mt-2"><ImageUploadField label="Enviar banner" value={eventForm.banner_url} onChange={(banner_url) => setEventForm((state) => ({ ...state, banner_url }))} /></div></div></div>
+          <div><Label>Descrição</Label><textarea className="mt-2 min-h-24 w-full border border-arena-line bg-black/25 p-3 text-sm" value={eventForm.description} onChange={(event) => setEventForm((state) => ({ ...state, description: event.target.value }))} /></div>
+          <div className="grid gap-4 md:grid-cols-4">{field("Local", "location", eventForm, setEventForm)}{field("Premiação", "prize_pool", eventForm, setEventForm)}{field("Formato", "format_label", eventForm, setEventForm)}{field("Site oficial", "official_url", eventForm, setEventForm, "url")}</div>
           <div className="grid gap-4 md:grid-cols-3"><div><Label>Inicio</Label><Input className="mt-2" type="datetime-local" value={eventForm.starts_at} onChange={(event) => setEventForm((state) => ({ ...state, starts_at: event.target.value }))} /></div><div><Label>Fim</Label><Input className="mt-2" type="datetime-local" value={eventForm.ends_at} onChange={(event) => setEventForm((state) => ({ ...state, ends_at: event.target.value }))} /></div><div><Label>Status</Label><Select className="mt-2" value={eventForm.status} onChange={(event) => setEventForm((state) => ({ ...state, status: event.target.value }))}><option value="anunciado">Anunciado</option><option value="em_andamento">Em andamento</option><option value="finalizado">Finalizado</option><option value="cancelado">Cancelado</option></Select></div></div>
-          <div className="flex flex-wrap gap-5 border border-arena-line p-3 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={eventForm.featured} onChange={(event) => setEventForm((state) => ({ ...state, featured: event.target.checked }))} />Destacar no portal</label><label className="flex items-center gap-2"><input type="checkbox" checked={eventForm.published} onChange={(event) => setEventForm((state) => ({ ...state, published: event.target.checked }))} />Publicar para o publico</label></div>
+          <div className="flex flex-wrap gap-5 border border-arena-line p-3 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={eventForm.featured} onChange={(event) => setEventForm((state) => ({ ...state, featured: event.target.checked }))} />Destacar no portal</label><label className="flex items-center gap-2"><input type="checkbox" checked={eventForm.published} onChange={(event) => setEventForm((state) => ({ ...state, published: event.target.checked }))} />Publicar para o público</label></div>
           <div className="flex flex-wrap gap-3"><Button loading={busy} icon={<Save className="h-4 w-4" />} onClick={() => void saveEvent()}>Salvar campeonato</Button>{selectedId ? <Button loading={busy} variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => void removeEvent()}>Excluir campeonato</Button> : null}</div>
         </CardContent>
       </Card>
@@ -122,7 +122,7 @@ export function OfficialTournamentsWorkspace() {
       <div className="grid gap-3 md:grid-cols-2">{field("Mapas / resumo", "map_summary", matchForm, setMatchForm)}{field("Link da transmissao", "stream_url", matchForm, setMatchForm, "url")}</div>
       <div className="flex gap-3"><Button loading={busy} icon={<Save className="h-4 w-4" />} onClick={() => void saveMatch()}>{editingMatchId ? "Atualizar partida" : "Adicionar partida"}</Button>{editingMatchId ? <Button variant="secondary" onClick={() => { setEditingMatchId(null); setMatchForm(emptyMatch); }}>Cancelar edicao</Button> : null}</div>
       <div className="space-y-2">{matches.length ? matches.map((item) => <div key={item.id} className="grid items-center gap-3 border border-arena-line p-3 md:grid-cols-[1fr_auto_auto]">
-        <div><p className="font-semibold">{item.team_a} <span className="mx-2 text-cyan-200">{item.score_a ?? "-"} x {item.score_b ?? "-"}</span> {item.team_b}</p><p className="mt-1 text-xs text-arena-muted">{item.stage_label || "Fase nao informada"} · {item.best_of.toUpperCase()} · {statusLabel(item.status)}{item.winner_name ? ` · Vencedor: ${item.winner_name}` : ""}</p></div>
+        <div><p className="font-semibold">{item.team_a} <span className="mx-2 text-cyan-200">{item.score_a ?? "-"} x {item.score_b ?? "-"}</span> {item.team_b}</p><p className="mt-1 text-xs text-arena-muted">{item.stage_label || "Fase não informada"} · {item.best_of.toUpperCase()} · {statusLabel(item.status)}{item.winner_name ? ` · Vencedor: ${item.winner_name}` : ""}</p></div>
         {item.stream_url ? <a className="inline-flex items-center gap-2 text-sm text-cyan-200" href={item.stream_url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" />Transmissao</a> : <span />}
         <div className="flex gap-2"><Button className="px-3" variant="secondary" icon={<PencilLine className="h-4 w-4" />} onClick={() => editMatch(item)} aria-label="Editar partida" /><Button className="px-3" variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => void removeMatch(item.id)} aria-label="Excluir partida" /></div>
       </div>) : <EmptyState title="Nenhuma partida cadastrada" description="Adicione a agenda ou os resultados deste evento." />}</div>

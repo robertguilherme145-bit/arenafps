@@ -12,12 +12,12 @@ export default {
       },
       colors: {
         arena: {
-          bg: "#05070c",
-          panel: "#0b0f18",
-          panel2: "#111827",
-          line: "#20283a",
-          text: "#f7fbff",
-          muted: "#9aa6b8",
+          bg: "rgb(var(--arena-bg) / <alpha-value>)",
+          panel: "rgb(var(--arena-panel) / <alpha-value>)",
+          panel2: "rgb(var(--arena-panel-2) / <alpha-value>)",
+          line: "rgb(var(--arena-line) / <alpha-value>)",
+          text: "rgb(var(--arena-text) / <alpha-value>)",
+          muted: "rgb(var(--arena-muted) / <alpha-value>)",
           blue: "#1f8bff",
           cyan: "#22d3ee",
           purple: "#8b5cf6",

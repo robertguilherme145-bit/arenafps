@@ -42,7 +42,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                   O frontend encontrou um erro ao montar a tela
                 </h1>
                 <p className="mt-4 text-sm leading-6 text-red-100/85">
-                  {this.state.errorMessage || "Erro nao identificado."}
+                  {this.state.errorMessage || "Erro não identificado."}
                 </p>
               </div>
             </div>

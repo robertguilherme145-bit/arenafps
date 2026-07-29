@@ -18,11 +18,11 @@ type RegulationTournament = {
 type RegulationMap = { id: number; nome: string; imagem?: string | null };
 
 const FORMATS: Record<string, { label: string; description: string }> = {
-  single_elimination: { label: "Eliminacao simples", description: "Quem perde a serie e eliminado; o vencedor avanca ate a final." },
-  double_elimination: { label: "Eliminacao dupla", description: "A equipe permanece no torneio ate sofrer a segunda derrota." },
-  swiss: { label: "Sistema suico", description: "Equipes com campanhas semelhantes se enfrentam; classificacao por pontos e criterios protegidos." },
-  round_robin: { label: "Todos contra todos", description: "Todas as equipes se enfrentam e a classificacao e definida pela campanha completa." },
-  league: { label: "Liga", description: "Temporada por pontos, com confrontos programados e classificacao acumulada." },
+  single_elimination: { label: "Eliminacao simples", description: "Quem perde a serie e eliminado; o vencedor avanca até a final." },
+  double_elimination: { label: "Eliminacao dupla", description: "A equipe permanece no torneio até sofrer a segunda derrota." },
+  swiss: { label: "Sistema suico", description: "Equipes com campanhas semelhantes se enfrentam; classificação por pontos e criterios protegidos." },
+  round_robin: { label: "Todos contra todos", description: "Todas as equipes se enfrentam e a classificação e definida pela campanha completa." },
+  league: { label: "Liga", description: "Temporada por pontos, com confrontos programados e classificação acumulada." },
   group_playoffs: { label: "Grupos e eliminatorias", description: "A fase de grupos classifica as melhores equipes para confrontos eliminatorios." },
   mix_single_elimination: { label: "Mix em eliminacao simples", description: "Os jogadores sao distribuidos nas equipes e cada derrota elimina a equipe do torneio." },
   custom: { label: "Personalizado", description: "Estrutura especial publicada pela organizacao no regulamento adicional." },
@@ -36,16 +36,16 @@ export function TournamentRegulationPanel({ tournament, mapPool = [], compact = 
       <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" /><div><p className="font-semibold">{format.label} · {series}</p><p className="mt-1 text-sm text-arena-muted">{format.description}</p></div></div>
     </div>
     <div className={`grid gap-3 ${compact ? "sm:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}>
-      <Rule title="Pontuacao" text="3 pontos por vitoria de serie. Nao existem pontos artificiais por mapas que nao foram jogados." />
+      <Rule title="Pontuacao" text="3 pontos por vitoria de serie. Não existem pontos artificiais por mapas que não foram jogados." />
       <Rule title="Desempate protegido" text="Pontos, confronto direto, aproveitamento e saldo medio por mapa realmente jogado." />
       <Rule title="Serie encerrada" text={`Em ${series}, a serie termina ao atingir a maioria. Um 2 x 0 continua 2 x 0; o mapa restante e cancelado.`} />
       <Rule title="Pick & Ban" text={tournament.pick_ban_enabled ? "Ativo, seguindo a ordem publicada pela organizacao." : "Desativado para este torneio."} />
-      <Rule title="Operacao" text={`Pausa: ${tournament.pause_minutes ?? 0} min · W.O.: ${tournament.walkover_minutes ?? 0} min · Prorrogacao: ${tournament.overtime_enabled ? "permitida" : "nao permitida"}.`} />
-      <Rule title="Inscricoes" text={tournament.registration_approval === "automatic" ? "Aprovacao automatica quando os requisitos forem atendidos." : "Confirmacao sujeita a validacao da organizacao."} />
+      <Rule title="Operação" text={`Pausa: ${tournament.pause_minutes ?? 0} min · W.O.: ${tournament.walkover_minutes ?? 0} min · Prorrogacao: ${tournament.overtime_enabled ? "permitida" : "não permitida"}.`} />
+      <Rule title="Inscrições" text={tournament.registration_approval === "automatic" ? "Aprovacao automatica quando os requisitos forem atendidos." : "Confirmação sujeita a validacao da organizacao."} />
     </div>
     {mapPool.length ? <div><p className="mb-3 text-sm font-semibold">Mapas habilitados</p><div className="flex flex-wrap gap-2">{mapPool.map((map) => <Badge key={map.id} tone="info">{map.nome}</Badge>)}</div></div> : null}
-    <div className="border border-arena-line p-4"><div className="flex items-center gap-2"><Scale className="h-4 w-4 text-cyan-200" /><p className="font-semibold">Regras adicionais da organizacao</p></div><p className="mt-3 whitespace-pre-wrap text-sm text-arena-muted">{tournament.descricao || "Nenhuma regra adicional foi publicada."}</p></div>
-    <div className="flex items-start gap-2 text-xs text-arena-muted"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><p>O aceite fica registrado na inscricao. Alteracoes relevantes devem ser comunicadas oficialmente pela organizacao.</p></div>
+    <div className="border border-arena-line p-4"><div className="flex items-center gap-2"><Scale className="h-4 w-4 text-cyan-200" /><p className="font-semibold">Regras adicionais da organização</p></div><p className="mt-3 whitespace-pre-wrap text-sm text-arena-muted">{tournament.descricao || "Nenhuma regra adicional foi publicada."}</p></div>
+    <div className="flex items-start gap-2 text-xs text-arena-muted"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><p>O aceite fica registrado na inscrição. Alteracoes relevantes devem ser comunicadas oficialmente pela organizacao.</p></div>
   </div>;
 }
 

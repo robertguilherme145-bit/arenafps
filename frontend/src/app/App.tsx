@@ -7,6 +7,9 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { AppErrorBoundary } from "../components/ui/AppErrorBoundary";
 import { router } from "../routes/router";
 import "../styles/globals.css";
+import { initializeArenaTheme } from "../utils/theme";
+
+initializeArenaTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {

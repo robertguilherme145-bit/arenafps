@@ -29,7 +29,7 @@ export const publicNavigation = [
   { label: "Home", href: "/", icon: Home },
   { label: "Torneios", href: "/torneios", icon: Trophy },
   { label: "Ranking", href: "/ranking", icon: Medal },
-  { label: "Calendario", href: "/calendario", icon: CalendarDays },
+  { label: "Calendário", href: "/calendario", icon: CalendarDays },
   { label: "Resultados", href: "/resultados", icon: Swords },
   { label: "Circuito oficial", href: "/circuito-oficial", icon: RadioTower },
   { label: "Jogos", href: "/jogos", icon: Gamepad2 }
@@ -43,15 +43,15 @@ export const footerNavigation = [
 
 export const adminNavigation = [
   { label: "Visao geral", href: "/admin?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Torneios e inscricoes", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
+  { label: "Torneios e inscrições", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
   { label: "Central de partidas", href: "/admin?module=operations", icon: Swords, module: "operations" }
 ];
 
 export const adminControlNavigation = [
   { label: "Equipes e jogadores", href: "/admin?module=community", icon: Users, module: "community" },
-  { label: "Contas e permissoes", href: "/admin?module=access", icon: KeyRound, module: "access" },
+  { label: "Contas e permissões", href: "/admin?module=access", icon: KeyRound, module: "access" },
   { label: "Conquistas e XP", href: "/admin?module=progression", icon: Medal, module: "progression" },
-  { label: "Conteudo do portal", href: "/admin?module=content", icon: Newspaper, module: "content" },
+  { label: "Conteúdo do portal", href: "/admin?module=content", icon: Newspaper, module: "content" },
   { label: "Circuito oficial", href: "/admin?module=official", icon: RadioTower, module: "official" },
   { label: "Financeiro", href: "/admin?module=finance", icon: CreditCard, module: "finance" },
   { label: "Auditoria", href: "/admin?module=audit", icon: History, module: "audit" }
@@ -72,13 +72,13 @@ export const leaderNavigation = [
 export const leaderCompetitionNavigation = [
   { label: "Torneios", href: "/lider?module=tournaments", icon: Trophy, module: "tournaments" },
   { label: "Partidas", href: "/lider?module=matches", icon: Swords, module: "matches" },
-  { label: "Calendario", href: "/lider?module=calendar", icon: CalendarDays, module: "calendar" }
+  { label: "Calendário", href: "/lider?module=calendar", icon: CalendarDays, module: "calendar" }
 ];
 
 export const leaderControlNavigation = [
   { label: "Financeiro", href: "/lider?module=finance", icon: CreditCard, module: "finance" },
-  { label: "Comunicacao", href: "/lider?module=communication", icon: MessageSquare, module: "communication" },
-  { label: "Historico", href: "/lider?module=history", icon: History, module: "history" },
+  { label: "Comunicação", href: "/lider?module=communication", icon: MessageSquare, module: "communication" },
+  { label: "Histórico", href: "/lider?module=history", icon: History, module: "history" },
   { label: "Configuracoes", href: "/lider?module=settings", icon: Settings2, module: "settings" }
 ];
 
@@ -91,13 +91,13 @@ export const captainNavigation = [
 export const captainTeamNavigation = [
   { label: "Lineup oficial", href: "/capitao?module=lineup", icon: ClipboardList, module: "lineup" },
   { label: "Ranking da equipe", href: "/capitao?module=ranking", icon: Medal, module: "ranking" },
-  { label: "Calendario", href: "/capitao?module=calendar", icon: CalendarDays, module: "calendar" },
-  { label: "Comunicacao", href: "/capitao?module=communication", icon: MessageSquare, module: "communication" }
+  { label: "Calendário", href: "/capitao?module=calendar", icon: CalendarDays, module: "calendar" },
+  { label: "Comunicação", href: "/capitao?module=communication", icon: MessageSquare, module: "communication" }
 ];
 
 export const captainControlNavigation = [
-  { label: "Estatisticas", href: "/capitao?module=statistics", icon: BarChart3, module: "statistics" },
-  { label: "Historico", href: "/capitao?module=history", icon: History, module: "history" },
+  { label: "Estatísticas", href: "/capitao?module=statistics", icon: BarChart3, module: "statistics" },
+  { label: "Histórico", href: "/capitao?module=history", icon: History, module: "history" },
   { label: "Configuracoes", href: "/capitao?module=settings", icon: Settings2, module: "settings" }
 ];
 
@@ -108,8 +108,8 @@ export const playerNavigation = [
   { label: "Torneios Mix", href: "/jogador?module=mix", icon: Shuffle, module: "mix" },
   { label: "Lineup", href: "/jogador?module=lineup", icon: ClipboardList, module: "lineup" },
   { label: "Partidas", href: "/jogador?module=matches", icon: Swords, module: "matches" },
-  { label: "Calendario", href: "/jogador?module=calendar", icon: CalendarDays, module: "calendar" },
-  { label: "Estatisticas", href: "/jogador?module=statistics", icon: BarChart3, module: "statistics" },
+  { label: "Calendário", href: "/jogador?module=calendar", icon: CalendarDays, module: "calendar" },
+  { label: "Estatísticas", href: "/jogador?module=statistics", icon: BarChart3, module: "statistics" },
   { label: "Carreira", href: "/jogador?module=career", icon: Medal, module: "career" },
   { label: "Mensagens", href: "/jogador?module=messages", icon: MessageSquare, module: "messages" },
   { label: "Suporte", href: "/jogador?module=support", icon: CircleHelp, module: "support" },

@@ -126,7 +126,7 @@ const adminModules = [
   },
   {
     id: "competitions",
-    title: "Torneios e inscricoes",
+    title: "Torneios e inscrições",
     description: "Configure torneios, aprove equipes e organize as lineups.",
   },
   {
@@ -146,7 +146,7 @@ const adminModules = [
   },
   {
     id: "content",
-    title: "Conteudo do portal",
+    title: "Conteúdo do portal",
     description: "Publique noticias, FAQ, parceiros e mensagens institucionais.",
   },
   {
@@ -156,7 +156,7 @@ const adminModules = [
   },
   {
     id: "access",
-    title: "Contas e permissoes",
+    title: "Contas e permissões",
     description: "Controle papeis, jogos vinculados e verificacao das contas.",
   },
   {
@@ -167,7 +167,7 @@ const adminModules = [
   {
     id: "audit",
     title: "Auditoria",
-    description: "Consulte o historico de alteracoes administrativas.",
+    description: "Consulte o histórico de alteracoes administrativas.",
   },
 ] as const;
 
@@ -439,8 +439,8 @@ export function AdminDashboardPage() {
     return months;
   }, [scopedEntries, scopedPayments]);
   const operationalPriorities = [
-    { label: "Inscricoes aguardando analise", value: scopedPendingEntries, module: "competitions" as const },
-    { label: "Pagamentos aguardando confirmacao", value: scopedPendingPayments, module: "finance" as const },
+    { label: "Inscrições aguardando analise", value: scopedPendingEntries, module: "competitions" as const },
+    { label: "Pagamentos aguardando confirmação", value: scopedPendingPayments, module: "finance" as const },
     { label: "Partidas aguardando resultado", value: adminDashboard?.matches_waiting_result ?? 0, module: "operations" as const },
     { label: "Disputas abertas", value: adminDashboard?.open_disputes ?? 0, module: "community" as const },
     { label: "Tickets abertos", value: adminDashboard?.open_tickets ?? 0, module: "community" as const },
@@ -733,13 +733,13 @@ export function AdminDashboardPage() {
     try {
       await approveAdminEntry(entryId);
       toast.success(
-        "Inscricao aprovada",
+        "Inscrição aprovada",
         "A equipe foi confirmada pelo admin.",
       );
       await loadAdminWorkspace();
     } catch (err) {
       toast.error(
-        "Falha ao aprovar inscricao",
+        "Falha ao aprovar inscrição",
         err instanceof Error ? err.message : "Tente novamente.",
       );
     }
@@ -749,13 +749,13 @@ export function AdminDashboardPage() {
     try {
       await cancelAdminEntry(entryId);
       toast.success(
-        "Inscricao cancelada",
+        "Inscrição cancelada",
         "A equipe foi removida do fluxo competitivo.",
       );
       await loadAdminWorkspace();
     } catch (err) {
       toast.error(
-        "Falha ao cancelar inscricao",
+        "Falha ao cancelar inscrição",
         err instanceof Error ? err.message : "Tente novamente.",
       );
     }
@@ -768,13 +768,13 @@ export function AdminDashboardPage() {
     try {
       await updateAdminEntryPayment(entryId, status);
       toast.success(
-        "Pagamento da inscricao atualizado",
+        "Pagamento da inscrição atualizado",
         `Novo status: ${status}.`,
       );
       await loadAdminWorkspace();
     } catch (err) {
       toast.error(
-        "Falha ao atualizar inscricao",
+        "Falha ao atualizar inscrição",
         err instanceof Error ? err.message : "Tente novamente.",
       );
     }
@@ -897,7 +897,7 @@ export function AdminDashboardPage() {
       else await createAdminAchievement(payload);
       toast.success(
         editingAchievementId ? "Conquista atualizada" : "Conquista criada",
-        "A meta ja esta integrada ao progresso dos jogadores.",
+        "A meta já está integrada ao progresso dos jogadores.",
       );
       resetAchievementForm();
       setAchievements(await getAdminAchievements());
@@ -915,7 +915,7 @@ export function AdminDashboardPage() {
       setAchievements(await getAdminAchievements());
       toast.success(
         "Conquista atualizada",
-        item.active ? "A meta foi desativada." : "A meta esta ativa novamente.",
+        item.active ? "A meta foi desativada." : "A meta está ativa novamente.",
       );
     } catch (err) {
       toast.error(
@@ -966,14 +966,14 @@ export function AdminDashboardPage() {
         await updateAdminPublicContent(editingContentId, payload);
       else await createAdminPublicContent(payload);
       toast.success(
-        editingContentId ? "Conteudo atualizado" : "Conteudo publicado",
-        "O portal publico ja recebeu a alteracao.",
+        editingContentId ? "Conteúdo atualizado" : "Conteúdo publicado",
+        "O portal público já recebeu a alteracao.",
       );
       resetContentForm();
       setPublicContent(await getAdminPublicContent());
     } catch (err) {
       toast.error(
-        "Falha ao salvar conteudo",
+        "Falha ao salvar conteúdo",
         err instanceof Error ? err.message : "Revise os campos.",
       );
     }
@@ -987,12 +987,12 @@ export function AdminDashboardPage() {
       });
       setPublicContent(await getAdminPublicContent());
       toast.success(
-        "Publicacao atualizada",
+        "Publicação atualizada",
         item.published ? "O item foi ocultado." : "O item voltou ao portal.",
       );
     } catch (err) {
       toast.error(
-        "Falha ao atualizar publicacao",
+        "Falha ao atualizar publicação",
         err instanceof Error ? err.message : "Tente novamente.",
       );
     }
@@ -1058,7 +1058,7 @@ export function AdminDashboardPage() {
       setAccessAccounts(await getAdminAccessAccounts());
       toast.success(
         "Acesso atualizado",
-        "Os papeis e jogos ja estao disponiveis na conta.",
+        "Os papeis e jogos já estao disponiveis na conta.",
       );
     } catch (err) {
       toast.error(
@@ -1126,9 +1126,9 @@ export function AdminDashboardPage() {
       await deleteAdminAccessAccount(selectedAccessId);
       setAccessAccounts(await getAdminAccessAccounts());
       setSelectedAccessId(null);
-      toast.success("Conta excluida", "O cadastro sem historico foi removido.");
+      toast.success("Conta excluida", "O cadastro sem histórico foi removido.");
     } catch (err) {
-      toast.error("Conta nao pode ser excluida", err instanceof Error ? err.message : "Tente novamente.");
+      toast.error("Conta não pode ser excluida", err instanceof Error ? err.message : "Tente novamente.");
     } finally {
       setModeratingAccess(false);
     }
@@ -1182,7 +1182,7 @@ export function AdminDashboardPage() {
         "Falha ao enviar notificacao",
         err instanceof Error
           ? err.message
-          : "Confira destinatarios e conteudo.",
+          : "Confira destinatarios e conteúdo.",
       );
     }
   }
@@ -1205,7 +1205,7 @@ export function AdminDashboardPage() {
       });
       toast.success(
         "Penalidade registrada",
-        "O historico disciplinar foi atualizado.",
+        "O histórico disciplinar foi atualizado.",
       );
       setPenaltyForm({
         player_id: "",
@@ -1231,7 +1231,7 @@ export function AdminDashboardPage() {
       await resolveAdminPenalty(penaltyId, "Encerrada pelo admin.");
       toast.success(
         "Penalidade encerrada",
-        "O caso foi movido para historico.",
+        "O caso foi movido para histórico.",
       );
       await loadAdminWorkspace();
     } catch (err) {
@@ -1290,7 +1290,7 @@ export function AdminDashboardPage() {
       setTicketBusy(true);
       await updateAdminTicket(ticketId, { response: ticketReply.trim() });
       setTicketReply("");
-      toast.success("Resposta enviada", "O usuario podera continuar a conversa pelo painel dele.");
+      toast.success("Resposta enviada", "O usuário podera continuar a conversa pelo painel dele.");
       await loadAdminWorkspace();
     } catch (err) {
       toast.error("Falha ao responder", err instanceof Error ? err.message : "Tente novamente.");
@@ -1433,7 +1433,7 @@ export function AdminDashboardPage() {
           helper={selectedGame?.nome ?? "Todos os jogos"}
         />
         <StatCard
-          label="Inscricoes pendentes"
+          label="Inscrições pendentes"
           value={String(scopedPendingEntries)}
           icon={<Users className="h-5 w-5" />}
           helper="Aguardando decisao"
@@ -1466,7 +1466,7 @@ export function AdminDashboardPage() {
             <Card>
               <CardHeader>
                 <h2 className="font-display text-xl font-semibold">Movimento dos ultimos 6 meses</h2>
-                <p className="mt-1 text-sm text-arena-muted">Receita aprovada e novas inscricoes registradas no banco.</p>
+                <p className="mt-1 text-sm text-arena-muted">Receita aprovada e novas inscrições registradas no banco.</p>
               </CardHeader>
               <CardContent>
                 <RevenueChart data={dashboardSeries} />
@@ -1505,7 +1505,7 @@ export function AdminDashboardPage() {
                 />
                 <QueueLine
                   icon={<CheckCircle2 className="h-4 w-4" />}
-                  label="Inscricoes confirmadas"
+                  label="Inscrições confirmadas"
                   value={String(scopedConfirmedEntries)}
                 />
                 <QueueLine
@@ -1546,8 +1546,8 @@ export function AdminDashboardPage() {
                 )) : (
                   <div className="flex min-h-48 flex-col items-center justify-center border border-dashed border-emerald-400/25 bg-emerald-400/5 px-6 text-center">
                     <CheckCircle2 className="h-8 w-8 text-emerald-300" />
-                    <p className="mt-3 font-semibold">Operacao em dia</p>
-                    <p className="mt-1 text-sm text-arena-muted">Nao existem pendencias administrativas neste momento.</p>
+                    <p className="mt-3 font-semibold">Operação em dia</p>
+                    <p className="mt-1 text-sm text-arena-muted">Não existem pendencias administrativas neste momento.</p>
                   </div>
                 )}
               </CardContent>
@@ -1627,7 +1627,7 @@ export function AdminDashboardPage() {
                         icon={<ShieldCheck className="h-4 w-4" />}
                       />
                       <MetricTile
-                        title="Inscricoes"
+                        title="Inscrições"
                         value={String(filteredEntries.length)}
                         icon={<Users className="h-4 w-4" />}
                       />
@@ -1648,7 +1648,7 @@ export function AdminDashboardPage() {
 
                     <div className="rounded-arena border border-arena-line bg-black/20 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[.16em] text-arena-muted">
-                        Acoes de status
+                        Ações de status
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {nextActions.length ? (
@@ -1727,7 +1727,7 @@ export function AdminDashboardPage() {
                           }
                         />
                       </Field>
-                      <Field label="Premiacao">
+                      <Field label="Premiação">
                         <Input
                           value={tournamentForm.premiacao}
                           onChange={(event) =>
@@ -1764,7 +1764,7 @@ export function AdminDashboardPage() {
                       </Field>
                     </div>
 
-                    <Field label="Descricao">
+                    <Field label="Descrição">
                       <textarea
                         className="min-h-[108px] w-full rounded-arena border border-arena-line bg-black/25 px-3 py-3 text-sm text-arena-text outline-none transition focus:border-arena-cyan"
                         value={tournamentForm.descricao}
@@ -1788,7 +1788,7 @@ export function AdminDashboardPage() {
                 ) : (
                   <EmptyState
                     title="Sem torneios"
-                    description="Crie um torneio para iniciar a operacao administrativa."
+                    description="Crie um torneio para iniciar a operação administrativa."
                   />
                 )}
               </CardContent>
@@ -1797,11 +1797,11 @@ export function AdminDashboardPage() {
             <Card>
               <CardHeader>
                 <h2 className="font-display text-xl font-semibold">
-                  Lineup da inscricao
+                  Lineup da inscrição
                 </h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Field label="Inscricao">
+                <Field label="Inscrição">
                   <Select
                     value={String(activeEntry?.id ?? "")}
                     onChange={(event) =>
@@ -1865,7 +1865,7 @@ export function AdminDashboardPage() {
                   </>
                 ) : (
                   <p className="text-sm text-arena-muted">
-                    Selecione uma inscricao para editar a lineup.
+                    Selecione uma inscrição para editar a lineup.
                   </p>
                 )}
               </CardContent>
@@ -1875,15 +1875,15 @@ export function AdminDashboardPage() {
           <Card className="mt-6">
             <CardHeader>
               <h2 className="font-display text-xl font-semibold">
-                Inscricoes do torneio
+                Inscrições do torneio
               </h2>
             </CardHeader>
             <DataTable
               data={filteredEntries}
               empty={
                 <EmptyState
-                  title="Sem inscricoes"
-                  description="Ainda nao existem equipes inscritas para o torneio atual."
+                  title="Sem inscrições"
+                  description="Ainda não existem equipes inscritas para o torneio atual."
                 />
               }
               columns={[
@@ -1925,7 +1925,7 @@ export function AdminDashboardPage() {
                   cell: (item) => `${item.starters_count}/${item.lineup_size}`,
                 },
                 {
-                  header: "Acoes",
+                  header: "Ações",
                   cell: (item) => (
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -1991,12 +1991,12 @@ export function AdminDashboardPage() {
                     header: "Ativa",
                     cell: (item) => (
                       <Badge tone={Boolean(item.ativo) ? "success" : "danger"}>
-                        {Boolean(item.ativo) ? "Sim" : "Nao"}
+                        {Boolean(item.ativo) ? "Sim" : "Não"}
                       </Badge>
                     ),
                   },
                   {
-                    header: "Acoes",
+                    header: "Ações",
                     cell: (item) => (
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -2040,7 +2040,7 @@ export function AdminDashboardPage() {
                   { header: "Nick", cell: (item) => item.nick },
                   {
                     header: "ID no jogo",
-                    cell: (item) => item.game_uid || "Nao informado",
+                    cell: (item) => item.game_uid || "Não informado",
                   },
                   { header: "Equipe", cell: (item) => item.team_name },
                   {
@@ -2052,7 +2052,7 @@ export function AdminDashboardPage() {
                     ),
                   },
                   {
-                    header: "Acoes",
+                    header: "Ações",
                     cell: (item) => (
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -2092,7 +2092,7 @@ export function AdminDashboardPage() {
               </h2>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field label="Usuarios (IDs separados por virgula)">
+              <Field label="Usuários (IDs separados por virgula)">
                 <Input
                   value={notificationForm.user_ids}
                   onChange={(event) =>
@@ -2269,7 +2269,7 @@ export function AdminDashboardPage() {
             <Card className="xl:col-span-2">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3"><LifeBuoy className="h-5 w-5 text-cyan-200" /><div><h2 className="font-display text-xl font-semibold">Central de suporte</h2><p className="text-sm text-arena-muted">Fila de atendimento e conversa com os usuarios.</p></div></div>
+                  <div className="flex items-center gap-3"><LifeBuoy className="h-5 w-5 text-cyan-200" /><div><h2 className="font-display text-xl font-semibold">Central de suporte</h2><p className="text-sm text-arena-muted">Fila de atendimento e conversa com os usuários.</p></div></div>
                   <Badge tone="info">{tickets.filter((ticket) => ticket.status !== "fechado").length} em atendimento</Badge>
                 </div>
               </CardHeader>
@@ -2307,9 +2307,9 @@ export function AdminDashboardPage() {
                         {(selectedTicket.messages ?? []).map((message) => { const fromAdmin = message.role === "admin"; return <div className={`max-w-[88%] border p-4 ${fromAdmin ? "ml-auto border-emerald-400/35 bg-emerald-400/[.07]" : "border-cyan-400/30 bg-cyan-400/[.06]"}`} key={message.id}><p className={`text-xs font-semibold ${fromAdmin ? "text-emerald-200" : "text-cyan-200"}`}>{message.nome} · {formatDateTime(message.created_at)}</p><p className="mt-2 whitespace-pre-wrap text-sm">{message.message}</p></div>; })}
                         {selectedTicket.response && !(selectedTicket.messages ?? []).length ? <div className="ml-auto max-w-[88%] border border-emerald-400/35 bg-emerald-400/[.07] p-4"><p className="text-xs font-semibold text-emerald-200">Resposta registrada</p><p className="mt-2 whitespace-pre-wrap text-sm">{selectedTicket.response}</p></div> : null}
                       </div>
-                      <div className="border-t border-arena-line p-4"><textarea className="min-h-24 w-full border border-arena-line bg-black/30 p-3 text-sm outline-none focus:border-cyan-400" disabled={selectedTicket.status === "fechado"} placeholder={selectedTicket.status === "fechado" ? "Reabra o ticket para responder." : "Escreva uma resposta clara para o usuario..."} value={ticketReply} onChange={(event) => setTicketReply(event.target.value)} /><div className="mt-3 flex justify-end"><Button disabled={!ticketReply.trim() || selectedTicket.status === "fechado"} loading={ticketBusy} icon={<Send className="h-4 w-4" />} onClick={() => void handleReplyTicket(selectedTicket.id)}>Enviar resposta</Button></div></div>
+                      <div className="border-t border-arena-line p-4"><textarea className="min-h-24 w-full border border-arena-line bg-black/30 p-3 text-sm outline-none focus:border-cyan-400" disabled={selectedTicket.status === "fechado"} placeholder={selectedTicket.status === "fechado" ? "Reabra o ticket para responder." : "Escreva uma resposta clara para o usuário..."} value={ticketReply} onChange={(event) => setTicketReply(event.target.value)} /><div className="mt-3 flex justify-end"><Button disabled={!ticketReply.trim() || selectedTicket.status === "fechado"} loading={ticketBusy} icon={<Send className="h-4 w-4" />} onClick={() => void handleReplyTicket(selectedTicket.id)}>Enviar resposta</Button></div></div>
                     </div>
-                  ) : <div className="flex items-center justify-center p-8 text-center"><div><MessageSquare className="mx-auto h-8 w-8 text-arena-muted" /><p className="mt-3 font-semibold">Selecione um ticket</p><p className="mt-1 text-sm text-arena-muted">O historico completo aparecera aqui.</p></div></div>}
+                  ) : <div className="flex items-center justify-center p-8 text-center"><div><MessageSquare className="mx-auto h-8 w-8 text-arena-muted" /><p className="mt-3 font-semibold">Selecione um ticket</p><p className="mt-1 text-sm text-arena-muted">O histórico completo aparecera aqui.</p></div></div>}
                 </div>
               </CardContent>
             </Card>
@@ -2363,7 +2363,7 @@ export function AdminDashboardPage() {
                     }
                   />
                 </Field>
-                <Field label="Descricao">
+                <Field label="Descrição">
                   <Input
                     value={disputeForm.description}
                     onChange={(event) =>
@@ -2481,7 +2481,7 @@ export function AdminDashboardPage() {
                     }
                   />
                 </Field>
-                <Field label="Codigo interno">
+                <Field label="Código interno">
                   <Input
                     placeholder="Gerado pelo titulo"
                     value={achievementForm.code}
@@ -2494,7 +2494,7 @@ export function AdminDashboardPage() {
                   />
                 </Field>
               </div>
-              <Field label="Descricao">
+              <Field label="Descrição">
                 <textarea
                   className="min-h-24 w-full rounded-arena border border-arena-line bg-black/25 px-3 py-3 text-sm text-arena-text outline-none focus:border-arena-cyan"
                   value={achievementForm.description}
@@ -2527,7 +2527,7 @@ export function AdminDashboardPage() {
                     <option value="mvps">MVPs</option>
                     <option value="matches">Partidas</option>
                     <option value="win_streak">Sequencia de vitorias</option>
-                    <option value="global_rank">Posicao no ranking</option>
+                    <option value="global_rank">Posição no ranking</option>
                   </Select>
                 </Field>
                 <Field label="Regra">
@@ -2637,7 +2637,7 @@ export function AdminDashboardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl font-semibold">
-                    Catalogo de conquistas
+                    Catálogo de conquistas
                   </h2>
                   <p className="mt-1 text-sm text-arena-muted">
                     {filteredAchievements.length} metas no filtro atual.
@@ -2708,7 +2708,7 @@ export function AdminDashboardPage() {
                   ),
                 },
                 {
-                  header: "Acoes",
+                  header: "Ações",
                   cell: (item) => (
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -2739,10 +2739,10 @@ export function AdminDashboardPage() {
             <Card>
               <CardHeader>
                 <h2 className="font-display text-xl font-semibold">
-                  {editingContentId ? "Editar conteudo" : "Nova publicacao"}
+                  {editingContentId ? "Editar conteúdo" : "Nova publicação"}
                 </h2>
                 <p className="mt-1 text-sm text-arena-muted">
-                  Gerencie o que aparece no portal publico.
+                  Gerencie o que aparece no portal público.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -2785,7 +2785,7 @@ export function AdminDashboardPage() {
                   />
                 </Field>
                 <Field
-                  label={contentForm.type === "faq" ? "Resposta" : "Conteudo"}
+                  label={contentForm.type === "faq" ? "Resposta" : "Conteúdo"}
                 >
                   <textarea
                     className="min-h-28 w-full rounded-arena border border-arena-line bg-black/25 px-3 py-3 text-sm text-arena-text outline-none focus:border-arena-cyan"
@@ -2879,7 +2879,7 @@ export function AdminDashboardPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="font-display text-xl font-semibold">
-                      Conteudo do portal
+                      Conteúdo do portal
                     </h2>
                     <p className="mt-1 text-sm text-arena-muted">
                       {publicContent.length} itens cadastrados.
@@ -2895,7 +2895,7 @@ export function AdminDashboardPage() {
                 data={publicContent}
                 empty={
                   <div className="p-6 text-sm text-arena-muted">
-                    Nenhum conteudo cadastrado.
+                    Nenhum conteúdo cadastrado.
                   </div>
                 }
                 columns={[
@@ -2908,7 +2908,7 @@ export function AdminDashboardPage() {
                     ),
                   },
                   {
-                    header: "Conteudo",
+                    header: "Conteúdo",
                     cell: (item) => (
                       <div>
                         <p className="font-semibold">{item.title}</p>
@@ -2928,7 +2928,7 @@ export function AdminDashboardPage() {
                     ),
                   },
                   {
-                    header: "Acoes",
+                    header: "Ações",
                     cell: (item) => (
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -2957,7 +2957,7 @@ export function AdminDashboardPage() {
                 Mensagens de contato
               </h2>
               <p className="mt-1 text-sm text-arena-muted">
-                Solicitacoes enviadas pela pagina publica.
+                Solicitacoes enviadas pela pagina pública.
               </p>
             </CardHeader>
             <DataTable
@@ -3009,7 +3009,7 @@ export function AdminDashboardPage() {
                   ),
                 },
                 {
-                  header: "Acoes",
+                  header: "Ações",
                   cell: (item) => (
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -3112,7 +3112,7 @@ export function AdminDashboardPage() {
                   ),
                 },
                 {
-                  header: "Acoes",
+                  header: "Ações",
                   cell: (item) => (
                     <Button
                       variant="secondary"
@@ -3128,10 +3128,10 @@ export function AdminDashboardPage() {
           <Card>
             <CardHeader>
               <h2 className="font-display text-xl font-semibold">
-                Permissoes da conta
+                Permissões da conta
               </h2>
               <p className="mt-1 text-sm text-arena-muted">
-                Papeis de equipe tambem sao concedidos automaticamente pelo
+                Papeis de equipe também sao concedidos automaticamente pelo
                 elenco.
               </p>
             </CardHeader>
@@ -3230,7 +3230,7 @@ export function AdminDashboardPage() {
                               : `Banida ate ${formatDateTime(accessAccounts.find((item) => item.id === selectedAccessId)?.banned_until)}`}
                           </p>
                           <p className="mt-1 text-arena-muted">
-                            {accessAccounts.find((item) => item.id === selectedAccessId)?.ban_reason || "Motivo nao informado."}
+                            {accessAccounts.find((item) => item.id === selectedAccessId)?.ban_reason || "Motivo não informado."}
                           </p>
                         </div>
                         <Button
@@ -3286,7 +3286,7 @@ export function AdminDashboardPage() {
                   <div className="border-t border-arena-line pt-6">
                     <p className="text-sm font-semibold">Excluir cadastro</p>
                     <p className="mt-1 text-xs text-arena-muted">
-                      Disponivel apenas para contas sem equipe, partidas, inscricoes ou outro historico.
+                      Disponivel apenas para contas sem equipe, partidas, inscrições ou outro histórico.
                     </p>
                     <Button
                       className="mt-4"
@@ -3336,7 +3336,7 @@ export function AdminDashboardPage() {
                 ),
               },
               {
-                header: "Inscricao",
+                header: "Inscrição",
                 cell: (item) => (
                   <Badge
                     tone={
@@ -3350,7 +3350,7 @@ export function AdminDashboardPage() {
                 ),
               },
               {
-                header: "Acoes",
+                header: "Ações",
                 cell: (item) => (
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -3420,7 +3420,7 @@ export function AdminDashboardPage() {
                 cell: (item) =>
                   item.actor_name ?? `Usuario ${item.actor_user_id}`,
               },
-              { header: "Acao", cell: (item) => item.action },
+              { header: "Ação", cell: (item) => item.action },
               {
                 header: "Entidade",
                 cell: (item) =>
@@ -3503,7 +3503,7 @@ function formatCurrency(value: number) {
 }
 
 function formatDateTime(value?: string | null) {
-  return value ? new Date(value).toLocaleString("pt-BR") : "data nao informada";
+  return value ? new Date(value).toLocaleString("pt-BR") : "data não informada";
 }
 
 function formatRelativeDate(value: string) {
@@ -3523,8 +3523,8 @@ function formatRelativeDate(value: string) {
 function auditActionLabel(action: string) {
   const labels: Record<string, string> = {
     "payment.updated": "Pagamento atualizado",
-    "entry.approved": "Inscricao aprovada",
-    "entry.cancelled": "Inscricao cancelada",
+    "entry.approved": "Inscrição aprovada",
+    "entry.cancelled": "Inscrição cancelada",
     "player.updated": "Jogador atualizado",
     "team.updated": "Equipe atualizada",
     "game.map.created": "Mapa cadastrado",
@@ -3604,8 +3604,8 @@ function roleLabel(role: string) {
     (
       {
         jogador: "Jogador",
-        lider: "Lider",
-        capitao: "Capitao",
+        lider: "Líder",
+        capitao: "Capitão",
         admin: "Administrador",
       } as Record<string, string>
     )[role] ?? role

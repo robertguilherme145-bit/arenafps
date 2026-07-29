@@ -13,8 +13,8 @@ import { resendAccountVerification } from "../../services/api";
 
 const ROLE_LABELS: Record<string, string> = {
   jogador: "Jogador",
-  lider: "Lider",
-  capitao: "Capitao",
+  lider: "Líder",
+  capitao: "Capitão",
   admin: "Administrador"
 };
 
@@ -47,7 +47,7 @@ export function Navbar() {
       await switchContext({ role, game_id: input.game_id, team_id: input.team_id });
       if (input.role) navigate(roleHref(role));
     } catch (reason) {
-      error("Nao foi possivel trocar o contexto", reason instanceof Error ? reason.message : "Tente novamente.");
+      error("Não foi possivel trocar o contexto", reason instanceof Error ? reason.message : "Tente novamente.");
     } finally {
       setSwitching(false);
     }
@@ -58,7 +58,7 @@ export function Navbar() {
     try {
       const response = await resendAccountVerification();
       if (response.email_sent) success("Email enviado", "Confira sua caixa de entrada e a pasta de spam.");
-      else error("Email nao enviado", "O servico de email esta indisponivel. Tente novamente em alguns minutos.");
+      else error("Email não enviado", "O servico de email está indisponivel. Tente novamente em alguns minutos.");
     } catch (reason) { error("Falha ao reenviar verificacao", reason instanceof Error ? reason.message : "Tente novamente."); }
     finally { setSwitching(false); }
   }
@@ -82,7 +82,7 @@ export function Navbar() {
               {inWorkspace ? "Workspace" : "Plataforma"}
             </Badge>
           </div>
-          {!inWorkspace ? <nav className="ml-4 hidden items-center gap-5 xl:flex" aria-label="Navegacao publica">{[["Inicio","/"],["Campeonatos","/torneios"],["Circuito oficial","/circuito-oficial"],["Ranking","/ranking"],["Equipes","/equipes"],["Jogadores","/jogadores"],["Noticias","/noticias"]].map(([label,href]) => <Link className="text-sm font-semibold text-arena-muted transition hover:text-white" key={href} to={href}>{label}</Link>)}</nav> : null}
+          {!inWorkspace ? <nav className="ml-4 hidden items-center gap-5 xl:flex" aria-label="Navegacao pública">{[["Inicio","/"],["Campeonatos","/torneios"],["Circuito oficial","/circuito-oficial"],["Ranking","/ranking"],["Equipes","/equipes"],["Jogadores","/jogadores"],["Noticias","/noticias"]].map(([label,href]) => <Link className="text-sm font-semibold text-arena-muted transition hover:text-white" key={href} to={href}>{label}</Link>)}</nav> : null}
         </div>
 
         <button
@@ -97,7 +97,7 @@ export function Navbar() {
           <Button aria-label="Abrir pesquisa" className="hidden h-10 w-10 px-0 md:inline-flex 2xl:hidden" variant="ghost" icon={<Search className="h-5 w-5" />} onClick={() => setCommandOpen(true)} />
           {user ? <div className="relative">
             <Button
-              aria-label="Notificacoes"
+              aria-label="Notificações"
               variant="ghost"
               className="h-10 w-10 px-0"
               icon={<Bell className="h-5 w-5" />}

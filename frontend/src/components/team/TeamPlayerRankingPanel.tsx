@@ -60,7 +60,7 @@ export function TeamPlayerRankingPanel({ ranking }: { ranking: TeamPlayerRanking
 
       <DataTable
         data={players}
-        empty={<div className="p-6 text-sm text-arena-muted">O elenco ainda nao possui jogadores ativos.</div>}
+        empty={<div className="p-6 text-sm text-arena-muted">O elenco ainda não possui jogadores ativos.</div>}
         columns={[
           { header: "#", className: "w-14 px-4 py-3 font-semibold", cell: (_, index) => <RankPosition position={index + 1} /> },
           { header: "Jogador", cell: (player) => <PlayerIdentity player={player} /> },
@@ -92,7 +92,7 @@ export function TeamPlayerRankingPanel({ ranking }: { ranking: TeamPlayerRanking
       </CardHeader>
       <DataTable
         data={mapPlayers}
-        empty={<div className="p-6 text-sm text-arena-muted">As estatisticas por mapa aparecerao depois que o administrador finalizar um mapa com os dados dos jogadores.</div>}
+        empty={<div className="p-6 text-sm text-arena-muted">As estatísticas por mapa aparecerao depois que o administrador finalizar um mapa com os dados dos jogadores.</div>}
         columns={[
           { header: "#", className: "w-14 px-4 py-3 font-semibold", cell: (_, index) => <RankPosition position={index + 1} /> },
           { header: "Jogador", cell: (item) => <PlayerIdentity player={item.player} /> },
@@ -112,7 +112,7 @@ export function TeamPlayerRankingPanel({ ranking }: { ranking: TeamPlayerRanking
 function Highlight({ icon, label, player, value }: { icon: React.ReactNode; label: string; player: TeamPlayerRankingRow | null; value: string }) {
   return <div className="flex min-h-20 items-center gap-3 border border-arena-line bg-black/20 p-3">
     <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-cyan-400/30 bg-cyan-400/10 text-cyan-200">{icon}</span>
-    <div className="min-w-0"><p className="text-xs font-semibold uppercase text-arena-muted">{label}</p><p className="mt-1 truncate font-semibold">{player?.nick ?? "Aguardando estatisticas"}</p><p className="text-xs text-cyan-200">{value}</p></div>
+    <div className="min-w-0"><p className="text-xs font-semibold uppercase text-arena-muted">{label}</p><p className="mt-1 truncate font-semibold">{player?.nick ?? "Aguardando estatísticas"}</p><p className="text-xs text-cyan-200">{value}</p></div>
   </div>;
 }
 

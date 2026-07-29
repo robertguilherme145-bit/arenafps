@@ -25,7 +25,7 @@ export function RankingPage() {
   }, [gameId]);
 
   return <section className="mx-auto max-w-[1500px] px-4 py-10 lg:px-8">
-    <PageHeader eyebrow="Rankings" title="Ranking competitivo" description="Classificacao por jogo calculada a partir das estatisticas oficiais de cada partida." />
+    <PageHeader eyebrow="Rankings" title="Ranking competitivo" description="Classificação por jogo calculada a partir das estatísticas oficiais de cada partida." />
     <div className="mb-6 grid gap-4 md:grid-cols-3">
       <StatCard label="Jogadores ranqueados" value={String(data?.players.length ?? 0)} icon={<UserRound className="h-5 w-5" />} />
       <StatCard label="Equipes ranqueadas" value={String(data?.teams.length ?? 0)} icon={<Users className="h-5 w-5" />} />
@@ -42,14 +42,14 @@ export function RankingPage() {
     </div>
     <Card>
       <CardHeader className="flex flex-row items-center gap-3"><Medal className="h-5 w-5 text-cyan-200" /><h2 className="font-display text-xl font-semibold">{tab === "players" ? "Jogadores" : "Equipes"}</h2></CardHeader>
-      {tab === "players" ? <DataTable data={data?.players ?? []} empty={<EmptyState title="Ranking vazio" description="Finalize partidas para gerar a classificacao." />} columns={[
-        { header: "Posicao", cell: (item) => <Badge tone={(data?.players.indexOf(item) ?? 3) < 3 ? "info" : "neutral"}>#{(data?.players.indexOf(item) ?? 0) + 1}</Badge> },
+      {tab === "players" ? <DataTable data={data?.players ?? []} empty={<EmptyState title="Ranking vazio" description="Finalize partidas para gerar a classificação." />} columns={[
+        { header: "Posição", cell: (item) => <Badge tone={(data?.players.indexOf(item) ?? 3) < 3 ? "info" : "neutral"}>#{(data?.players.indexOf(item) ?? 0) + 1}</Badge> },
         { header: "Jogador", cell: (item) => <Link className="font-semibold hover:text-cyan-200" to={`/jogador/${item.nickname || item.id}`}>{item.nickname || item.nick}</Link> },
         { header: "Equipe", cell: (item) => item.team_name }, { header: "Jogo", cell: (item) => item.game_short_name },
         { header: "Partidas", cell: (item) => item.matches }, { header: "K/D", cell: (item) => item.kd },
         { header: "HS", cell: (item) => `${item.hs_percent}%` }, { header: "MVPs", cell: (item) => item.mvps },
-      ]} /> : <DataTable data={data?.teams ?? []} empty={<EmptyState title="Ranking vazio" description="Finalize partidas para gerar a classificacao." />} columns={[
-        { header: "Posicao", cell: (item) => <Badge tone={(data?.teams.indexOf(item) ?? 3) < 3 ? "info" : "neutral"}>#{(data?.teams.indexOf(item) ?? 0) + 1}</Badge> },
+      ]} /> : <DataTable data={data?.teams ?? []} empty={<EmptyState title="Ranking vazio" description="Finalize partidas para gerar a classificação." />} columns={[
+        { header: "Posição", cell: (item) => <Badge tone={(data?.teams.indexOf(item) ?? 3) < 3 ? "info" : "neutral"}>#{(data?.teams.indexOf(item) ?? 0) + 1}</Badge> },
         { header: "Equipe", cell: (item) => <Link className="flex items-center gap-3 font-semibold hover:text-cyan-200" to={`/equipe/${item.slug}`}><RankingTeamLogo logo={item.logo} name={item.nome} /><span>{item.nome}</span></Link> },
         { header: "Jogo", cell: (item) => item.game_short_name }, { header: "Partidas", cell: (item) => item.matches },
         { header: "Vitorias", cell: (item) => item.wins }, { header: "Derrotas", cell: (item) => item.losses },

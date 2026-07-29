@@ -44,7 +44,7 @@ export function Sidebar() {
             <p className="mt-2 text-sm text-arena-muted">
               {area === "public"
                 ? "Explore torneios, rankings e calendarios da Arena Camp."
-                : "Area privada com ferramentas focadas no seu papel dentro da competicao."}
+                : "Area privada com ferramentas focadas no seu papel dentro da competição."}
             </p>
           </div>
         ) : null}
@@ -171,19 +171,19 @@ function getSections(area: string) {
   switch (area) {
     case "admin":
       return [
-        { title: "Competicao", items: adminNavigation },
+        { title: "Competição", items: adminNavigation },
         { title: "Plataforma", items: adminControlNavigation },
-        { title: "Acoes", items: adminActionNavigation }
+        { title: "Ações", items: adminActionNavigation }
       ];
     case "leader":
       return [
         { title: "Gestao", items: leaderNavigation },
-        { title: "Competicao", items: leaderCompetitionNavigation },
+        { title: "Competição", items: leaderCompetitionNavigation },
         { title: "Controle", items: leaderControlNavigation }
       ];
     case "captain":
       return [
-        { title: "Operacao", items: captainNavigation },
+        { title: "Operação", items: captainNavigation },
         { title: "Equipe", items: captainTeamNavigation },
         { title: "Desempenho", items: captainControlNavigation }
       ];

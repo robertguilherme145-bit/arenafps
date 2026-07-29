@@ -99,7 +99,7 @@ export function TournamentDetailPage() {
             title={tournament.nome}
             description={
               tournament.descricao ||
-              "Central publica da competicao, com chaveamento, cronograma e estatisticas oficiais."
+              "Central pública da competição, com chaveamento, cronograma e estatísticas oficiais."
             }
           />
         </div>
@@ -116,7 +116,7 @@ export function TournamentDetailPage() {
               </p>
               <div className="mt-2 flex items-center gap-3">{center.result.champion_logo ? <img className="h-14 w-14 object-contain" src={center.result.champion_logo} alt={`Logo ${center.result.champion_name}`} /> : null}<h2 className="font-display text-3xl font-bold">{center.result.champion_name}</h2></div>
               <p className="mt-1 text-sm text-arena-muted">
-                Vice-campeao: {center.result.runner_up_name || "Nao definido"}
+                Vice-campeao: {center.result.runner_up_name || "Não definido"}
               </p>
             </div>
             <Badge tone="success">
@@ -136,7 +136,7 @@ export function TournamentDetailPage() {
             icon={<Users className="h-5 w-5" />}
           />
           <StatCard
-            label="Premiacao"
+            label="Premiação"
             value={tournament.premiacao || "A definir"}
             icon={<Medal className="h-5 w-5" />}
           />
@@ -154,10 +154,10 @@ export function TournamentDetailPage() {
         <div className="mt-6 flex gap-2 overflow-x-auto border-b border-arena-line pb-3">
           {[
             ["overview", "Visao geral"],
-            ["standings", "Classificacao"],
+            ["standings", "Classificação"],
             ["bracket", "Chaveamento"],
             ["matches", "Partidas"],
-            ["statistics", "Estatisticas"],
+            ["statistics", "Estatísticas"],
             ["rules", "Regulamento"],
           ].map(([value, label]) => (
             <button
@@ -210,7 +210,7 @@ export function TournamentDetailPage() {
                 {!center.participants.length ? (
                   <EmptyState
                     title="Sem participantes"
-                    description="As equipes aparecerao quando as inscricoes forem confirmadas."
+                    description="As equipes aparecerao quando as inscrições forem confirmadas."
                   />
                 ) : null}
               </CardContent>
@@ -248,7 +248,7 @@ export function TournamentDetailPage() {
                     ))}
                     {!center.map_pool.length ? (
                       <span className="text-sm text-arena-muted">
-                        Nao publicado
+                        Não publicado
                       </span>
                     ) : null}
                   </div>
@@ -257,12 +257,12 @@ export function TournamentDetailPage() {
             </Card>
           </div>
         ) : null}
-        {tab === "rules" ? <Card className="mt-6"><CardHeader><h2 className="font-display text-xl font-semibold">Regulamento oficial</h2><p className="mt-1 text-sm text-arena-muted">Este documento permanece disponivel durante toda a competicao.</p></CardHeader><CardContent><TournamentRegulationPanel tournament={tournament} mapPool={center.map_pool} /></CardContent></Card> : null}
+        {tab === "rules" ? <Card className="mt-6"><CardHeader><h2 className="font-display text-xl font-semibold">Regulamento oficial</h2><p className="mt-1 text-sm text-arena-muted">Este documento permanece disponivel durante toda a competição.</p></CardHeader><CardContent><TournamentRegulationPanel tournament={tournament} mapPool={center.map_pool} /></CardContent></Card> : null}
         {tab === "standings" ? (
           <Card className="mt-6">
             <CardHeader>
-              <h2 className="font-display text-xl font-semibold">Classificacao oficial</h2>
-              <p className="mt-1 text-sm text-arena-muted">3 pontos por vitoria de serie. Mapas nao disputados nao geram saldo.</p>
+              <h2 className="font-display text-xl font-semibold">Classificação oficial</h2>
+              <p className="mt-1 text-sm text-arena-muted">3 pontos por vitoria de serie. Mapas não disputados não geram saldo.</p>
             </CardHeader>
             <DataTable data={center.standings} columns={[
               { header: "#", cell: (team) => team.position },
@@ -329,8 +329,8 @@ export function TournamentDetailPage() {
               ))}
               {!rounds.length ? (
                 <EmptyState
-                  title="Chaveamento ainda nao publicado"
-                  description="A organizacao publicara os confrontos quando as inscricoes forem encerradas."
+                  title="Chaveamento ainda não publicado"
+                  description="A organizacao publicara os confrontos quando as inscrições forem encerradas."
                 />
               ) : null}
             </div>
@@ -407,7 +407,7 @@ export function TournamentDetailPage() {
           <Card className="mt-6">
             <CardHeader>
               <h2 className="font-display text-xl font-semibold">
-                Estatisticas de jogadores
+                Estatísticas de jogadores
               </h2>
               <p className="mt-1 text-sm text-arena-muted">
                 Dados consolidados das partidas oficiais deste torneio.
@@ -417,7 +417,7 @@ export function TournamentDetailPage() {
               data={stats}
               empty={
                 <EmptyState
-                  title="Sem estatisticas oficiais"
+                  title="Sem estatísticas oficiais"
                   description="Os dados aparecerao depois do primeiro mapa finalizado."
                 />
               }
@@ -457,7 +457,7 @@ export function TournamentDetailPage() {
               ? "Partida ao vivo"
               : selectedMatch?.winner
                 ? `Vencedor: ${selectedMatch.winner}`
-                : "Central publica da partida"
+                : "Central pública da partida"
           }
           onClose={() => setSelectedMatch(null)}
           size="wide"
@@ -598,7 +598,7 @@ function MatchMapDetails({
       description={
         match?.winner
           ? `Vencedor da serie: ${match.winner}`
-          : "Central publica da partida"
+          : "Central pública da partida"
       }
       onClose={onClose}
       size="wide"
@@ -642,7 +642,7 @@ function MatchMapDetails({
               </>
             ) : selectedMap?.status === "cancelado" ? (
               <p className="mt-3 text-sm text-arena-muted">
-                Nao disputado porque a serie ja foi decidida.
+                Não disputado porque a serie já foi decidida.
               </p>
             ) : null}
           </div>
@@ -687,7 +687,7 @@ function MatchMapDetails({
         <div className="border border-arena-line">
           <div className="border-b border-arena-line p-4">
             <h4 className="font-display text-lg font-semibold">
-              Estatisticas do mapa
+              Estatísticas do mapa
             </h4>
             <p className="mt-1 text-sm text-arena-muted">
               Desempenho individual em {selectedMap?.map_name || "este mapa"}.
@@ -724,13 +724,13 @@ function MatchMapDetails({
               <EmptyState
                 title={
                   selectedMap?.status === "cancelado"
-                    ? "Mapa nao disputado"
-                    : "Sem estatisticas neste mapa"
+                    ? "Mapa não disputado"
+                    : "Sem estatísticas neste mapa"
                 }
                 description={
                   selectedMap?.status === "cancelado"
                     ? "A serie terminou antes deste mapa."
-                    : "A sumula sera exibida quando a organizacao registrar os dados."
+                    : "A sumula será exibida quando a organizacao registrar os dados."
                 }
               />
             </div>
@@ -781,8 +781,8 @@ function status(value: string) {
     (
       {
         criado: "Em preparacao",
-        aberto: "Inscricoes abertas",
-        fechado: "Inscricoes encerradas",
+        aberto: "Inscrições abertas",
+        fechado: "Inscrições encerradas",
         em_andamento: "Ao vivo",
         finalizado: "Finalizado",
         cancelado: "Cancelado",

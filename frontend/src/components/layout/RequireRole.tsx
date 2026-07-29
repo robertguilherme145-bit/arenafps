@@ -26,7 +26,7 @@ export function RequireRole({ role, children }: { role: string; children: ReactN
     return (
       <AccessPanel
         action={<Button icon={<LogIn className="h-4 w-4" />} onClick={() => setAuthModalOpen(true)}>Entrar na plataforma</Button>}
-        description="Faca login com uma conta autorizada para acessar as ferramentas de operacao."
+        description="Faca login com uma conta autorizada para acessar as ferramentas de operação."
         icon={<LockKeyhole className="h-7 w-7 text-cyan-200" />}
         title="Area administrativa protegida"
       />

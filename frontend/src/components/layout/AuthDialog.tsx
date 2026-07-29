@@ -58,7 +58,7 @@ export function AuthDialog() {
     <Modal
       open={open}
       title={mode === "login" ? "Entrar na Arena Camp" : "Criar conta"}
-      description="Use a conta do banco atual ou cadastre um novo usuario para testar os fluxos autenticados."
+      description="Use a conta do banco atual ou cadastre um novo usuário para testar os fluxos autenticados."
       onClose={() => setOpen(false)}
     >
       <div className="space-y-4">
@@ -83,14 +83,14 @@ export function AuthDialog() {
         </Field>
         <Field label="Senha">
           <Input type="password" value={form.password} onChange={(event) => setForm((state) => ({ ...state, password: event.target.value }))} />
-        </Field></> : <Field label="Codigo de autenticacao"><Input autoComplete="one-time-code" inputMode="numeric" maxLength={6} placeholder="000000" value={form.two_factor_code} onChange={(event) => setForm((state) => ({ ...state, two_factor_code: event.target.value.replace(/\D/g, "") }))} /></Field>}
+        </Field></> : <Field label="Código de autenticacao"><Input autoComplete="one-time-code" inputMode="numeric" maxLength={6} placeholder="000000" value={form.two_factor_code} onChange={(event) => setForm((state) => ({ ...state, two_factor_code: event.target.value.replace(/\D/g, "") }))} /></Field>}
         <div className="flex flex-wrap gap-3 pt-2">
           <Button
             loading={submitting}
             icon={twoFactorRequired ? <KeyRound className="h-4 w-4" /> : mode === "login" ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
             onClick={() => void handleSubmit()}
           >
-            {twoFactorRequired ? "Validar codigo" : mode === "login" ? "Entrar" : "Cadastrar"}
+            {twoFactorRequired ? "Validar código" : mode === "login" ? "Entrar" : "Cadastrar"}
           </Button>
           <Button
             variant="secondary"

@@ -20,16 +20,16 @@ export function NotificationsDrawer() {
       <div className="absolute right-0 top-0 h-full w-full max-w-md border-l border-arena-line bg-arena-panel shadow-panel">
         <div className="flex items-center justify-between border-b border-arena-line p-5">
           <div>
-            <h2 className="font-display text-2xl font-semibold">Notificacoes</h2>
+            <h2 className="font-display text-2xl font-semibold">Notificações</h2>
             <p className="mt-1 text-sm text-arena-muted">
-              {token ? "Feed de atividades e alertas da conta." : "Faca login para ver suas notificacoes."}
+              {token ? "Feed de atividades e alertas da conta." : "Faca login para ver suas notificações."}
             </p>
           </div>
           <Button variant="ghost" onClick={() => setOpen(false)}>Fechar</Button>
         </div>
         <div className="h-[calc(100%-92px)] overflow-y-auto p-4 scrollbar-thin">
           {!token ? (
-            <EmptyState title="Sessao necessaria" description="O painel de notificacoes fica ativo depois do login." />
+            <EmptyState title="Sessao necessaria" description="O painel de notificações fica ativo depois do login." />
           ) : notifications.length ? (
             <div className="space-y-3">
               {notifications.map((item) => (
@@ -54,7 +54,7 @@ export function NotificationsDrawer() {
               ))}
             </div>
           ) : (
-            <EmptyState title="Sem novas notificacoes" description="Quando a API retornar alertas, eles aparecem aqui em tempo real." />
+            <EmptyState title="Sem novas notificações" description="Quando a API retornar alertas, eles aparecem aqui em tempo real." />
           )}
         </div>
       </div>

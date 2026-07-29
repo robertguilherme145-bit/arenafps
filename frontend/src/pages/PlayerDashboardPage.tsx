@@ -60,7 +60,7 @@ export function PlayerDashboardPage() {
       if (refresh) await load();
       return true;
     } catch (error) {
-      toast.error("Operacao nao concluida", messageOf(error));
+      toast.error("Operação não concluida", messageOf(error));
       return false;
     } finally {
       setBusy(null);
@@ -93,15 +93,15 @@ export function PlayerDashboardPage() {
       description={team ? `${team.team_name} · ${team.game_name} · carreira competitiva` : "Construa seu perfil competitivo e encontre uma equipe"}
       action={<div className="flex flex-wrap gap-2">
         {workspace.teams.length > 1 ? <Select className="min-w-56" value={team?.team_id ?? ""} onChange={(event) => { const id = Number(event.target.value); setSelectedTeamId(id); void load(id); }}>{workspace.teams.map((item) => <option key={item.team_id} value={item.team_id}>{item.team_name} · {item.game_name}</option>)}</Select> : null}
-        <Link to={`/jogador/${publicSlug(workspace.profile.nickname || String(workspace.profile.id))}`}><Button icon={<ExternalLink className="h-4 w-4" />} variant="secondary">Meu perfil publico</Button></Link>
+        <Link to={`/jogador/${publicSlug(workspace.profile.nickname || String(workspace.profile.id))}`}><Button icon={<ExternalLink className="h-4 w-4" />} variant="secondary">Meu perfil público</Button></Link>
         {team ? <Link to={`/equipe/${team.team_slug}`}><Button icon={<Shield className="h-4 w-4" />} variant="secondary">Perfil da equipe</Button></Link> : null}
       </div>}
     />
     <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <ContextItem icon={<Swords className="h-4 w-4" />} label="Proxima partida" value={nextMatchLabel(workspace)} />
-      <ContextItem icon={<Medal className="h-4 w-4" />} label="Ranking geral" value={workspace.career.totals.global_rank ? `#${workspace.career.totals.global_rank}` : "Ainda sem posicao"} />
+      <ContextItem icon={<Swords className="h-4 w-4" />} label="Próxima partida" value={nextMatchLabel(workspace)} />
+      <ContextItem icon={<Medal className="h-4 w-4" />} label="Ranking geral" value={workspace.career.totals.global_rank ? `#${workspace.career.totals.global_rank}` : "Ainda sem posição"} />
       <ContextItem icon={<CalendarDays className="h-4 w-4" />} label="Agenda" value={`${workspace.matches.filter((item) => item.status !== "finalizada").length + workspace.events.length} compromissos`} />
-      <ContextItem icon={<Bell className="h-4 w-4" />} label="Notificacoes" value={`${workspace.notifications.filter((item) => !item.lida).length} nao lidas`} action={<button aria-label="Atualizar painel" className="text-arena-muted hover:text-cyan-200" title="Atualizar painel" onClick={() => void run("reload", load, "Painel atualizado", false)}><RefreshCw className={`h-4 w-4 ${busy === "reload" ? "animate-spin" : ""}`} /></button>} />
+      <ContextItem icon={<Bell className="h-4 w-4" />} label="Notificações" value={`${workspace.notifications.filter((item) => !item.lida).length} nao lidas`} action={<button aria-label="Atualizar painel" className="text-arena-muted hover:text-cyan-200" title="Atualizar painel" onClick={() => void run("reload", load, "Painel atualizado", false)}><RefreshCw className={`h-4 w-4 ${busy === "reload" ? "animate-spin" : ""}`} /></button>} />
     </div>
     {content}
   </section>;

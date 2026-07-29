@@ -38,7 +38,7 @@ export function TournamentsPage() {
       <PageHeader
         eyebrow="Competicoes"
         title="Torneios"
-        description="Lista publica de campeonatos com status, datas, premiacao e capacidade de equipes."
+        description="Lista pública de campeonatos com status, datas, premiação e capacidade de equipes."
         action={user?.roles.includes("admin") ?
           <Link to="/admin/torneios/novo">
             <Button icon={<Trophy className="h-4 w-4" />}>Criar torneio</Button>
@@ -50,7 +50,7 @@ export function TournamentsPage() {
           <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-arena-muted" />
           <Input className="pl-9" placeholder="Pesquisar torneio" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
-        <Select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os status</option><option value="criado">Em preparacao</option><option value="aberto">Inscricoes abertas</option><option value="fechado">Inscricoes encerradas</option><option value="em_andamento">Ao vivo</option><option value="finalizado">Finalizado</option></Select>
+        <Select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os status</option><option value="criado">Em preparacao</option><option value="aberto">Inscrições abertas</option><option value="fechado">Inscrições encerradas</option><option value="em_andamento">Ao vivo</option><option value="finalizado">Finalizado</option></Select>
         <Select aria-label="Jogo" value={game} onChange={(event) => setGame(event.target.value)}><option value="">Todos os jogos</option>{[...new Map(data.filter((item) => item.game_id).map((item) => [String(item.game_id), item.game_name || item.game_short_name || item.game])).entries()].map(([id,name]) => <option key={id} value={id}>{name}</option>)}</Select>
       </div>
 
@@ -80,13 +80,13 @@ export function TournamentsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState title="Nenhum torneio encontrado" description="Ajuste a pesquisa ou os filtros para localizar outra competicao." />
+        <EmptyState title="Nenhum torneio encontrado" description="Ajuste a pesquisa ou os filtros para localizar outra competição." />
       )}
     </section>
   );
 }
 
-function statusLabel(value: string) { return ({ criado:"Em preparacao", aberto:"Inscricoes abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
+function statusLabel(value: string) { return ({ criado:"Em preparacao", aberto:"Inscrições abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (

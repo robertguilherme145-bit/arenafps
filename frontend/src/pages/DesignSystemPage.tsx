@@ -14,12 +14,12 @@ export function DesignSystemPage() {
       <PageHeader eyebrow="Design System" title="Arena UI Kit" description="Tokens, componentes, estados e padroes reutilizaveis para evoluir a plataforma." />
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
-          <CardHeader><h2 className="font-display text-xl font-semibold">Acoes</h2></CardHeader>
+          <CardHeader><h2 className="font-display text-xl font-semibold">Ações</h2></CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Button icon={<Save className="h-4 w-4" />} onClick={() => toast.success("Acao primaria", "Componente pronto para formularios e workflows.")}>Primary</Button>
-            <Button variant="secondary" icon={<Download className="h-4 w-4" />} onClick={() => toast.info("Acao secundaria", "Perfeita para exportacao, preview e atalhos.")}>Secondary</Button>
+            <Button icon={<Save className="h-4 w-4" />} onClick={() => toast.success("Ação primaria", "Componente pronto para formularios e workflows.")}>Primary</Button>
+            <Button variant="secondary" icon={<Download className="h-4 w-4" />} onClick={() => toast.info("Ação secundaria", "Perfeita para exportacao, preview e atalhos.")}>Secondary</Button>
             <Button variant="ghost" icon={<Bell className="h-4 w-4" />} onClick={() => toast.info("Ghost acionado", "Uso ideal para ferramentas de baixo peso visual.")}>Ghost</Button>
-            <Button variant="danger" onClick={() => toast.error("Acao critica", "Use este estado apenas para operacoes sensiveis.")}>Danger</Button>
+            <Button variant="danger" onClick={() => toast.error("Ação critica", "Use este estado apenas para operações sensiveis.")}>Danger</Button>
             <Button loading>Loading</Button>
           </CardContent>
         </Card>

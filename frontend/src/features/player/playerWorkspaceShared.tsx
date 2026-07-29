@@ -45,7 +45,7 @@ export function statusLabel(value: string) {
 }
 
 export function roleLabel(value: string) {
-  return ({ leader: "Lider", captain: "Capitao", manager: "Gerente", player: "Jogador" } as Record<string, string>)[value] ?? value;
+  return ({ leader: "Líder", captain: "Capitão", manager: "Gerente", player: "Jogador" } as Record<string, string>)[value] ?? value;
 }
 
 export function confirmAction(message: string, action: () => void) {
