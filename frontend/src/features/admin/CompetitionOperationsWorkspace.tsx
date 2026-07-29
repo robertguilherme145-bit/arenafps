@@ -208,13 +208,17 @@ export function CompetitionOperationsWorkspace({
     }
 
     setSelectedStatsMapId((current) => {
+      const expectedPlayers = operations.rosters.filter((player) => player.in_lineup).length;
+      const statsCount = (mapId: number) => operations.map_player_stats.filter((stat) => Number(stat.match_map_id) === mapId).length;
+      const needsStatistics = (map: MatchOperations["maps"][number]) => map.status === "finalizado" && statsCount(map.id) < expectedPlayers;
       const currentMap = operations.maps.find((map) => map.id === current);
-      if (currentMap && !["finalizado", "cancelado"].includes(currentMap.status)) return currentMap.id;
-      return operations.maps.find((map) => !["finalizado", "cancelado"].includes(map.status))?.id
+      if (currentMap && (needsStatistics(currentMap) || !["finalizado", "cancelado"].includes(currentMap.status))) return currentMap.id;
+      return operations.maps.find(needsStatistics)?.id
+        ?? operations.maps.find((map) => !["finalizado", "cancelado"].includes(map.status))?.id
         ?? [...operations.maps].reverse().find((map) => map.status === "finalizado")?.id
         ?? operations.maps[0].id;
     });
-  }, [operations?.match.id, operations?.maps.map((map) => `${map.id}:${map.status}`).join("|")]);
+  }, [operations?.match.id, operations?.maps.map((map) => `${map.id}:${map.status}`).join("|"), operations?.map_player_stats.length, operations?.rosters.length]);
 
   async function loadGames(preferredId?: number) {
     try {
@@ -482,7 +486,6 @@ export function CompetitionOperationsWorkspace({
       score_team_a: Number(score?.a),
       score_team_b: Number(score?.b)
     }));
-    if (activeTournament) await Promise.all([onReloadMatches(activeTournament.id), onRefreshAdmin()]);
   }
 
   async function handleSavePlayerStats() {
@@ -514,6 +517,7 @@ export function CompetitionOperationsWorkspace({
       setOperations(data);
       setMapPlayerStats(buildMapPlayerStatDraft(data));
       toast.success(`Sumula de ${selectedMap.map_name} salva`, "Os totais da partida, K/D, HS%, MVPs e ranking foram recalculados.");
+      if (activeTournament) await Promise.all([onReloadMatches(activeTournament.id), onRefreshAdmin()]);
     } catch (error) {
       toast.error("Falha ao salvar sumula", messageOf(error));
     } finally {
@@ -1044,6 +1048,10 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
   for (const stat of operations.map_player_stats ?? []) {
     statsByMap.set(Number(stat.match_map_id), (statsByMap.get(Number(stat.match_map_id)) ?? 0) + 1);
   }
+  const lineupPlayerCount = operations.rosters.filter((player) => player.in_lineup).length;
+  const requiredMap = operations.maps.find((map) => map.status === "finalizado" && (statsByMap.get(map.id) ?? 0) < lineupPlayerCount)
+    ?? operations.maps.find((map) => !["finalizado", "cancelado"].includes(map.status))
+    ?? null;
   const hasLegacyTotals = operations.player_stats.length > 0 && !(operations.map_player_stats ?? []).length;
 
   return <div className="space-y-5">
@@ -1060,17 +1068,17 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
       </CardContent></Card>
       <Card><CardHeader><h3 className="font-display text-lg font-semibold">Jogadores elegiveis</h3><p className="mt-1 text-sm text-arena-muted">ID interno e ID oficial do jogo ficam visiveis para conferencia.</p></CardHeader><CardContent className="grid gap-5 md:grid-cols-2 xl:grid-cols-1"><Roster title={operations.match.team_a} players={teamARoster} /><Roster title={operations.match.team_b} players={teamBRoster} /></CardContent></Card>
     </div>
-    <Card><CardHeader><h3 className="font-display text-lg font-semibold">Serie de mapas</h3><p className="mt-1 text-sm text-arena-muted">Ao atingir a maioria da serie, o backend finaliza a partida e atualiza o Competition Engine.</p></CardHeader><CardContent className="space-y-3">{operations.maps.map((map) => { const cancelled = map.status === "cancelado" || (operations.match.status === "finalizada" && map.status !== "finalizado"); return <div className="grid items-center gap-4 border border-arena-line bg-black/20 p-4 lg:grid-cols-[70px_1fr_130px_130px_auto]" key={map.id}><div><p className="text-xs uppercase text-arena-muted">Mapa {map.map_number}</p><p className="font-bold">#{map.id}</p></div><div><p className="font-semibold">{map.map_name}</p><p className="text-xs text-arena-muted">{map.selection_type === "pick" ? `Pick de ${map.selected_by_team}` : map.selection_type === "decider" ? "Decider" : "Escolha manual"}</p></div><Field label={operations.match.team_a}><Input disabled={map.status === "finalizado" || cancelled} min="0" type="number" value={mapScores[map.id]?.a ?? ""} onChange={(event) => onScoreChange(map.id, "a", event.target.value)} /></Field><Field label={operations.match.team_b}><Input disabled={map.status === "finalizado" || cancelled} min="0" type="number" value={mapScores[map.id]?.b ?? ""} onChange={(event) => onScoreChange(map.id, "b", event.target.value)} /></Field>{map.status === "finalizado" ? <div><Badge tone="success">{map.score_team_a} x {map.score_team_b}</Badge><p className="mt-1 text-xs text-arena-muted">{map.winner_team}</p></div> : cancelled ? <Badge>Não disputado</Badge> : <Button loading={busy === `result-${map.id}`} icon={<Save className="h-4 w-4" />} onClick={() => onMapResult(map.id)}>Salvar mapa</Button>}</div>})}{!operations.maps.length ? <EmptyState title="Mapas ainda nao definidos" description={operations.match.pick_ban_enabled ? "Conclua os picks para formar a serie." : "Adicione os mapas manualmente."} /> : null}</CardContent></Card>
+    <Card><CardHeader><h3 className="font-display text-lg font-semibold">1. Placar do mapa</h3><p className="mt-1 text-sm text-arena-muted">Salve o placar atual. O proximo mapa so e liberado depois da sumula dos jogadores.</p></CardHeader><CardContent className="space-y-3">{operations.maps.map((map) => { const cancelled = map.status === "cancelado" || (operations.match.status === "finalizada" && map.status !== "finalizado"); const locked = Boolean(requiredMap && requiredMap.id !== map.id); return <div className={cn("grid items-center gap-4 border p-4 lg:grid-cols-[70px_1fr_130px_130px_auto]", requiredMap?.id === map.id ? "border-cyan-400/50 bg-cyan-400/[0.07]" : "border-arena-line bg-black/20", locked && map.status !== "finalizado" ? "opacity-55" : "")} key={map.id}><div><p className="text-xs uppercase text-arena-muted">Mapa {map.map_number}</p><p className="font-bold">#{map.id}</p></div><div><p className="font-semibold">{map.map_name}</p><p className="text-xs text-arena-muted">{map.selection_type === "pick" ? `Pick de ${map.selected_by_team}` : map.selection_type === "decider" ? "Decider" : "Escolha manual"}</p></div><Field label={operations.match.team_a}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.a ?? ""} onChange={(event) => onScoreChange(map.id, "a", event.target.value)} /></Field><Field label={operations.match.team_b}><Input disabled={map.status === "finalizado" || cancelled || locked} min="0" type="number" value={mapScores[map.id]?.b ?? ""} onChange={(event) => onScoreChange(map.id, "b", event.target.value)} /></Field>{map.status === "finalizado" ? <div><Badge tone={(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "success" : "warning"}>{map.score_team_a} x {map.score_team_b}</Badge><p className="mt-1 text-xs text-arena-muted">{(statsByMap.get(map.id) ?? 0) >= lineupPlayerCount ? "Placar e sumula salvos" : "Aguardando sumula"}</p></div> : cancelled ? <Badge>Não disputado</Badge> : <Button disabled={locked} loading={busy === `result-${map.id}`} icon={<Save className="h-4 w-4" />} onClick={() => onMapResult(map.id)}>Salvar placar</Button>}</div>})}{!operations.maps.length ? <EmptyState title="Mapas ainda nao definidos" description={operations.match.pick_ban_enabled ? "Conclua os picks para formar a serie." : "Adicione os mapas manualmente."} /> : null}</CardContent></Card>
     <Card>
       <CardHeader className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="font-display text-lg font-semibold">Sumula por mapa</h3>
-          <p className="mt-1 text-sm text-arena-muted">Kills, mortes, assistencias, headshots e MVP ficam separados em cada mapa.</p>
+          <h3 className="font-display text-lg font-semibold">2. Sumula dos jogadores</h3>
+          <p className="mt-1 text-sm text-arena-muted">Preencha as estatisticas do mapa atual para liberar o proximo mapa ou confronto.</p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Select className="min-w-56 flex-1" disabled={!operations.maps.length} value={selectedStatsMapId ?? ""} onChange={(event) => onSelectStatsMap(Number(event.target.value))}>
             {!operations.maps.length ? <option value="">Nenhum mapa definido</option> : null}
-            {operations.maps.map((map) => <option key={map.id} value={map.id}>Mapa {map.map_number} - {map.map_name}</option>)}
+            {operations.maps.map((map) => <option disabled={map.status !== "finalizado" && requiredMap?.id !== map.id} key={map.id} value={map.id}>Mapa {map.map_number} - {map.map_name}</option>)}
           </Select>
           <Button disabled={!selectedStatsMap || selectedStatsMap.status !== "finalizado"} loading={busy === "player-stats"} icon={<Save className="h-4 w-4" />} onClick={onSavePlayerStats}>Salvar este mapa</Button>
         </div>
@@ -1088,12 +1096,15 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
               {operations.maps.map((map) => {
                 const completedPlayers = statsByMap.get(map.id) ?? 0;
                 const selected = map.id === selectedStatsMapId;
+                const accessible = map.status === "finalizado" || requiredMap?.id === map.id;
                 return (
                   <button
                     className={cn(
                       "flex min-h-20 items-center justify-between gap-3 border px-4 py-3 text-left transition",
-                      selected ? "border-cyan-400/60 bg-cyan-400/10" : "border-arena-line bg-black/20 hover:bg-white/[.04]"
+                      selected ? "border-cyan-400/60 bg-cyan-400/10" : "border-arena-line bg-black/20 hover:bg-white/[.04]",
+                      !accessible ? "cursor-not-allowed opacity-45" : ""
                     )}
+                    disabled={!accessible}
                     key={map.id}
                     onClick={() => onSelectStatsMap(map.id)}
                     type="button"

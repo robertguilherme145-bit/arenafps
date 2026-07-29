@@ -524,19 +524,6 @@ export async function recordMatchMapResult(adminUser, matchMapId, payload) {
   const winsB = maps.filter((map) => Number(map.winner_team_id) === Number(match.team_b_id)).length;
   const winsNeeded = Math.floor(bestOfNumber(match.best_of) / 2) + 1;
 
-  if (winsA >= winsNeeded || winsB >= winsNeeded) {
-    const seriesWinner = winsA > winsB ? match.team_a_id : match.team_b_id;
-    await finishMatch(match.id, seriesWinner, winsA, winsB);
-    await cancelPendingMatchMaps(match.id);
-    await advanceMixBracket(match);
-    await advanceTournamentFormat(match.tournament_id);
-    await dispatchCompetitionEvent(COMPETITION_EVENTS.MATCH_RESULT_SAVED, {
-      match_id: match.id,
-      tournament_id: match.tournament_id,
-      winner_team_id: seriesWinner
-    });
-  }
-
   await audit(adminUser, "match.map.result", "match_map", matchMap.id, {
     score_team_a: scoreA,
     score_team_b: scoreB,
@@ -584,11 +571,33 @@ export async function saveMatchMapPlayerStatistics(adminUser, matchId, matchMapI
   const normalized = await normalizePlayerStatistics(match, payload, "mapa");
 
   await replaceMatchMapPlayerStats(match.id, matchMap.id, normalized);
+  const maps = await getMatchMaps(match.id);
+  const winsA = maps.filter((map) => Number(map.winner_team_id) === Number(match.team_a_id)).length;
+  const winsB = maps.filter((map) => Number(map.winner_team_id) === Number(match.team_b_id)).length;
+  const winsNeeded = Math.floor(bestOfNumber(match.best_of) / 2) + 1;
+  let seriesWinner = match.winner_team_id;
+
+  if (winsA >= winsNeeded || winsB >= winsNeeded) {
+    const detailedStats = await getMatchMapPlayerStatistics(match.id);
+    const lineupSize = (await getMatchRosters(match.id)).filter((player) => player.in_lineup).length;
+    const allPlayedMapsHaveStatistics = maps
+      .filter((map) => map.status === "finalizado")
+      .every((map) => detailedStats.filter((stat) => Number(stat.match_map_id) === Number(map.id)).length >= lineupSize);
+
+    if (allPlayedMapsHaveStatistics) {
+      seriesWinner = winsA > winsB ? match.team_a_id : match.team_b_id;
+      await finishMatch(match.id, seriesWinner, winsA, winsB);
+      await cancelPendingMatchMaps(match.id);
+      await advanceMixBracket(match);
+      await advanceTournamentFormat(match.tournament_id);
+    }
+  }
+
   await dispatchCompetitionEvent(COMPETITION_EVENTS.MATCH_RESULT_SAVED, {
     match_id: match.id,
     match_map_id: matchMap.id,
     tournament_id: match.tournament_id,
-    winner_team_id: match.winner_team_id
+    winner_team_id: seriesWinner
   });
   await audit(adminUser, "match.map_player_stats.saved", "match_map", matchMap.id, {
     match_id: match.id,
