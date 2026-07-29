@@ -508,7 +508,7 @@ export async function replyLeaderTicket(ticketId, userId, message) {
   if (!tickets[0]) return false;
 
   await pool.query(
-    `INSERT INTO support_ticket_messages (ticket_id, user_id, role, message) VALUES (?, ?, 'user', ?)`,
+    `INSERT INTO support_ticket_messages (ticket_id, user_id, message) VALUES (?, ?, ?)`,
     [ticketId, userId, message]
   );
   await pool.query(
@@ -707,7 +707,7 @@ async function queryTickets(userId) {
 
   const [messages] = await pool.query(
     `
-    SELECT stm.*, u.nome
+    SELECT stm.*, u.nome, u.role
     FROM support_ticket_messages stm
     LEFT JOIN users u ON u.id = stm.user_id
     WHERE stm.ticket_id IN (?)
