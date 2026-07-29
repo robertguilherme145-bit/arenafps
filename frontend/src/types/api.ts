@@ -882,6 +882,7 @@ export type SupportTicket = {
   user_name: string | null;
   user_email: string | null;
   assigned_admin_name: string | null;
+  messages?: Array<{ id: number; ticket_id: number; user_id: number; nome: string; role: string; message: string; created_at: string }>;
 };
 
 export type Dispute = {

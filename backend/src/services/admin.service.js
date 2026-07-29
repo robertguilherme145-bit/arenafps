@@ -23,6 +23,7 @@ import {
   createDispute,
   createPenalty,
   createSupportTicket,
+  createSupportTicketMessage,
   findDispute,
   findPenalty,
   findSupportTicket,
@@ -433,16 +434,22 @@ export async function updateAdminTicket(adminUser, ticketId, payload) {
     throw new Error("Ticket nao encontrado.");
   }
 
+  const response = typeof payload.response === "string" ? payload.response.trim() : "";
+  if (response) {
+    await createSupportTicketMessage(ticket.id, adminUser.id, response);
+  }
+
   await updateSupportTicket(ticket.id, {
-    status: payload.status ?? ticket.status,
+    status: response ? "respondido" : payload.status ?? ticket.status,
     priority: payload.priority ?? ticket.priority,
-    response: payload.response ?? ticket.response,
-    assigned_admin_id: payload.assigned_admin_id ? Number(payload.assigned_admin_id) : ticket.assigned_admin_id
+    response: response || ticket.response,
+    assigned_admin_id: payload.assigned_admin_id ? Number(payload.assigned_admin_id) : ticket.assigned_admin_id ?? adminUser.id
   });
 
   await audit(adminUser.id, "ticket.updated", "ticket", ticket.id, {
     previous_status: ticket.status,
-    next_status: payload.status ?? ticket.status
+    next_status: response ? "respondido" : payload.status ?? ticket.status,
+    replied: Boolean(response)
   });
 }
 

@@ -11,10 +11,12 @@ import {
   Gavel,
   LifeBuoy,
   Mail,
+  MessageSquare,
   PencilLine,
   PlayCircle,
   Plus,
   Save,
+  Send,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -261,6 +263,11 @@ export function AdminDashboardPage() {
     subject: "",
     message: "",
   });
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<SupportTicket["status"] | "all">("all");
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [ticketReply, setTicketReply] = useState("");
+  const [ticketBusy, setTicketBusy] = useState(false);
   const [disputeForm, setDisputeForm] = useState({
     match_id: "",
     tournament_id: "",
@@ -438,6 +445,16 @@ export function AdminDashboardPage() {
     { label: "Disputas abertas", value: adminDashboard?.open_disputes ?? 0, module: "community" as const },
     { label: "Tickets abertos", value: adminDashboard?.open_tickets ?? 0, module: "community" as const },
   ].filter((item) => item.value > 0);
+  const filteredTickets = useMemo(() => {
+    const query = ticketSearch.trim().toLowerCase();
+    return tickets.filter((ticket) => {
+      if (ticketStatusFilter !== "all" && ticket.status !== ticketStatusFilter) return false;
+      if (!query) return true;
+      return [ticket.subject, ticket.user_name, ticket.user_email, ticket.category, String(ticket.id)]
+        .some((value) => String(value ?? "").toLowerCase().includes(query));
+    });
+  }, [ticketSearch, ticketStatusFilter, tickets]);
+  const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId) ?? filteredTickets[0] ?? null;
 
   const activeEntry =
     filteredEntries.find((item) => item.id === selectedEntryId) ??
@@ -1264,6 +1281,21 @@ export function AdminDashboardPage() {
         "Falha ao atualizar ticket",
         err instanceof Error ? err.message : "Tente novamente.",
       );
+    }
+  }
+
+  async function handleReplyTicket(ticketId: number) {
+    if (!ticketReply.trim()) return;
+    try {
+      setTicketBusy(true);
+      await updateAdminTicket(ticketId, { response: ticketReply.trim() });
+      setTicketReply("");
+      toast.success("Resposta enviada", "O usuario podera continuar a conversa pelo painel dele.");
+      await loadAdminWorkspace();
+    } catch (err) {
+      toast.error("Falha ao responder", err instanceof Error ? err.message : "Tente novamente.");
+    } finally {
+      setTicketBusy(false);
     }
   }
 
@@ -2234,117 +2266,50 @@ export function AdminDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="xl:col-span-2">
               <CardHeader>
-                <h2 className="font-display text-xl font-semibold">Tickets</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3"><LifeBuoy className="h-5 w-5 text-cyan-200" /><div><h2 className="font-display text-xl font-semibold">Central de suporte</h2><p className="text-sm text-arena-muted">Fila de atendimento e conversa com os usuarios.</p></div></div>
+                  <Badge tone="info">{tickets.filter((ticket) => ticket.status !== "fechado").length} em atendimento</Badge>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Field label="User ID">
-                  <Input
-                    value={ticketForm.user_id}
-                    onChange={(event) =>
-                      setTicketForm((state) => ({
-                        ...state,
-                        user_id: event.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-                <Field label="Categoria">
-                  <Input
-                    value={ticketForm.category}
-                    onChange={(event) =>
-                      setTicketForm((state) => ({
-                        ...state,
-                        category: event.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-                <Field label="Prioridade">
-                  <Select
-                    value={ticketForm.priority}
-                    onChange={(event) =>
-                      setTicketForm((state) => ({
-                        ...state,
-                        priority: event.target
-                          .value as SupportTicket["priority"],
-                      }))
-                    }
-                  >
-                    <option value="baixa">Baixa</option>
-                    <option value="media">Media</option>
-                    <option value="alta">Alta</option>
-                    <option value="critica">Critica</option>
+                <div className="grid gap-3 md:grid-cols-[1fr_220px]">
+                  <Input placeholder="Buscar por protocolo, assunto, nome ou e-mail" value={ticketSearch} onChange={(event) => setTicketSearch(event.target.value)} />
+                  <Select value={ticketStatusFilter} onChange={(event) => setTicketStatusFilter(event.target.value as SupportTicket["status"] | "all")}>
+                    <option value="all">Todos os status</option><option value="aberto">Abertos</option><option value="em_analise">Em analise</option><option value="respondido">Respondidos</option><option value="fechado">Fechados</option>
                   </Select>
-                </Field>
-                <Field label="Assunto">
-                  <Input
-                    value={ticketForm.subject}
-                    onChange={(event) =>
-                      setTicketForm((state) => ({
-                        ...state,
-                        subject: event.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-                <Field label="Mensagem">
-                  <Input
-                    value={ticketForm.message}
-                    onChange={(event) =>
-                      setTicketForm((state) => ({
-                        ...state,
-                        message: event.target.value,
-                      }))
-                    }
-                  />
-                </Field>
-                <Button
-                  icon={<LifeBuoy className="h-4 w-4" />}
-                  onClick={() => void handleCreateTicket()}
-                >
-                  Abrir ticket
-                </Button>
-                <div className="space-y-2">
-                  {tickets.slice(0, 4).map((item) => (
-                    <div
-                      className="rounded-arena border border-arena-line bg-black/20 p-3"
-                      key={item.id}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{item.subject}</p>
-                        <Badge
-                          tone={
-                            item.status === "fechado" ? "neutral" : "warning"
-                          }
-                        >
-                          {item.status}
-                        </Badge>
+                </div>
+
+                <div className="grid min-h-[560px] border border-arena-line lg:grid-cols-[340px_1fr]">
+                  <div className="max-h-[680px] overflow-y-auto border-b border-arena-line lg:border-b-0 lg:border-r">
+                    {filteredTickets.map((ticket) => (
+                      <button className={`block w-full border-b border-arena-line p-4 text-left transition ${selectedTicket?.id === ticket.id ? "bg-cyan-400/10" : "bg-black/20 hover:bg-white/[.04]"}`} key={ticket.id} onClick={() => { setSelectedTicketId(ticket.id); setTicketReply(""); }} type="button">
+                        <div className="flex items-start justify-between gap-3"><p className="line-clamp-2 text-sm font-semibold">#{ticket.id} · {ticket.subject}</p><Badge tone={ticket.status === "fechado" ? "neutral" : ticket.priority === "critica" ? "danger" : "warning"}>{ticket.status}</Badge></div>
+                        <p className="mt-2 truncate text-xs text-arena-muted">{ticket.user_name ?? "Atendimento interno"} · {ticket.category}</p>
+                        <p className="mt-1 text-xs text-arena-muted">{formatDateTime(ticket.updated_at || ticket.created_at)}</p>
+                      </button>
+                    ))}
+                    {!filteredTickets.length ? <div className="p-8 text-center text-sm text-arena-muted">Nenhum ticket encontrado neste filtro.</div> : null}
+                  </div>
+
+                  {selectedTicket ? (
+                    <div className="flex min-w-0 flex-col">
+                      <div className="border-b border-arena-line p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase text-cyan-200">Protocolo #{selectedTicket.id}</p><h3 className="mt-1 text-lg font-semibold">{selectedTicket.subject}</h3><p className="mt-2 text-sm text-arena-muted">{selectedTicket.user_name ?? "Atendimento interno"} · {selectedTicket.user_email ?? "Sem e-mail vinculado"}</p></div><div className="flex flex-wrap gap-2"><Badge>{selectedTicket.category}</Badge><Badge tone={selectedTicket.priority === "critica" ? "danger" : "warning"}>{selectedTicket.priority}</Badge></div></div>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <Field label="Status"><Select value={selectedTicket.status} onChange={(event) => void handleUpdateTicket(selectedTicket.id, event.target.value as SupportTicket["status"])}><option value="aberto">Aberto</option><option value="em_analise">Em analise</option><option value="respondido">Respondido</option><option value="fechado">Fechado</option></Select></Field>
+                          <Field label="Prioridade"><Select value={selectedTicket.priority} onChange={async (event) => { try { await updateAdminTicket(selectedTicket.id, { priority: event.target.value as SupportTicket["priority"] }); await loadAdminWorkspace(); } catch (err) { toast.error("Falha ao alterar prioridade", err instanceof Error ? err.message : "Tente novamente."); } }}><option value="baixa">Baixa</option><option value="media">Media</option><option value="alta">Alta</option><option value="critica">Critica</option></Select></Field>
+                        </div>
                       </div>
-                      <p className="mt-1 text-xs text-arena-muted">
-                        {item.user_name ?? "Sem usuario"} | {item.priority}
-                      </p>
-                      <div className="mt-3 flex gap-2">
-                        <Button
-                          variant="secondary"
-                          onClick={() =>
-                            void handleUpdateTicket(item.id, "em_analise")
-                          }
-                        >
-                          Analisar
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() =>
-                            void handleUpdateTicket(item.id, "fechado")
-                          }
-                        >
-                          Fechar
-                        </Button>
+                      <div className="max-h-[390px] flex-1 space-y-4 overflow-y-auto bg-black/20 p-5">
+                        <div className="max-w-[88%] border border-cyan-400/30 bg-cyan-400/[.06] p-4"><p className="text-xs font-semibold uppercase text-cyan-200">Solicitacao inicial · {formatDateTime(selectedTicket.created_at)}</p><p className="mt-2 whitespace-pre-wrap text-sm">{selectedTicket.message}</p></div>
+                        {(selectedTicket.messages ?? []).map((message) => { const fromAdmin = message.role === "admin"; return <div className={`max-w-[88%] border p-4 ${fromAdmin ? "ml-auto border-emerald-400/35 bg-emerald-400/[.07]" : "border-cyan-400/30 bg-cyan-400/[.06]"}`} key={message.id}><p className={`text-xs font-semibold ${fromAdmin ? "text-emerald-200" : "text-cyan-200"}`}>{message.nome} · {formatDateTime(message.created_at)}</p><p className="mt-2 whitespace-pre-wrap text-sm">{message.message}</p></div>; })}
+                        {selectedTicket.response && !(selectedTicket.messages ?? []).length ? <div className="ml-auto max-w-[88%] border border-emerald-400/35 bg-emerald-400/[.07] p-4"><p className="text-xs font-semibold text-emerald-200">Resposta registrada</p><p className="mt-2 whitespace-pre-wrap text-sm">{selectedTicket.response}</p></div> : null}
                       </div>
+                      <div className="border-t border-arena-line p-4"><textarea className="min-h-24 w-full border border-arena-line bg-black/30 p-3 text-sm outline-none focus:border-cyan-400" disabled={selectedTicket.status === "fechado"} placeholder={selectedTicket.status === "fechado" ? "Reabra o ticket para responder." : "Escreva uma resposta clara para o usuario..."} value={ticketReply} onChange={(event) => setTicketReply(event.target.value)} /><div className="mt-3 flex justify-end"><Button disabled={!ticketReply.trim() || selectedTicket.status === "fechado"} loading={ticketBusy} icon={<Send className="h-4 w-4" />} onClick={() => void handleReplyTicket(selectedTicket.id)}>Enviar resposta</Button></div></div>
                     </div>
-                  ))}
+                  ) : <div className="flex items-center justify-center p-8 text-center"><div><MessageSquare className="mx-auto h-8 w-8 text-arena-muted" /><p className="mt-3 font-semibold">Selecione um ticket</p><p className="mt-1 text-sm text-arena-muted">O historico completo aparecera aqui.</p></div></div>}
                 </div>
               </CardContent>
             </Card>

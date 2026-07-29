@@ -118,7 +118,35 @@ export async function getSupportTickets() {
     `
   );
 
-  return rows;
+  if (!rows.length) return [];
+
+  const [messages] = await pool.query(
+    `
+    SELECT
+      stm.*,
+      u.nome,
+      u.role
+    FROM support_ticket_messages stm
+    INNER JOIN users u
+      ON u.id = stm.user_id
+    WHERE stm.ticket_id IN (?)
+    ORDER BY stm.created_at ASC, stm.id ASC
+    `,
+    [rows.map((ticket) => ticket.id)]
+  );
+
+  return rows.map((ticket) => ({
+    ...ticket,
+    messages: messages.filter((message) => Number(message.ticket_id) === Number(ticket.id))
+  }));
+}
+
+export async function createSupportTicketMessage(ticketId, userId, message) {
+  const [result] = await pool.query(
+    `INSERT INTO support_ticket_messages (ticket_id, user_id, message) VALUES (?, ?, ?)`,
+    [ticketId, userId, message]
+  );
+  return result.insertId;
 }
 
 export async function createSupportTicket(data) {
