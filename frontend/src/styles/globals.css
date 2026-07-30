@@ -20,10 +20,10 @@
   color-scheme: light;
   --arena-bg: 244 247 251;
   --arena-panel: 255 255 255;
-  --arena-panel-2: 235 241 248;
-  --arena-line: 198 208 222;
-  --arena-text: 18 28 43;
-  --arena-muted: 79 94 116;
+  --arena-panel-2: 232 239 247;
+  --arena-line: 173 186 204;
+  --arena-text: 12 23 39;
+  --arena-muted: 65 80 102;
   --arena-page: #f4f7fb;
 }
 
@@ -46,16 +46,45 @@ body {
   overflow-x: hidden;
 }
 
-:root.light .bg-black\/20,
-:root.light .bg-black\/25,
-:root.light .bg-black\/30,
-:root.light .bg-black\/40,
-:root.light .bg-black\/55 { background-color: rgb(226 233 242 / .72) !important; }
 :root.light .bg-white\/\[\.03\],
 :root.light .bg-white\/\[\.04\],
-:root.light .bg-white\/\[\.06\] { background-color: rgb(255 255 255 / .82) !important; }
-:root.light .text-white { color: rgb(var(--arena-text)) !important; }
+:root.light .bg-white\/\[\.05\],
+:root.light .bg-white\/\[\.06\],
+:root.light .bg-white\/\[\.07\],
+:root.light .bg-white\/\[\.08\],
+:root.light .bg-white\/\[\.1\] { background-color: rgb(218 227 238 / .7) !important; }
+:root.light .text-cyan-100,
+:root.light .text-cyan-200,
+:root.light .text-cyan-300,
+:root.light .text-cyan-400 { color: #075985 !important; }
+:root.light .text-emerald-200,
+:root.light .text-emerald-300,
+:root.light .text-emerald-400 { color: #047857 !important; }
+:root.light .text-amber-200,
+:root.light .text-amber-300,
+:root.light .text-amber-400 { color: #92400e !important; }
+:root.light .text-slate-200,
+:root.light .text-slate-300,
+:root.light .text-slate-400 { color: #475569 !important; }
+:root.light input::placeholder,
+:root.light textarea::placeholder { color: #64748b; opacity: 1; }
 :root.light .shadow-panel { box-shadow: 0 16px 45px rgb(26 45 72 / .12); }
+
+:root.light .arena-media-surface {
+  color: #f8fafc;
+}
+
+:root.light .arena-media-surface .text-arena-muted,
+:root.light .arena-media-surface .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+:root.light .arena-media-surface .text-cyan-100,
+:root.light .arena-media-surface .text-cyan-200,
+:root.light .arena-media-surface .text-cyan-300,
+:root.light .arena-media-surface .text-cyan-400 {
+  color: #67e8f9 !important;
+}
 
 .grid > * {
   min-width: 0;

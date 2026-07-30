@@ -25,7 +25,7 @@ export function HomePage() {
   const dashboardHref = roleHref(user?.active_role);
 
   return <div className="pb-12">
-    <section className="relative min-h-[calc(100svh-7.5rem)] overflow-hidden border-b border-arena-line">
+    <section className="arena-media-surface relative min-h-[calc(100svh-7.5rem)] overflow-hidden border-b border-arena-line">
       <img src={hero} alt="Arena de competição de eSports" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-black/55" />
       <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-[#020711] via-[#020711]/80 to-transparent lg:w-4/5" />
