@@ -28,9 +28,11 @@ const uploadDirectory = path.resolve("uploads");
 const sourceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const publicDirectories = [
  path.resolve(sourceDirectory, "../public"),
- path.resolve(sourceDirectory, "../../frontend/dist")
+ path.resolve(sourceDirectory, "../../frontend/dist"),
+ path.resolve(process.cwd(), "backend/public"),
+ path.resolve(process.cwd(), "frontend/dist")
 ];
-const publicDirectory = publicDirectories.find((directory) => fs.existsSync(path.join(directory, "index.html"))) || publicDirectories[0];
+const publicDirectory = publicDirectories.find((directory) => fs.existsSync(path.join(directory, "index.html")));
 fs.mkdirSync(uploadDirectory, { recursive:true });
 
 function validateProductionEnvironment() {
@@ -61,8 +63,9 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/uploads", express.static(uploadDirectory, { maxAge:"7d", immutable:true }));
+app.use(routes);
 
-if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
+if (publicDirectory) {
  app.use(express.static(publicDirectory, {
   maxAge:process.env.NODE_ENV === "production" ? "1y" : 0,
   immutable:process.env.NODE_ENV === "production",
@@ -81,8 +84,10 @@ if (fs.existsSync(path.join(publicDirectory, "index.html"))) {
   return next();
  });
 }
-
-app.use(routes);
+else {
+ console.error("Frontend compilado nao encontrado. Caminhos verificados:", publicDirectories);
+ app.get("/", (req,res) => res.status(503).json({ erro:"Frontend indisponivel nesta implantacao." }));
+}
 
 app.use((err,req,res,next) => {
  if (res.headersSent) return next(err);

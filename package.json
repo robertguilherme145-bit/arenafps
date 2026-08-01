@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "prebuild": "node scripts/ensure-rollup-native.mjs",
-    "build": "npm run build --workspace=arena-camp-frontend",
+    "build": "npm run build --workspace=arena-camp-frontend && node scripts/stage-frontend.mjs",
     "start": "node backend/src/app.js",
     "test": "npm test --workspace=backend"
   },
