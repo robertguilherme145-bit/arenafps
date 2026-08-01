@@ -1,5 +1,5 @@
-import { Bell, LoaderCircle, LogOut, MailWarning, Menu, Moon, Search, Shield, Sun, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bell, LoaderCircle, LogOut, MailWarning, Menu, Search, Shield, UserRound } from "lucide-react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSessionStore } from "../../stores/sessionStore";
@@ -10,7 +10,6 @@ import { Logo } from "./Logo";
 import { useLocation } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
 import { resendAccountVerification } from "../../services/api";
-import { getResolvedArenaTheme, setArenaTheme, THEME_CHANGE_EVENT } from "../../utils/theme";
 
 const ROLE_LABELS: Record<string, string> = {
   jogador: "Jogador",
@@ -35,13 +34,6 @@ export function Navbar() {
   const { user, notifications, logout, switchContext } = useAuth();
   const { error, success } = useToast();
   const [switching, setSwitching] = useState(false);
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() => getResolvedArenaTheme());
-
-  useEffect(() => {
-    const syncTheme = () => setResolvedTheme(getResolvedArenaTheme());
-    window.addEventListener(THEME_CHANGE_EVENT, syncTheme);
-    return () => window.removeEventListener(THEME_CHANGE_EVENT, syncTheme);
-  }, []);
 
   const unreadCount = notifications.filter((item) => item.lida === 0).length;
   const dashboardHref = roleHref(user?.active_role);
@@ -103,14 +95,6 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <Button aria-label="Abrir pesquisa" className="hidden h-10 w-10 px-0 md:inline-flex 2xl:hidden" variant="ghost" icon={<Search className="h-5 w-5" />} onClick={() => setCommandOpen(true)} />
-          <Button
-            aria-label={resolvedTheme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
-            title={resolvedTheme === "dark" ? "Usar tema claro" : "Usar tema escuro"}
-            className="h-10 w-10 px-0"
-            variant="ghost"
-            icon={resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            onClick={() => setArenaTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          />
           {user ? <div className="relative">
             <Button
               aria-label="Notificações"
