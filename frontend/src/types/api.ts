@@ -486,6 +486,10 @@ export type PlayerWorkspaceProfile = {
   cidade: string | null;
   birth_date: string | null;
   languages: string[];
+  phone: string | null;
+  whatsapp_opt_in: boolean;
+  pix_key: string | null;
+  pix_key_type: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria" | null;
   created_at: string;
   links: Record<"steam" | "faceit" | "discord" | "riot_id" | "xbox" | "playstation" | "epic_games" | "battlenet" | "twitch" | "youtube" | "kick" | "instagram" | "x" | "tiktok", string | null>;
   preferences: Omit<LeaderPreferences, "user_id">;
@@ -660,7 +664,7 @@ export type PlayerWorkspace = {
 };
 
 export type PlayerPublicProfile = {
-  profile: Omit<PlayerWorkspaceProfile, "email" | "birth_date">;
+  profile: Omit<PlayerWorkspaceProfile, "email" | "birth_date" | "phone" | "whatsapp_opt_in" | "pix_key" | "pix_key_type">;
   games: PlayerWorkspaceGame[];
   current_team: PlayerTeamContext | null;
   team_ranking: TeamPlayerRanking;

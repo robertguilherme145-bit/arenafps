@@ -339,6 +339,8 @@ export async function openMatchVeto(adminUser, matchId) {
   const order = resolveVetoOrder(match.veto_order, match.best_of, pool.length, match.auto_decider);
   if (session) await completeAutomaticDecider(adminUser, match, session, order, pool);
   await audit(adminUser, "match.veto.opened", "match", match.id, null);
+  const { announceExternalMatchEvent } = await import("./integrationEvents.service.js");
+  void announceExternalMatchEvent(match.id, "veto_opened").catch((error) => console.error("Integracoes veto_opened:", error.message));
   return await getMatchOperations(match.id);
 }
 

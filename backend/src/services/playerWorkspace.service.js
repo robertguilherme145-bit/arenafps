@@ -140,6 +140,10 @@ export async function getPublicPlayerProfile(slug) {
   const profile = normalizeProfile(profileRow);
   delete profile.email;
   delete profile.birth_date;
+  delete profile.phone;
+  delete profile.whatsapp_opt_in;
+  delete profile.pix_key;
+  delete profile.pix_key_type;
   return {
     profile,
     games: games.map(normalizeGame).filter((game) => game.selected),
@@ -167,6 +171,10 @@ export async function updatePlayerWorkspaceProfile(user, payload) {
     pais: optionalText(payload.pais, 100),
     birth_date: optionalDate(payload.birth_date),
     languages,
+    phone: optionalPhone(payload.phone),
+    whatsapp_opt_in: payload.whatsapp_opt_in === true,
+    pix_key: optionalText(payload.pix_key, 255),
+    pix_key_type: optionalPixType(payload.pix_key_type),
     links
   });
   return { mensagem: "Perfil competitivo atualizado." };
@@ -398,7 +406,7 @@ function normalizeProfile(row) {
   return {
     id: Number(row.id), nome: row.nome, email: row.email, avatar: row.avatar, banner: row.banner,
     nickname: row.nickname || row.nome, bio: row.bio, pais: row.pais, estado: row.estado, cidade: row.cidade,
-    birth_date: row.birth_date, languages: parseJson(row.languages, []), created_at: row.created_at,
+    birth_date: row.birth_date, languages: parseJson(row.languages, []), phone: row.phone, whatsapp_opt_in: Boolean(row.whatsapp_opt_in), pix_key: row.pix_key, pix_key_type: row.pix_key_type, created_at: row.created_at,
     links: { steam: row.steam, faceit: row.faceit, discord: row.linked_discord || row.discord, riot_id: row.riot_id, xbox: row.xbox, playstation: row.playstation, epic_games: row.epic_games, battlenet: row.battlenet, twitch: row.twitch, youtube: row.youtube, kick: row.kick, instagram: row.instagram, x: row.x, tiktok: row.tiktok },
     preferences: { language: row.language || "pt-BR", theme: row.theme || "dark", steam_profile: row.steam_profile, email_notifications: row.email_notifications === null ? true : Boolean(row.email_notifications), discord_notifications: Boolean(row.discord_notifications), profile_public: row.profile_public === null ? true : Boolean(row.profile_public) }
   };
@@ -421,6 +429,8 @@ function requiredText(value, message, max) { const text = String(value ?? "").tr
 function optionalText(value, max) { const text = String(value ?? "").trim(); return text ? text.slice(0, max) : null; }
 function optionalUrl(value) { const text = String(value ?? "").trim(); if (!text) return null; try { return new URL(text).toString(); } catch { throw new Error("Informe uma URL valida."); } }
 function optionalDate(value) { if (!value) return null; const date = new Date(value); if (Number.isNaN(date.getTime()) || date > new Date()) throw new Error("Data de nascimento invalida."); return date.toISOString().slice(0, 10); }
+function optionalPhone(value) { const phone=String(value??"").replace(/\D/g,""); if (!phone) return null; if (phone.length<10||phone.length>15) throw new Error("Informe um telefone valido com DDD e codigo do pais."); return `+${phone}`; }
+function optionalPixType(value) { const type=String(value??"").trim(); return ["cpf","cnpj","email","telefone","aleatoria"].includes(type) ? type : null; }
 function optionalInteger(value) { if (value === null || value === undefined || value === "") return null; const number = Number(value); return Number.isInteger(number) ? number : null; }
 function uniqueTexts(value, limit, max) { return [...new Set((Array.isArray(value) ? value : []).map((item) => String(item).trim().slice(0, max)).filter(Boolean))].slice(0, limit); }
 function parseJson(value, fallback) { if (!value) return fallback; if (typeof value !== "string") return value; try { return JSON.parse(value); } catch { return fallback; } }

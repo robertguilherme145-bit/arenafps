@@ -451,6 +451,18 @@ export function PlayerProfileModule({ data, busy, run }: PlayerModuleProps) {
                 }
               />
             </Field>
+            <Field label="Telefone com DDD e país">
+              <Input placeholder="+55 11 99999-9999" value={form.phone} onChange={(event) => setForm({ ...form, phone:event.target.value })} />
+            </Field>
+            <Field label="Tipo da chave PIX">
+              <Select value={form.pix_key_type} onChange={(event) => setForm({ ...form, pix_key_type:event.target.value })}>
+                <option value="">Não informar</option><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option><option value="telefone">Telefone</option><option value="aleatoria">Chave aleatória</option>
+              </Select>
+            </Field>
+            <Field label="Chave PIX para premiações">
+              <Input value={form.pix_key} onChange={(event) => setForm({ ...form, pix_key:event.target.value })} />
+            </Field>
+            <label className="flex items-center gap-3 text-sm font-semibold"><input className="h-4 w-4 accent-cyan-400" type="checkbox" checked={form.whatsapp_opt_in} onChange={(event)=>setForm({ ...form, whatsapp_opt_in:event.target.checked })} />Aceito receber avisos operacionais pelo WhatsApp</label>
           </div>
           <Field label="Bio">
             <Textarea
@@ -1039,6 +1051,10 @@ function profileForm(profile: PlayerWorkspaceProfile) {
       ? String(profile.birth_date).slice(0, 10)
       : "",
     languages: profile.languages.join(", "),
+    phone: profile.phone || "",
+    whatsapp_opt_in: Boolean(profile.whatsapp_opt_in),
+    pix_key: profile.pix_key || "",
+    pix_key_type: profile.pix_key_type || "",
     links: Object.fromEntries(
       Object.entries(profile.links).map(([key, value]) => [key, value || ""]),
     ) as Record<keyof PlayerWorkspaceProfile["links"], string>,

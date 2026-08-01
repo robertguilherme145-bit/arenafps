@@ -25,6 +25,7 @@ import {
     listTournamentTeams
 } from "./competitionSetup.service.js";
 import { advanceMixBracket } from "./mixTournament.service.js";
+import { announceExternalMatchEvent } from "./integrationEvents.service.js";
 
 /**
  * Listar partidas do torneio
@@ -103,6 +104,7 @@ export async function registerMatch(data){
     });
 
     await initializeMatchCompetition(match.id, tournament.id);
+    void announceExternalMatchEvent(match.id, "match_created").catch((error) => console.error("Integracoes match_created:", error.message));
     return match;
 
 }

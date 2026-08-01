@@ -13,7 +13,7 @@ export async function findPlayerWorkspaceProfile(userId) {
   const [rows] = await pool.query(
     `
     SELECT u.id, u.nome, u.email, u.avatar, u.banner, u.nickname, u.bio, u.pais, u.estado, u.cidade,
-      u.birth_date, u.languages, u.discord, u.created_at,
+      u.birth_date, u.languages, u.discord, u.phone, u.whatsapp_opt_in, u.pix_key, u.pix_key_type, u.created_at,
       pl.steam, pl.faceit, pl.discord AS linked_discord, pl.riot_id, pl.xbox, pl.playstation,
       pl.epic_games, pl.battlenet, pl.twitch, pl.youtube, pl.kick, pl.instagram, pl.x, pl.tiktok,
       up.language, up.theme, up.steam_profile, up.email_notifications, up.discord_notifications, up.profile_public
@@ -251,8 +251,8 @@ export async function findUpcomingPlayerTournaments(userId, gameId) {
 
 export async function savePlayerProfile(userId, data) {
   await pool.query(
-    `UPDATE users SET nome = ?, nickname = ?, avatar = ?, banner = ?, bio = ?, cidade = ?, estado = ?, pais = ?, birth_date = ?, languages = ?, discord = ? WHERE id = ?`,
-    [data.nome, data.nickname, data.avatar, data.banner, data.bio, data.cidade, data.estado, data.pais, data.birth_date, JSON.stringify(data.languages), data.links.discord, userId]
+    `UPDATE users SET nome = ?, nickname = ?, avatar = ?, banner = ?, bio = ?, cidade = ?, estado = ?, pais = ?, birth_date = ?, languages = ?, discord = ?, phone = ?, whatsapp_opt_in = ?, pix_key = ?, pix_key_type = ? WHERE id = ?`,
+    [data.nome, data.nickname, data.avatar, data.banner, data.bio, data.cidade, data.estado, data.pais, data.birth_date, JSON.stringify(data.languages), data.links.discord, data.phone, data.whatsapp_opt_in ? 1 : 0, data.pix_key, data.pix_key_type, userId]
   );
   await pool.query(
     `INSERT INTO player_links (user_id, steam, faceit, discord, riot_id, xbox, playstation, epic_games, battlenet, twitch, youtube, kick, instagram, x, tiktok) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE steam=VALUES(steam), faceit=VALUES(faceit), discord=VALUES(discord), riot_id=VALUES(riot_id), xbox=VALUES(xbox), playstation=VALUES(playstation), epic_games=VALUES(epic_games), battlenet=VALUES(battlenet), twitch=VALUES(twitch), youtube=VALUES(youtube), kick=VALUES(kick), instagram=VALUES(instagram), x=VALUES(x), tiktok=VALUES(tiktok)`,
