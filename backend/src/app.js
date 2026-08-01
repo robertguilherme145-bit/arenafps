@@ -33,6 +33,9 @@ const publicDirectories = [
  path.resolve(process.cwd(), "frontend/dist")
 ];
 const publicDirectory = publicDirectories.find((directory) => fs.existsSync(path.join(directory, "index.html")));
+const publicIndexHtml = publicDirectory
+ ? fs.readFileSync(path.join(publicDirectory, "index.html"), "utf8")
+ : null;
 fs.mkdirSync(uploadDirectory, { recursive:true });
 
 function validateProductionEnvironment() {
@@ -79,7 +82,7 @@ if (publicDirectory) {
     Expires:"0",
     "Surrogate-Control":"no-store"
    });
-   return res.sendFile(path.join(publicDirectory, "index.html"));
+   return res.type("html").send(publicIndexHtml);
   }
   return next();
  });
