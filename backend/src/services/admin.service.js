@@ -19,6 +19,7 @@ import { findTeamWithContext, updateTeamAdmin } from "../models/team.model.js";
 import { findTournament } from "../models/tournament.model.js";
 import { createNotification } from "../models/notification.model.js";
 import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
+import { notifyDiscordSupportReply } from "./discordBot.service.js";
 import {
   createDispute,
   createPenalty,
@@ -445,6 +446,12 @@ export async function updateAdminTicket(adminUser, ticketId, payload) {
     response: response || ticket.response,
     assigned_admin_id: payload.assigned_admin_id ? Number(payload.assigned_admin_id) : ticket.assigned_admin_id ?? adminUser.id
   });
+
+  if (response) {
+    notifyDiscordSupportReply(ticket.id, response).catch((error) => {
+      console.warn(`Resposta do ticket #${ticket.id} não enviada ao Discord: ${error.message}`);
+    });
+  }
 
   await audit(adminUser.id, "ticket.updated", "ticket", ticket.id, {
     previous_status: ticket.status,
