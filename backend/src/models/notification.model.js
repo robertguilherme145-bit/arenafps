@@ -104,3 +104,21 @@ export async function countNotifications(user_id){
     return rows[0];
 
 }
+
+export async function markNotificationRead(userId, notificationId) {
+    const [result] = await pool.query(`UPDATE notifications SET lida=1 WHERE id=? AND user_id=?`, [notificationId, userId]);
+    return result.affectedRows > 0;
+}
+
+export async function markAllNotificationsRead(userId) {
+    await pool.query(`UPDATE notifications SET lida=1 WHERE user_id=?`, [userId]);
+}
+
+export async function deleteNotification(userId, notificationId) {
+    const [result] = await pool.query(`DELETE FROM notifications WHERE id=? AND user_id=?`, [notificationId, userId]);
+    return result.affectedRows > 0;
+}
+
+export async function clearNotifications(userId) {
+    await pool.query(`DELETE FROM notifications WHERE user_id=?`, [userId]);
+}

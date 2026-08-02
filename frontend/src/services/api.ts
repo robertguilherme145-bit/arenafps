@@ -161,6 +161,11 @@ export function getOAuthStartUrl(provider: "google" | "discord" | "steam") {
   return `${String(api.defaults.baseURL || window.location.origin).replace(/\/$/, "")}/auth/oauth/${provider}`;
 }
 
+export async function getOAuthLinkUrl(provider: "discord", returnPath?: string) {
+  const { data } = await api.post<{ url:string }>(`/auth/oauth/${provider}/link`, { return_path:returnPath });
+  return data.url;
+}
+
 export async function exchangeOAuthLogin(code: string) {
   const { data } = await api.post<AuthResponse>("/auth/oauth/exchange", { code });
   return data;
@@ -220,6 +225,10 @@ export async function getNotifications() {
   const { data } = await api.get<NotificationItem[]>("/notifications");
   return data;
 }
+export async function markNotificationAsRead(id:number) { await api.patch(`/notifications/${id}/read`); }
+export async function markAllNotificationsAsRead() { await api.patch("/notifications/read-all"); }
+export async function deleteNotification(id:number) { await api.delete(`/notifications/${id}`); }
+export async function clearNotifications() { await api.delete("/notifications"); }
 
 export async function getDashboard() {
   const { data } = await api.get<DashboardData>("/dashboard");

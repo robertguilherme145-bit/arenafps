@@ -21,7 +21,8 @@ export async function findProfile(user_id){
             cidade,
             discord,
             role,
-            created_at
+            created_at,
+            EXISTS(SELECT 1 FROM oauth_accounts oa WHERE oa.user_id = users.id AND oa.provider = 'discord') AS discord_verified
 
         FROM users
 

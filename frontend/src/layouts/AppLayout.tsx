@@ -4,6 +4,7 @@ import { AuthDialog } from "../components/layout/AuthDialog";
 import { CommandPalette } from "../components/layout/CommandPalette";
 import { Navbar } from "../components/layout/Navbar";
 import { NotificationsDrawer } from "../components/layout/NotificationsDrawer";
+import { DiscordLinkGate } from "../components/layout/DiscordLinkGate";
 import { Sidebar } from "../components/layout/Sidebar";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useUiStore } from "../stores/uiStore";
@@ -36,6 +37,7 @@ export function AppLayout() {
       <CommandPalette />
       <AuthDialog />
       <NotificationsDrawer />
+      <DiscordLinkGate />
       <ToastViewport />
     </div>
   );

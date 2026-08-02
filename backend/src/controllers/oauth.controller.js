@@ -1,5 +1,5 @@
 import { completeOAuthProfile } from "../services/auth.service.js";
-import { createOAuthAuthorization, exchangeOAuthCode, finishOAuthCallback, validateOAuthState } from "../services/oauth.service.js";
+import { createOAuthAuthorization, exchangeOAuthCode, finishOAuthCallback, finishOAuthLinkCallback, validateOAuthState } from "../services/oauth.service.js";
 
 export function startOAuth(req, res) {
   try {
@@ -11,11 +11,28 @@ export function startOAuth(req, res) {
   }
 }
 
+export function startOAuthLink(req, res) {
+  try {
+    const { url, state } = createOAuthAuthorization(req.params.provider, { purpose:"link", userId:req.user.id, returnPath:req.body?.return_path });
+    res.cookie("arena_oauth_state", state, cookieOptions(req));
+    return res.json({ url });
+  } catch (error) {
+    return res.status(400).json({ erro:error.message });
+  }
+}
+
 export async function oauthCallback(req, res) {
   try {
     if (req.query.error) throw new Error("A autorizacao foi cancelada no provedor.");
     const state = String(req.query.state || "");
-    validateOAuthState(req.params.provider, state, readCookie(req, "arena_oauth_state"));
+    const oauthState = validateOAuthState(req.params.provider, state, readCookie(req, "arena_oauth_state"));
+    if (oauthState.purpose === "link") {
+      await finishOAuthLinkCallback(req.params.provider, req.query, oauthState.user_id);
+      res.clearCookie("arena_oauth_state", { path:"/auth/oauth" });
+      const linkedUrl = new URL(oauthState.return_path || "/jogador", frontendUrl());
+      linkedUrl.searchParams.set("discord_vinculado", "1");
+      return res.redirect(linkedUrl.toString());
+    }
     const code = await finishOAuthCallback(req.params.provider, req.query);
     res.clearCookie("arena_oauth_state", { path:"/auth/oauth" });
     const url = new URL("/oauth/callback", frontendUrl());

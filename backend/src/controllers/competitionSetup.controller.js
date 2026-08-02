@@ -21,6 +21,7 @@ import {
   saveTournamentCompetition
 } from "../services/competitionSetup.service.js";
 import { generateTournamentStructure } from "../services/tournamentFormat.service.js";
+import { closeMatchDiscordRooms } from "../services/discordIntegration.service.js";
 
 export async function games(req, res) {
   try {
@@ -121,6 +122,14 @@ export async function matchRoom(req, res) {
     return res.json(await saveMatchRoomSettings(req.user, Number(req.params.matchId), req.body));
   } catch (error) {
     return res.status(400).json({ erro: error.message });
+  }
+}
+
+export async function closeDiscordRoom(req, res) {
+  try {
+    return res.json(await closeMatchDiscordRooms(Number(req.params.matchId), { force:true }));
+  } catch (error) {
+    return res.status(400).json({ erro:error.message });
   }
 }
 

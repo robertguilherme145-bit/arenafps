@@ -261,6 +261,7 @@ export type UserProfile = {
   cidade: string | null;
   discord: string | null;
   role: string | null;
+  discord_verified: number;
   created_at: string;
 };
 

@@ -15,10 +15,10 @@ export function oauthProviderEnabled(provider) {
   return false;
 }
 
-export function createOAuthAuthorization(provider) {
+export function createOAuthAuthorization(provider, options = {}) {
   assertProvider(provider);
   if (!oauthProviderEnabled(provider)) throw new Error("Este provedor ainda nao foi configurado.");
-  const state = jwt.sign({ type:"oauth_state", provider, nonce:crypto.randomUUID() }, process.env.JWT_SECRET, { expiresIn:"10m" });
+  const state = jwt.sign({ type:"oauth_state", provider, nonce:crypto.randomUUID(), purpose:options.purpose || "login", user_id:options.userId || null, return_path:normalizeReturnPath(options.returnPath) }, process.env.JWT_SECRET, { expiresIn:"10m" });
   const callback = callbackUrl(provider);
   if (provider === "google") {
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -46,6 +46,17 @@ export function validateOAuthState(provider, state, cookieState) {
   if (!state || !cookieState || state !== cookieState) throw new Error("A sessao de autenticacao expirou. Tente novamente.");
   const payload = jwt.verify(state, process.env.JWT_SECRET);
   if (payload.type !== "oauth_state" || payload.provider !== provider) throw new Error("Estado OAuth invalido.");
+  return payload;
+}
+
+export async function finishOAuthLinkCallback(provider, query, userId) {
+  assertProvider(provider);
+  const profile = provider === "google" ? await googleProfile(query.code) : provider === "discord" ? await discordProfile(query.code) : await steamProfile(query);
+  const account = await findOAuthAccount(provider, profile.id);
+  if (account && Number(account.user_id) !== Number(userId)) throw new Error("Esta conta do provedor ja esta vinculada a outro usuario.");
+  if (account) await touchOAuthAccount(account.id);
+  else await linkOAuthAccount(userId, oauthInput(provider, profile));
+  return { provider, label:profile.label || profile.nickname || profile.name };
 }
 
 export async function finishOAuthCallback(provider, query) {
@@ -143,6 +154,10 @@ function callbackUrl(provider) { return String(process.env[`${provider.toUpperCa
 function apiUrl() { return String(process.env.PUBLIC_API_URL || `http://localhost:${process.env.PORT || 4000}`).replace(/\/$/, ""); }
 function normalizedEmail(value) { const email = String(value || "").trim().toLowerCase(); return /^\S+@\S+\.\S+$/.test(email) ? email : null; }
 function safeId(value) { return String(value).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 120); }
+function normalizeReturnPath(value) {
+  const path = String(value || "");
+  return /^\/(jogador|lider|capitao)(?:[/?]|$)/.test(path) && !path.startsWith("//") ? path : "/jogador";
+}
 function hash(value) { return crypto.createHash("sha256").update(String(value || "")).digest("hex"); }
 function assertProvider(provider) { if (!PROVIDERS.includes(provider)) throw new Error("Provedor de autenticacao invalido."); }
 function addParams(url, values) { for (const [key, value] of Object.entries(values)) if (value !== undefined && value !== null) url.searchParams.set(key, String(value)); }

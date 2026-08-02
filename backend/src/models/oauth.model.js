@@ -50,6 +50,9 @@ export async function linkOAuthAccount(userId, input) {
     `UPDATE users SET avatar=COALESCE(avatar,?),email_verified_at=IF(?=1,COALESCE(email_verified_at,NOW()),email_verified_at) WHERE id=?`,
     [input.avatar, input.email_verified ? 1 : 0, userId]
   );
+  if (input.provider === "discord") {
+    await pool.query(`INSERT INTO player_links (user_id,discord) VALUES (?,?) ON DUPLICATE KEY UPDATE discord=VALUES(discord)`, [userId, input.provider_label || input.provider_user_id]);
+  }
 }
 
 export async function touchOAuthAccount(id) {
