@@ -231,10 +231,10 @@ export async function updatePlayerMatchAttendance(user, matchId, payload) {
   const match = workspace.matches.find((item) => Number(item.id) === Number(matchId));
   if (!match) throw new Error("Partida nao encontrada para sua equipe.");
   if (!match.in_official_lineup) throw new Error("Somente jogadores da lineup oficial confirmam presenca.");
-  if (match.status === "finalizada") throw new Error("A partida ja foi finalizada.");
+  if (["finalizada", "cancelada"].includes(match.status)) throw new Error("Esta partida não aceita mais confirmações de presença.");
   const status = attendanceStatus(payload.status);
-  await savePlayerMatchAttendance(match.id, user.id, status, optionalText(payload.note, 500));
-  if (status === "ausente") await notifyTeamStaff(workspace.current_team.team_id, `${workspace.profile.nickname} nao podera jogar`, `O jogador informou ausencia na partida contra ${match.opponent}.`, "player_absent", "/lider?module=calendar");
+  const previousStatus = await savePlayerMatchAttendance(match.id, user.id, status, optionalText(payload.note, 500));
+  if (status === "ausente" && previousStatus !== "ausente") await notifyTeamStaff(workspace.current_team.team_id, `${workspace.profile.nickname} não poderá jogar`, `O jogador informou ausência na partida contra ${match.opponent}.`, "player_absent", "/lider?module=calendar");
   return { mensagem: "Presenca atualizada." };
 }
 
@@ -242,6 +242,7 @@ export async function updatePlayerEventAttendance(user, eventId, payload) {
   const workspace = await getPlayerWorkspace(user, payload.team_id);
   const event = workspace.events.find((item) => Number(item.id) === Number(eventId));
   if (!event) throw new Error("Evento nao encontrado para sua equipe.");
+  if (eventHasEnded(event)) throw new Error("Este evento ja foi encerrado e nao aceita novas respostas.");
   await savePlayerEventAttendance(event.id, user.id, attendanceStatus(payload.status));
   return { mensagem: "Presenca no evento atualizada." };
 }
@@ -425,6 +426,7 @@ async function notifyTeamStaff(teamId, title, message, type, link) {
 
 function playerPermissions() { return { edit_profile: true, manage_game_profiles: true, request_team: true, respond_invites: true, confirm_attendance: true, view_veto: true, view_match_room: true, send_team_messages: true, open_tickets: true, edit_results: false, operate_veto: false, manage_lineup: false, manage_payments: false }; }
 function attendanceStatus(value) { if (!["confirmado", "ausente", "talvez"].includes(value)) throw new Error("Status de presenca invalido."); return value; }
+function eventHasEnded(event) { const boundary = event.ends_at || event.starts_at; return Boolean(boundary && new Date(boundary).getTime() < Date.now()); }
 function requiredText(value, message, max) { const text = String(value ?? "").trim(); if (!text) throw new Error(message); return text.slice(0, max); }
 function optionalText(value, max) { const text = String(value ?? "").trim(); return text ? text.slice(0, max) : null; }
 function optionalUrl(value) { const text = String(value ?? "").trim(); if (!text) return null; try { return new URL(text).toString(); } catch { throw new Error("Informe uma URL valida."); } }

@@ -32,6 +32,7 @@ import {
 } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "../components/ui/Badge";
+import { AttendanceResponse } from "../components/attendance/AttendanceResponse";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
 import { DataTable } from "../components/ui/DataTable";
@@ -2237,55 +2238,21 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2 border-t border-arena-line pt-3">
-                  <Button
-                    className="h-8 text-xs"
-                    variant={
-                      event.my_attendance === "confirmado"
-                        ? "primary"
-                        : "secondary"
-                    }
-                    onClick={() =>
-                      void run(
+                <div className="mt-3 border-t border-arena-line pt-3">
+                  {isPastEvent(event) ? (
+                    <StatusBadge value={event.my_attendance || "encerrado"} />
+                  ) : (
+                    <AttendanceResponse
+                      busy={busy === `attendance-${event.id}`}
+                      compact
+                      value={event.my_attendance}
+                      onChange={(status) => void run(
                         `attendance-${event.id}`,
-                        () =>
-                          updateLeaderEventAttendance(event.id, "confirmado"),
-                        "Presença confirmada",
-                      )
-                    }
-                  >
-                    Vou participar
-                  </Button>
-                  <Button
-                    className="h-8 text-xs"
-                    variant={
-                      event.my_attendance === "talvez" ? "primary" : "secondary"
-                    }
-                    onClick={() =>
-                      void run(
-                        `attendance-${event.id}`,
-                        () => updateLeaderEventAttendance(event.id, "talvez"),
-                        "Presença atualizada",
-                      )
-                    }
-                  >
-                    Talvez
-                  </Button>
-                  <Button
-                    className="h-8 text-xs"
-                    variant={
-                      event.my_attendance === "ausente" ? "danger" : "secondary"
-                    }
-                    onClick={() =>
-                      void run(
-                        `attendance-${event.id}`,
-                        () => updateLeaderEventAttendance(event.id, "ausente"),
-                        "Ausencia registrada",
-                      )
-                    }
-                  >
-                    Não vou
-                  </Button>
+                        () => updateLeaderEventAttendance(event.id, status),
+                        status === "confirmado" ? "Presença confirmada" : "Presença atualizada",
+                      )}
+                    />
+                  )}
                 </div>
               </div>
             ))}
@@ -3789,6 +3756,9 @@ function formatDate(value: string | null | undefined) {
         timeStyle: "short",
       })
     : "A definir";
+}
+function isPastEvent(event: { starts_at: string; ends_at: string | null }) {
+  return new Date(event.ends_at || event.starts_at).getTime() < Date.now();
 }
 function formatShortDate(value: string | null | undefined) {
   return value

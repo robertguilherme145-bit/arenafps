@@ -81,6 +81,7 @@ export async function getCaptainMatchExtras(matchId, userId, teamId) {
 }
 
 export async function saveCaptainMatchAttendance(matchId, userId, status, note) {
+  const [current] = await pool.query(`SELECT status FROM match_attendance WHERE match_id = ? AND user_id = ? LIMIT 1`, [matchId, userId]);
   await pool.query(
     `
     INSERT INTO match_attendance (match_id, user_id, status, note) VALUES (?, ?, ?, ?)
@@ -88,6 +89,7 @@ export async function saveCaptainMatchAttendance(matchId, userId, status, note) 
     `,
     [matchId, userId, status, note]
   );
+  return current[0]?.status ?? null;
 }
 
 export async function getMatchMessages(matchId) {

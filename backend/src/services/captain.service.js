@@ -54,11 +54,11 @@ export async function getCaptainMatchRoom(user, matchId) {
 export async function respondCaptainMatchAttendance(user, matchId, payload) {
   const context = await requireCaptainContext(user.id);
   const match = await requireTeamMatch(Number(matchId), context.team_id);
-  if (match.status === "finalizada") throw new Error("A partida ja foi finalizada.");
+  if (["finalizada", "cancelada"].includes(match.status)) throw new Error("Esta partida não aceita mais confirmações de presença.");
   const status = ["confirmado", "ausente", "talvez"].includes(payload.status) ? payload.status : null;
   if (!status) throw new Error("Informe uma resposta de presenca valida.");
-  await saveCaptainMatchAttendance(match.id, user.id, status, optionalText(payload.note, 500));
-  if (status === "ausente") {
+  const previousStatus = await saveCaptainMatchAttendance(match.id, user.id, status, optionalText(payload.note, 500));
+  if (status === "ausente" && previousStatus !== "ausente") {
     const leaderId = await findTeamLeaderUser(context.team_id);
     if (leaderId) await notify({ user_id: leaderId, titulo: "Capitao indisponivel", mensagem: `${context.nick || "O capitao"} informou ausencia na partida #${match.id}.`, tipo: "match_attendance", link: "/lider?module=matches" });
   }
@@ -145,7 +145,9 @@ export async function getCaptainTournamentCenter(user, tournamentId) {
 
 export async function respondCaptainEventAttendance(user, eventId, payload) {
   const context = await requireCaptainContext(user.id);
-  if (!await findLeaderEvent(Number(eventId), context.team_id)) throw new Error("Evento nao encontrado na agenda da equipe.");
+  const event = await findLeaderEvent(Number(eventId), context.team_id);
+  if (!event) throw new Error("Evento nao encontrado na agenda da equipe.");
+  if (eventHasEnded(event)) throw new Error("Este evento ja foi encerrado e nao aceita novas respostas.");
   const status = ["confirmado", "ausente", "talvez"].includes(payload.status) ? payload.status : null;
   if (!status) throw new Error("Informe uma resposta valida.");
   await setLeaderEventAttendance(Number(eventId), user.id, status);
@@ -265,5 +267,6 @@ function requiredText(value, message, maxLength) {
 }
 
 function optionalText(value, maxLength) { const text = String(value ?? "").trim(); return text ? text.slice(0, maxLength) : null; }
+function eventHasEnded(event) { const boundary = event.ends_at || event.starts_at; return Boolean(boundary && new Date(boundary).getTime() < Date.now()); }
 function validUrl(value) { try { return new URL(String(value)).toString(); } catch { throw new Error("Informe uma URL valida para o anexo."); } }
 async function audit(actorUserId, action, entityType, entityId, details) { await createAuditLog({ actor_user_id: actorUserId, action, entity_type: entityType, entity_id: entityId, details }); }

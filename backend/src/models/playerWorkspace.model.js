@@ -269,7 +269,9 @@ export async function savePlayerGameProfile(userId, data) {
 }
 
 export async function savePlayerMatchAttendance(matchId, userId, status, note) {
+  const [current] = await pool.query(`SELECT status FROM match_attendance WHERE match_id = ? AND user_id = ? LIMIT 1`, [matchId, userId]);
   await pool.query(`INSERT INTO match_attendance (match_id, user_id, status, note) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE status=VALUES(status), note=VALUES(note)`, [matchId, userId, status, note]);
+  return current[0]?.status ?? null;
 }
 
 export async function savePlayerEventAttendance(eventId, userId, status) {

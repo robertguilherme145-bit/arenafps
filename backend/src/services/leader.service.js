@@ -321,11 +321,18 @@ export async function removeLeaderEvent(user, eventId) {
 
 export async function respondLeaderEventAttendance(user, eventId, payload) {
   const team = await requireLeaderTeam(user.id);
-  if (!await findLeaderEvent(Number(eventId), team.id)) throw new Error("Evento nao encontrado na agenda da equipe.");
+  const event = await findLeaderEvent(Number(eventId), team.id);
+  if (!event) throw new Error("Evento nao encontrado na agenda da equipe.");
+  if (eventHasEnded(event)) throw new Error("Este evento ja foi encerrado e nao aceita novas respostas.");
   const status = ["confirmado", "ausente", "talvez"].includes(payload.status) ? payload.status : null;
   if (!status) throw new Error("Informe uma resposta de presenca valida.");
   await setLeaderEventAttendance(Number(eventId), user.id, status);
   return { mensagem: "Presenca atualizada." };
+}
+
+function eventHasEnded(event) {
+  const boundary = event.ends_at || event.starts_at;
+  return Boolean(boundary && new Date(boundary).getTime() < Date.now());
 }
 
 export async function sendLeaderTeamMessage(user, payload) {
