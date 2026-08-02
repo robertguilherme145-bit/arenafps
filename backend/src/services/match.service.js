@@ -25,7 +25,10 @@ import {
     listTournamentTeams
 } from "./competitionSetup.service.js";
 import { advanceMixBracket } from "./mixTournament.service.js";
-import { announceExternalMatchEvent } from "./integrationEvents.service.js";
+import {
+    announceExternalMatchEvent,
+    completeExternalMatchIntegrations
+} from "./integrationEvents.service.js";
 
 /**
  * Listar partidas do torneio
@@ -184,6 +187,10 @@ export async function finishMatchResult(matchId, data){
             winner_team_id: winner
         }
 
+    );
+
+    void completeExternalMatchIntegrations(match.id).catch((error) =>
+        console.error("Integracoes match_finished:", error.message)
     );
 
     return{

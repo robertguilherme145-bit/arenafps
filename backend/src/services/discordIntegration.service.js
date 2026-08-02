@@ -56,8 +56,54 @@ export async function announceMatchEvent(matchId, eventType) {
   return { configured:true };
 }
 
+export async function closeMatchDiscordRooms(matchId) {
+  if (!discordConfigured()) return { configured:false, skipped:true };
+
+  const context = await matchContext(matchId);
+  const [[room]] = await pool.query(
+    `SELECT * FROM match_discord_rooms WHERE match_id=? LIMIT 1`,
+    [matchId]
+  );
+  if (!context || !room || room.status !== "ativo") {
+    return { configured:true, skipped:true };
+  }
+
+  const winner = Number(context.winner_team_id) === Number(context.team_a_id)
+    ? context.team_a
+    : context.team_b;
+  const result = `**Partida finalizada**\n${context.team_a} ${context.score_team_a} x ${context.score_team_b} ${context.team_b}\nVencedor: **${winner}**\n${publicUrl(`/torneios/${context.tournament_id}?tab=matches`)}`;
+
+  if (process.env.DISCORD_PUBLIC_CHANNEL_ID) {
+    await deliverOnce({
+      provider:"discord",
+      eventType:"match_finished",
+      dedupeKey:`match-finished:${matchId}`,
+      matchId,
+      destination:process.env.DISCORD_PUBLIC_CHANNEL_ID,
+      payload:{ content:result }
+    }, () => sendChannelMessage(process.env.DISCORD_PUBLIC_CHANNEL_ID, result));
+  }
+
+  const channelIds = [
+    room.text_channel_id,
+    room.team_a_voice_channel_id,
+    room.team_b_voice_channel_id
+  ].filter(Boolean);
+  const removals = await Promise.allSettled(channelIds.map(deleteChannel));
+  const failures = removals
+    .filter((item) => item.status === "rejected")
+    .map((item) => String(item.reason?.message || item.reason));
+
+  await pool.query(
+    `UPDATE match_discord_rooms SET status=?,error_message=? WHERE match_id=?`,
+    [failures.length ? "falhou" : "arquivado", failures.join(" | ").slice(0, 1000) || null, matchId]
+  );
+  if (failures.length) throw new Error(failures.join(" | "));
+  return { configured:true, archived:true, deleted_channels:channelIds.length };
+}
+
 async function matchContext(matchId) {
-  const [[row]] = await pool.query(`SELECT m.id,m.tournament_id,m.team_a_id,m.team_b_id,t.nome tournament_name,ta.nome team_a,tb.nome team_b FROM matches m INNER JOIN tournaments t ON t.id=m.tournament_id INNER JOIN teams ta ON ta.id=m.team_a_id INNER JOIN teams tb ON tb.id=m.team_b_id WHERE m.id=? LIMIT 1`, [matchId]);
+  const [[row]] = await pool.query(`SELECT m.id,m.tournament_id,m.team_a_id,m.team_b_id,m.winner_team_id,m.score_team_a,m.score_team_b,t.nome tournament_name,ta.nome team_a,tb.nome team_b FROM matches m INNER JOIN tournaments t ON t.id=m.tournament_id INNER JOIN teams ta ON ta.id=m.team_a_id INNER JOIN teams tb ON tb.id=m.team_b_id WHERE m.id=? LIMIT 1`, [matchId]);
   return row ?? null;
 }
 
@@ -83,6 +129,10 @@ async function createChannel(payload) {
 
 async function sendChannelMessage(channelId, content) {
   return discordRequest(`/channels/${channelId}/messages`, { method:"POST", body:{ content, allowed_mentions:{ parse:[] } } });
+}
+
+async function deleteChannel(channelId) {
+  return discordRequest(`/channels/${channelId}`, { method:"DELETE" });
 }
 
 async function discordRequest(path, { method, body }) {

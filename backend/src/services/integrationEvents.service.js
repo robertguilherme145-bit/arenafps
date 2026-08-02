@@ -1,4 +1,4 @@
-import { announceMatchEvent } from "./discordIntegration.service.js";
+import { announceMatchEvent, closeMatchDiscordRooms } from "./discordIntegration.service.js";
 import { announceMatchOnWhatsApp } from "./whatsappIntegration.service.js";
 
 export async function announceExternalMatchEvent(matchId, eventType) {
@@ -11,6 +11,11 @@ export async function announceExternalMatchEvent(matchId, eventType) {
     discord: resultSummary(discord),
     whatsapp: resultSummary(whatsapp)
   };
+}
+
+export async function completeExternalMatchIntegrations(matchId) {
+  const discord = await Promise.allSettled([closeMatchDiscordRooms(matchId)]);
+  return { discord:resultSummary(discord[0]) };
 }
 
 function resultSummary(result) {

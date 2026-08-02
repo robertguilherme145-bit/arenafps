@@ -39,6 +39,7 @@ import { findMembershipByUserAndTeam } from "../models/team.model.js";
 import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
 import COMPETITION_EVENTS from "../constants/competitionEvents.js";
 import { advanceMixBracket } from "./mixTournament.service.js";
+import { completeExternalMatchIntegrations } from "./integrationEvents.service.js";
 import { advanceTournamentFormat } from "./tournamentFormat.service.js";
 
 const BEST_OF_VALUES = ["bo1", "bo3", "bo5"];
@@ -592,6 +593,9 @@ export async function saveMatchMapPlayerStatistics(adminUser, matchId, matchMapI
       await cancelPendingMatchMaps(match.id);
       await advanceMixBracket(match);
       await advanceTournamentFormat(match.tournament_id);
+      void completeExternalMatchIntegrations(match.id).catch((error) =>
+        console.error("Integracoes match_finished:", error.message)
+      );
     }
   }
 
