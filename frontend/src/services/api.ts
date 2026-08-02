@@ -484,6 +484,16 @@ export async function getAdminDashboard() {
   return data;
 }
 
+export async function getAdminDiscordStatus() {
+  const { data } = await api.get<import("../types/api").DiscordServerStatus>("/admin/integrations/discord");
+  return data;
+}
+
+export async function setupAdminDiscordServer() {
+  const { data } = await api.post<import("../types/api").DiscordSetupResult>("/admin/integrations/discord/setup");
+  return data;
+}
+
 export async function getAdminAccessAccounts() {
   const { data } = await api.get<AdminAccessAccount[]>("/admin/access-accounts");
   return data;

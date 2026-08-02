@@ -816,6 +816,27 @@ export type AuditLog = {
   actor_email: string | null;
 };
 
+export type DiscordServerStatus = {
+  configured: boolean;
+  connected: boolean;
+  guild?: { id:string; name:string; icon:string | null };
+  categories: Array<{ id:string; name:string; type:number; parent_id:string | null; topic:string | null }>;
+  channels: Array<{ id:string; name:string; type:number; parent_id:string | null; topic:string | null }>;
+  blueprint?: Array<{ name:string; ready:boolean; channels:Array<{ name:string; ready:boolean }> }>;
+};
+
+export type DiscordSetupResult = {
+  configured: boolean;
+  connected: boolean;
+  bot: { id:string; username:string };
+  guild_id: string;
+  match_category_id: string | null;
+  public_channel_id: string | null;
+  created: string[];
+  reused: string[];
+  messages: string[];
+};
+
 export type AdminDashboardData = {
   upcoming_tournaments: number;
   live_tournaments: number;

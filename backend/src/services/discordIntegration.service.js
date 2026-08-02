@@ -7,6 +7,114 @@ export function discordConfigured() {
   return Boolean(process.env.DISCORD_BOT_TOKEN && process.env.DISCORD_GUILD_ID);
 }
 
+const SERVER_BLUEPRINT = [
+  {
+    name:"COMECE AQUI",
+    channels:[
+      { name:"boas-vindas", topic:"Apresentacao oficial da Arena Camp e primeiros passos." },
+      { name:"regras", topic:"Regras de convivencia e conduta da comunidade Arena Camp." },
+      { name:"como-competir", topic:"Guia para criar conta, montar equipe e participar dos campeonatos." }
+    ]
+  },
+  {
+    name:"COMPETICOES",
+    channels:[
+      { name:"anuncios-de-partidas", topic:"Agenda e avisos automaticos das partidas oficiais." },
+      { name:"calendario", topic:"Datas, horarios e etapas das competicoes Arena Camp." },
+      { name:"resultados", topic:"Placares e vencedores confirmados pela organizacao." }
+    ]
+  },
+  {
+    name:"COMUNIDADE",
+    channels:[
+      { name:"geral", topic:"Conversa geral da comunidade Arena Camp." },
+      { name:"encontre-equipe", topic:"Jogadores e equipes podem divulgar vagas e disponibilidade." },
+      { name:"suporte", topic:"Orientacoes para abrir um chamado oficial pelo site." }
+    ]
+  },
+  { name:"PARTIDAS OFICIAIS", channels:[] }
+];
+
+export async function getDiscordServerStatus() {
+  if (!discordConfigured()) return { configured:false, connected:false, categories:[], channels:[] };
+  const [guild, channels] = await Promise.all([
+    discordRequest(`/guilds/${process.env.DISCORD_GUILD_ID}`, { method:"GET" }),
+    listGuildChannels()
+  ]);
+  return {
+    configured:true,
+    connected:true,
+    guild:{ id:guild.id, name:guild.name, icon:guild.icon },
+    categories:channels.filter((channel)=>channel.type === 4).map(channelSummary),
+    channels:channels.filter((channel)=>channel.type !== 4).map(channelSummary),
+    blueprint:blueprintStatus(channels)
+  };
+}
+
+export async function setupDiscordServer() {
+  if (!discordConfigured()) throw new Error("Configure o token e o servidor do Discord antes de sincronizar.");
+  const guildId = String(process.env.DISCORD_GUILD_ID);
+  const bot = await discordRequest("/users/@me", { method:"GET" });
+  let channels = await listGuildChannels();
+  const report = { created:[], reused:[], messages:[] };
+
+  for (const definition of SERVER_BLUEPRINT) {
+    let category = findChannel(channels, definition.name, 4);
+    if (!category) {
+      category = await createChannel({ name:definition.name, type:4 });
+      channels.push(category);
+      report.created.push(`Categoria: ${definition.name}`);
+    } else report.reused.push(`Categoria: ${definition.name}`);
+
+    for (const channelDefinition of definition.channels) {
+      let channel = findChannel(channels, channelDefinition.name, 0);
+      if (!channel) {
+        channel = await createChannel({
+          name:channelDefinition.name,
+          type:0,
+          parent_id:category.id,
+          topic:channelDefinition.topic
+        });
+        channels.push(channel);
+        report.created.push(`#${channelDefinition.name}`);
+      } else {
+        await updateChannel(channel.id, { parent_id:category.id, topic:channelDefinition.topic });
+        report.reused.push(`#${channelDefinition.name}`);
+      }
+    }
+  }
+
+  const welcome = findChannel(channels,"boas-vindas",0);
+  const rules = findChannel(channels,"regras",0);
+  const guide = findChannel(channels,"como-competir",0);
+  const support = findChannel(channels,"suporte",0);
+  const introductions = [
+    [welcome,"**Bem-vindo a Arena Camp**\nA plataforma oficial para organizar, competir e construir sua historia nos eSports. Vincule sua conta no site, acompanhe seus campeonatos e fique atento aos avisos da organizacao."],
+    [rules,"**Regras da comunidade**\n1. Respeite jogadores, equipes e organizadores.\n2. Nao compartilhe dados privados das salas oficiais.\n3. Fraudes, discriminacao e manipulacao de resultados geram penalidades.\n4. Decisoes competitivas seguem o regulamento publicado em cada torneio.\n5. Use o suporte oficial para contestacoes e denuncias."],
+    [guide,`**Como competir**\n1. Crie e confirme sua conta em ${publicUrl("/criar-conta")}\n2. Vincule seu Discord oficial.\n3. Entre em uma equipe e confirme sua lineup.\n4. Inscreva-se em um campeonato.\n5. Acompanhe Pick & Ban, sala e resultados pelo painel.`],
+    [support,`**Atendimento Arena Camp**\nAbra e acompanhe seu chamado dentro da plataforma. Assim a conversa fica registrada e protegida: ${publicUrl("/entrar")}`]
+  ];
+  for (const [channel, content] of introductions) {
+    if (!channel) continue;
+    const result = await publishSetupMessageOnce(channel.id, content);
+    if (result) report.messages.push(channel.name);
+  }
+
+  const matchCategory = findChannel(channels,"PARTIDAS OFICIAIS",4);
+  const publicChannel = process.env.DISCORD_PUBLIC_CHANNEL_ID
+    ? channels.find((channel)=>String(channel.id) === String(process.env.DISCORD_PUBLIC_CHANNEL_ID))
+    : findChannel(channels,"anuncios-de-partidas",0);
+  return {
+    configured:true,
+    connected:true,
+    bot:{ id:bot.id, username:bot.username },
+    guild_id:guildId,
+    match_category_id:matchCategory?.id ?? null,
+    public_channel_id:publicChannel?.id ?? null,
+    ...report
+  };
+}
+
 export async function provisionMatchDiscordRooms(matchId) {
   if (!discordConfigured()) return { configured:false, skipped:true };
   const context = await matchContext(matchId);
@@ -192,6 +300,14 @@ async function createChannel(payload) {
   return discordRequest(`/guilds/${process.env.DISCORD_GUILD_ID}/channels`, { method:"POST", body:payload });
 }
 
+async function updateChannel(channelId, payload) {
+  return discordRequest(`/channels/${channelId}`, { method:"PATCH", body:payload });
+}
+
+async function listGuildChannels() {
+  return discordRequest(`/guilds/${process.env.DISCORD_GUILD_ID}/channels`, { method:"GET" });
+}
+
 async function sendChannelMessage(channelId, content) {
   return discordRequest(`/channels/${channelId}/messages`, { method:"POST", body:{ content, allowed_mentions:{ parse:[] } } });
 }
@@ -222,3 +338,20 @@ async function deliverOnce({ provider,eventType,dedupeKey,matchId,destination,pa
 function publicUrl(path) { return `${String(process.env.FRONTEND_URL || "").split(",")[0].replace(/\/$/,"")}${path}`; }
 function slug(value) { return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,30); }
 function memberNames(members) { return members.map((member) => member.nick || `jogador #${member.user_id || "sem conta"}`).join(", "); }
+function normalizedName(value) { return slug(value).replace(/-/g,""); }
+function findChannel(channels,name,type) { return channels.find((channel)=>channel.type === type && normalizedName(channel.name) === normalizedName(name)); }
+function channelSummary(channel) { return { id:channel.id,name:channel.name,type:channel.type,parent_id:channel.parent_id ?? null,topic:channel.topic ?? null }; }
+function blueprintStatus(channels) { return SERVER_BLUEPRINT.map((category)=>({ name:category.name,ready:Boolean(findChannel(channels,category.name,4)),channels:category.channels.map((item)=>({ name:item.name,ready:Boolean(findChannel(channels,item.name,0)) })) })); }
+async function publishSetupMessageOnce(channelId,content) {
+  const dedupeKey = `discord-server-setup:${channelId}:v1`;
+  const [result] = await pool.query(`INSERT IGNORE INTO integration_deliveries (provider,event_type,dedupe_key,destination,payload_json) VALUES ('discord','server_setup',?,?,?)`,[dedupeKey,channelId,JSON.stringify({content})]);
+  if (!result.affectedRows) return false;
+  try {
+    const message = await sendChannelMessage(channelId,content);
+    await pool.query(`UPDATE integration_deliveries SET status='enviado',provider_message_id=?,sent_at=NOW() WHERE provider='discord' AND dedupe_key=?`,[message.id,dedupeKey]);
+    return true;
+  } catch (error) {
+    await pool.query(`UPDATE integration_deliveries SET status='falhou',error_message=? WHERE provider='discord' AND dedupe_key=?`,[String(error.message).slice(0,1000),dedupeKey]);
+    throw error;
+  }
+}

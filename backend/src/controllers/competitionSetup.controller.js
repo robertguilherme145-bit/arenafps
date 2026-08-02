@@ -21,7 +21,7 @@ import {
   saveTournamentCompetition
 } from "../services/competitionSetup.service.js";
 import { generateTournamentStructure } from "../services/tournamentFormat.service.js";
-import { closeMatchDiscordRooms } from "../services/discordIntegration.service.js";
+import { closeMatchDiscordRooms, getDiscordServerStatus, setupDiscordServer } from "../services/discordIntegration.service.js";
 
 export async function games(req, res) {
   try {
@@ -132,6 +132,9 @@ export async function closeDiscordRoom(req, res) {
     return res.status(400).json({ erro:error.message });
   }
 }
+
+export async function discordServerStatus(req,res){try{return res.json(await getDiscordServerStatus());}catch(error){return res.status(400).json({erro:error.message});}}
+export async function syncDiscordServer(req,res){try{return res.json(await setupDiscordServer());}catch(error){return res.status(400).json({erro:error.message});}}
 
 export async function openVeto(req, res) {
   try {

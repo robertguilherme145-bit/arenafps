@@ -70,6 +70,7 @@ import {
 import { RevenueChart } from "../components/charts/RevenueChart";
 import { CompetitionOperationsWorkspace } from "../features/admin/CompetitionOperationsWorkspace";
 import { OfficialTournamentsWorkspace } from "../features/admin/OfficialTournamentsWorkspace";
+import { DiscordServerWorkspace } from "../features/admin/DiscordServerWorkspace";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
@@ -1969,6 +1970,7 @@ export function AdminDashboardPage() {
 
       {activeModule === "community" ? (
         <>
+          <DiscordServerWorkspace />
           <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_1fr]">
             <Card>
               <CardHeader>

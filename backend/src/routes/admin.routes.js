@@ -32,6 +32,7 @@ import { adminMatchMessage } from "../controllers/captain.controller.js";
 import {
   createMap,
   closeDiscordRoom,
+  discordServerStatus,
   deleteMap,
   deleteGame,
   gameSettings,
@@ -46,6 +47,7 @@ import {
   matchRoom,
   openVeto,
   resetVeto,
+  syncDiscordServer,
   tournamentCompetition,
   tournamentTeams,
   updateMap,
@@ -102,6 +104,8 @@ router.get("/competition/tournaments/:tournamentId/teams", tournamentTeams);
 router.get("/competition/matches/:matchId", matchOperations);
 router.put("/competition/matches/:matchId/room", matchRoom);
 router.delete("/competition/matches/:matchId/discord-room", closeDiscordRoom);
+router.get("/integrations/discord", discordServerStatus);
+router.post("/integrations/discord/setup", syncDiscordServer);
 router.post("/competition/matches/:matchId/messages", adminMatchMessage);
 router.post("/competition/matches/:matchId/veto/open", openVeto);
 router.post("/competition/matches/:matchId/veto/reset", resetVeto);
