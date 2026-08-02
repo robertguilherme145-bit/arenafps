@@ -15,8 +15,9 @@ export async function provisionMatchDiscordRooms(matchId) {
   if (existing?.status === "ativo") return existing;
 
   try {
+    const bot = await discordRequest("/users/@me", { method:"GET" });
     const members = await discordMembers(context);
-    const sharedPermissions = permissionOverwrites([...members.teamA, ...members.teamB], "68608");
+    const sharedPermissions = permissionOverwrites([...members.teamA, ...members.teamB], "68608", bot.id, "68624");
     const shared = await createChannel({
       name:`partida-${matchId}-${slug(context.team_a)}-x-${slug(context.team_b)}`,
       type:0,
@@ -24,8 +25,8 @@ export async function provisionMatchDiscordRooms(matchId) {
       topic:`${context.tournament_name} | ${context.team_a} x ${context.team_b}`,
       permission_overwrites:sharedPermissions
     });
-    const voiceA = await createChannel({ name:`${context.team_a} | Partida ${matchId}`, type:2, parent_id:process.env.DISCORD_MATCH_CATEGORY_ID || undefined, permission_overwrites:permissionOverwrites(members.teamA,"3146752") });
-    const voiceB = await createChannel({ name:`${context.team_b} | Partida ${matchId}`, type:2, parent_id:process.env.DISCORD_MATCH_CATEGORY_ID || undefined, permission_overwrites:permissionOverwrites(members.teamB,"3146752") });
+    const voiceA = await createChannel({ name:`${context.team_a} | Partida ${matchId}`, type:2, parent_id:process.env.DISCORD_MATCH_CATEGORY_ID || undefined, permission_overwrites:permissionOverwrites(members.teamA,"3146752",bot.id,"1040") });
+    const voiceB = await createChannel({ name:`${context.team_b} | Partida ${matchId}`, type:2, parent_id:process.env.DISCORD_MATCH_CATEGORY_ID || undefined, permission_overwrites:permissionOverwrites(members.teamB,"3146752",bot.id,"1040") });
     await pool.query(
       `INSERT INTO match_discord_rooms (match_id,text_channel_id,team_a_voice_channel_id,team_b_voice_channel_id,status,error_message) VALUES (?,?,?,?,'ativo',NULL) ON DUPLICATE KEY UPDATE text_channel_id=VALUES(text_channel_id),team_a_voice_channel_id=VALUES(team_a_voice_channel_id),team_b_voice_channel_id=VALUES(team_b_voice_channel_id),status='ativo',error_message=NULL`,
       [matchId, shared.id, voiceA.id, voiceB.id]
@@ -68,9 +69,10 @@ async function discordMembers(context) {
   };
 }
 
-function permissionOverwrites(memberIds, allow) {
+function permissionOverwrites(memberIds, allow, botId, botAllow) {
   return [
     { id:String(process.env.DISCORD_GUILD_ID), type:0, deny:"1024", allow:"0" },
+    { id:String(botId), type:1, allow:String(botAllow), deny:"0" },
     ...[...new Set(memberIds.map(String))].map((id)=>({ id,type:1,allow,deny:"0" }))
   ];
 }
@@ -84,7 +86,7 @@ async function sendChannelMessage(channelId, content) {
 }
 
 async function discordRequest(path, { method, body }) {
-  const response = await fetch(`${API}${path}`, { method, headers:{ Authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`, "Content-Type":"application/json" }, body:JSON.stringify(body) });
+  const response = await fetch(`${API}${path}`, { method, headers:{ Authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`, "Content-Type":"application/json" }, body:body === undefined ? undefined : JSON.stringify(body) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`Discord ${response.status}: ${data.message || "falha na integracao"}`);
   return data;
