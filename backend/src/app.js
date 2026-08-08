@@ -77,7 +77,11 @@ if (publicDirectory) {
   index:false
  }));
  app.use((req,res,next) => {
-  if (req.method === "GET" && String(req.headers.accept || "").includes("text/html")) {
+  const isPageRequest = req.method === "GET"
+   && !req.path.startsWith("/api")
+   && !path.extname(req.path);
+
+  if (isPageRequest) {
    res.set({
     "Cache-Control":"no-store, no-cache, must-revalidate, proxy-revalidate",
     Pragma:"no-cache",

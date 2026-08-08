@@ -1,7 +1,15 @@
 User-agent: *
 Allow: /
 Allow: /torneios
+Allow: /circuito-oficial
 Allow: /ranking
+Allow: /jogos
+Allow: /equipes
+Allow: /jogadores
+Allow: /noticias
+Allow: /sobre
+Allow: /faq
+Allow: /contato
 
 Disallow: /entrar
 Disallow: /criar-conta

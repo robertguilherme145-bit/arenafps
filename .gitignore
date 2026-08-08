@@ -6,5 +6,7 @@ backend/public/
 coverage
 deploy/
 *.log
+*.tsbuildinfo
+.artifacts/
 uploads/*
 !uploads/.gitkeep
