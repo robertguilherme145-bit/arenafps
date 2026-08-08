@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Allow: /torneios
+Allow: /ranking
 
 Disallow: /entrar
 Disallow: /criar-conta
