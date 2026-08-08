@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+Disallow: /entrar
+Disallow: /criar-conta
+Disallow: /recuperar-senha
+Disallow: /verificar-email
+Disallow: /oauth
+Disallow: /onboarding
+Disallow: /admin
+Disallow: /lider
+Disallow: /capitao
+Disallow: /jogador
+Disallow: /design-system
+
+Sitemap: https://arenafps.com.br/sitemap.xml
