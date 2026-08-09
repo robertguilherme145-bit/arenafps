@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getStoredAuthToken } from "../utils/authStorage";
 import type {
   AdminDashboardData,
   AdminCompetitionGame,
@@ -56,7 +57,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = window.localStorage.getItem("arena-camp-token");
+  const token = getStoredAuthToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

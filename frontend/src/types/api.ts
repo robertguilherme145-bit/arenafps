@@ -317,6 +317,7 @@ export type AuthResponse = {
 export type LoginInput = {
   email: string;
   password: string;
+  remember?: boolean;
   two_factor_code?: string;
 };
 

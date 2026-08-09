@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { AuthUser, DashboardData, NotificationItem, UserProfile } from "../types/api";
+import { clearAuthToken, getStoredAuthToken, saveAuthToken } from "../utils/authStorage";
 
 type SessionState = {
   token: string | null;
@@ -9,7 +10,7 @@ type SessionState = {
   notifications: NotificationItem[];
   authModalOpen: boolean;
   notificationsOpen: boolean;
-  setSession: (token: string, user: AuthUser) => void;
+  setSession: (token: string, user: AuthUser, remember?: boolean) => void;
   clearSession: () => void;
   setProfile: (profile: UserProfile | null) => void;
   setDashboard: (dashboard: DashboardData | null) => void;
@@ -19,21 +20,21 @@ type SessionState = {
 };
 
 export const useSessionStore = create<SessionState>((set) => ({
-  token: window.localStorage.getItem("arena-camp-token"),
+  token: getStoredAuthToken(),
   user: null,
   profile: null,
   dashboard: null,
   notifications: [],
   authModalOpen: false,
   notificationsOpen: false,
-  setSession: (token, user) =>
+  setSession: (token, user, remember) =>
     set(() => {
-      window.localStorage.setItem("arena-camp-token", token);
+      saveAuthToken(token, remember);
       return { token, user };
     }),
   clearSession: () =>
     set(() => {
-      window.localStorage.removeItem("arena-camp-token");
+      clearAuthToken();
       return {
         token: null,
         user: null,

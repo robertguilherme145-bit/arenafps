@@ -15,7 +15,7 @@ export function LoginPage() {
   const [params] = useSearchParams();
   const { user, loginWithPassword } = useAuth();
   const { error } = useToast();
-  const [form, setForm] = useState({ email:"", password:"", remember:true, two_factor_code:"" });
+  const [form, setForm] = useState({ email:"", password:"", remember:false, two_factor_code:"" });
   const [twoFactor, setTwoFactor] = useState(false);
   const [busy, setBusy] = useState(false);
   const [providers, setProviders] = useState<AuthProviderStatus>({ password:true, google:false, discord:false, steam:false });
@@ -28,7 +28,7 @@ export function LoginPage() {
   async function submit() {
     setBusy(true);
     try {
-      const required = await loginWithPassword({ email:form.email, password:form.password, two_factor_code:form.two_factor_code || undefined });
+      const required = await loginWithPassword({ email:form.email, password:form.password, remember:form.remember, two_factor_code:form.two_factor_code || undefined });
       if (required) setTwoFactor(true); else navigate("/onboarding");
     } catch (reason) { error("Não foi possivel entrar", message(reason)); }
     finally { setBusy(false); }

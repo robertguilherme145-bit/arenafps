@@ -74,7 +74,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function loginWithPassword(input: LoginInput) {
     const response = await login(input);
     if (response.requires_two_factor) return true;
-    setSession(response.token, response.usuario);
+    setSession(response.token, response.usuario, Boolean(input.remember));
     setAuthModalOpen(false);
     success("Login realizado", `Bem-vindo de volta, ${response.usuario.nome}.`);
     await refreshSession(response.token);
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function loginWithOAuthCode(code: string) {
     const response = await exchangeOAuthLogin(code);
     if (response.requires_two_factor) throw new Error("Conclua o acesso com email e senha para validar o segundo fator.");
-    setSession(response.token, response.usuario);
+    setSession(response.token, response.usuario, false);
     setAuthModalOpen(false);
     success("Conta conectada", `Bem-vindo, ${response.usuario.nome}.`);
     await refreshSession(response.token);
