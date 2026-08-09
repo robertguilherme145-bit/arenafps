@@ -43,7 +43,7 @@ import { findTournament } from "../models/tournament.model.js";
 import { findUserByEmail } from "../models/user.model.js";
 import { getMatchOperations, performParticipantVetoAction } from "./competitionSetup.service.js";
 import { notify } from "./notification.service.js";
-import { createEntryPayment, syncTeamPendingPayments } from "./payment.service.js";
+import { captureEntryPaypalPayment, createEntryPayment, createEntryPaypalPayment, syncTeamPendingPayments } from "./payment.service.js";
 import { getTeamPlayerRanking } from "./teamRanking.service.js";
 import { getPlayerCareerSummary } from "./playerWorkspace.service.js";
 import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
@@ -258,9 +258,17 @@ export async function registerLeaderEntry(user, payload) {
   return { id: entryId, mensagem: automaticFreeEntry ? "Inscricao confirmada. O regulamento foi enviado para a equipe." : "Equipe inscrita. A lineup foi congelada para auditoria." };
 }
 
-export async function createLeaderPayment(user, entryId) {
+export async function createLeaderPayment(user, entryId, provider = "mercadopago") {
   await requireLeaderTeam(user.id);
+  if (String(provider).toLowerCase() === "paypal") {
+    return await createEntryPaypalPayment(user.id, Number(entryId));
+  }
   return await createEntryPayment(user.id, Number(entryId));
+}
+
+export async function captureLeaderPaypalPayment(user, orderId) {
+  await requireLeaderTeam(user.id);
+  return await captureEntryPaypalPayment(user.id, orderId);
 }
 
 export async function syncLeaderPayments(user) {

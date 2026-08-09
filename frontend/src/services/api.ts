@@ -772,8 +772,13 @@ export async function registerLeaderTournament(input: { tournament_id: number; l
   return data;
 }
 
-export async function createLeaderPayment(entryId: number) {
-  const { data } = await api.post(`/leader/payments/${entryId}`);
+export async function createLeaderPayment(entryId: number, provider: "mercadopago" | "paypal" = "mercadopago") {
+  const { data } = await api.post(`/leader/payments/${entryId}`, { provider });
+  return data;
+}
+
+export async function captureLeaderPaypalPayment(orderId: string) {
+  const { data } = await api.post("/leader/payments/paypal/capture", { orderId });
   return data;
 }
 

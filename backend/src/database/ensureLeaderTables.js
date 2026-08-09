@@ -11,6 +11,8 @@ export async function ensureLeaderTables() {
   await ensureColumn("team_members", "last_seen_at", "DATETIME NULL AFTER status");
   await ensureColumn("entries", "lineup_id", "INT NULL AFTER team_id");
   await ensureColumn("entries", "rules_accepted_at", "DATETIME NULL AFTER payment_status");
+  await ensureColumn("payments", "checkout_url", "TEXT NULL AFTER copia_cola");
+  await ensureColumn("payments", "currency", "VARCHAR(3) NOT NULL DEFAULT 'BRL' AFTER checkout_url");
   await pool.query(`UPDATE payments SET status = 'pendente' WHERE status IS NULL OR status NOT IN ('pendente', 'aprovado', 'cancelado', 'rejeitado')`);
   await ensureIndex("players", "uq_players_team_user", "UNIQUE KEY uq_players_team_user (team_id, user_id)");
   await backfillPlayerUsers();

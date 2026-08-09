@@ -1,10 +1,12 @@
 import COMPETITION_EVENTS from "../constants/competitionEvents.js";
+import { randomUUID } from "node:crypto";
 import { findEntry } from "../models/entry.model.js";
 import {
   createPayment,
   findPaymentByEntry,
   findPaymentByExternalReference,
   findPaymentByGatewayId,
+  findPaymentWithEntry,
   findPendingPayments,
   findPendingPaymentsByTeam,
   reconcileGatewayPayment
@@ -18,6 +20,20 @@ import { buildPixDescription, createPixPayment, getPayment } from "./mercadopago
 import { notify } from "./notification.service.js";
 import { findPendingMixPayments } from "../models/mixTournament.model.js";
 import { processMixGatewayPayment } from "./mixTournament.service.js";
+import {
+  buildPayPalDescription,
+  capturePayPalOrder,
+  createPayPalOrder,
+  extractPayPalApprovalUrl,
+  extractPayPalCapturedAmount,
+  extractPayPalExternalReference,
+  extractPayPalPaidAt,
+  normalizePayPalOrderStatus,
+  resolvePayPalAmount,
+  resolvePayPalCancelUrl,
+  resolvePayPalCurrency,
+  resolvePayPalReturnUrl
+} from "./paypal.service.js";
 
 export async function createEntryPayment(userId, entryId) {
   const [team, user, entry] = await Promise.all([
@@ -33,8 +49,11 @@ export async function createEntryPayment(userId, entryId) {
     throw new Error("Esta inscricao nao pertence a sua equipe.");
   }
 
-  if (await findPaymentByEntry(entry.id)) {
-    throw new Error("Ja existe um pagamento para esta inscricao.");
+  const existingPayment = await findPaymentByEntry(entry.id);
+  if (existingPayment) {
+    if (existingPayment.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
+    if (existingPayment.provider === "mercadopago") return formatPaymentResponse(existingPayment);
+    throw new Error("Ja existe um pagamento PayPal pendente para esta inscricao.");
   }
 
   const tournament = await findTournament(entry.tournament_id);
@@ -63,13 +82,101 @@ export async function createEntryPayment(userId, entryId) {
   });
 
   return {
-    id: localPayment.id,
-    payment_id: pix.id,
-    status,
-    qr_code: pixData.qr_code,
-    qr_code_base64: pixData.qr_code_base64,
-    copia_cola: pixData.copia_cola
+    ...formatPaymentResponse(localPayment),
+    payment_id: pix.id
   };
+}
+
+export async function createEntryPaypalPayment(userId, entryId) {
+  const [team, user, entry] = await Promise.all([
+    findUserTeam(userId),
+    findUserById(userId),
+    findEntry(entryId)
+  ]);
+
+  if (!team) throw new Error("Equipe nao encontrada.");
+  if (!user) throw new Error("Usuario nao encontrado.");
+  if (!entry) throw new Error("Inscricao nao encontrada.");
+  if (Number(entry.team_id) !== Number(team.id)) {
+    throw new Error("Esta inscricao nao pertence a sua equipe.");
+  }
+
+  const existingPayment = await findPaymentByEntry(entry.id);
+  if (existingPayment) {
+    if (existingPayment.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
+    if (existingPayment.provider === "paypal" && existingPayment.checkout_url) return formatPaymentResponse(existingPayment);
+    throw new Error("Ja existe um pagamento PIX pendente para esta inscricao.");
+  }
+
+  const tournament = await findTournament(entry.tournament_id);
+  if (!tournament) throw new Error("Torneio nao encontrado.");
+
+  const currency = resolvePayPalCurrency();
+  const amount = resolvePayPalAmount(tournament.valor);
+  if (amount <= 0) throw new Error("O valor do PayPal precisa ser maior que zero.");
+
+  const externalReference = `ENTRY_${entryId}_PAYPAL_${randomUUID()}`;
+  const order = await createPayPalOrder({
+    amount,
+    currency,
+    description: buildPayPalDescription(team.nome, tournament.nome),
+    externalReference,
+    returnUrl: resolvePayPalReturnUrl(),
+    cancelUrl: resolvePayPalCancelUrl()
+  });
+  const checkoutUrl = extractPayPalApprovalUrl(order);
+  if (!checkoutUrl) throw new Error("O PayPal nao retornou o link de aprovacao.");
+
+  const localPayment = await createPayment({
+    entry_id: entry.id,
+    provider: "paypal",
+    payment_id: String(order.id),
+    external_reference: externalReference,
+    status: normalizePayPalOrderStatus(order),
+    valor: amount,
+    checkout_url: checkoutUrl,
+    currency
+  });
+
+  return formatPaymentResponse(localPayment);
+}
+
+export async function captureEntryPaypalPayment(userId, orderId) {
+  const team = await findUserTeam(userId);
+  if (!team) throw new Error("Equipe nao encontrada.");
+  if (!orderId) throw new Error("Informe a ordem do PayPal.");
+
+  const localPayment = await findPaymentByGatewayId(orderId);
+  if (!localPayment || localPayment.provider !== "paypal") {
+    throw new Error("Pagamento PayPal nao encontrado.");
+  }
+
+  const paymentWithEntry = await findPaymentWithEntry(localPayment.id);
+  if (!paymentWithEntry || Number(paymentWithEntry.team_id) !== Number(team.id)) {
+    throw new Error("Este pagamento nao pertence a sua equipe.");
+  }
+
+  if (localPayment.status === "aprovado") return formatPaymentResponse(paymentWithEntry);
+
+  const order = await capturePayPalOrder(orderId);
+  validatePayPalPayment(order, paymentWithEntry);
+
+  const status = normalizePayPalOrderStatus(order);
+  const reconciled = await reconcileGatewayPayment(paymentWithEntry.id, {
+    payment_id: String(order.id),
+    status,
+    paid_at: status === "aprovado" ? extractPayPalPaidAt(order) : null
+  });
+
+  if (status === "aprovado") {
+    await dispatchCompetitionEvent(COMPETITION_EVENTS.PAYMENT_APPROVED, {
+      payment_id: reconciled.id,
+      entry_id: reconciled.entry_id
+    });
+    await notifyPaymentApproved(reconciled);
+  }
+
+  return formatPaymentResponse(reconciled);
 }
 
 export async function processWebhook(paymentId) {
@@ -164,17 +271,40 @@ function validateGatewayPayment(gatewayPayment, localPayment) {
   }
 }
 
+function validatePayPalPayment(order, localPayment) {
+  if (String(localPayment.payment_id ?? "") !== String(order?.id ?? "")) {
+    throw new Error("A ordem do PayPal nao corresponde ao pagamento local.");
+  }
+
+  if (String(localPayment.external_reference ?? "") !== String(extractPayPalExternalReference(order) ?? "")) {
+    throw new Error("A referencia externa do PayPal nao confere.");
+  }
+
+  const capturedAmount = extractPayPalCapturedAmount(order);
+  if (normalizePayPalOrderStatus(order) === "aprovado" && Math.abs(Number(localPayment.valor) - capturedAmount) > 0.001) {
+    throw new Error("O valor confirmado pelo PayPal nao corresponde ao valor da inscricao.");
+  }
+
+  const currency = order?.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.currency_code
+    ?? order?.purchase_units?.[0]?.amount?.currency_code;
+  if (currency && String(currency).toUpperCase() !== String(localPayment.currency || "USD").toUpperCase()) {
+    throw new Error("A moeda confirmada pelo PayPal e invalida para esta inscricao.");
+  }
+}
+
 async function notifyPaymentApproved(payment) {
   const adminIds = await findUserIdsByRole("admin");
-  const amount = new Intl.NumberFormat("pt-BR", {
+  const currency = payment.currency || "BRL";
+  const amount = new Intl.NumberFormat(currency === "BRL" ? "pt-BR" : "en-US", {
     style: "currency",
-    currency: "BRL"
+    currency
   }).format(Number(payment.valor));
   const message = `Pagamento de ${amount} da equipe ${payment.team_name} confirmado para o torneio ${payment.tournament_name}.`;
+  const providerName = payment.provider === "paypal" ? "PayPal" : "PIX";
 
   await Promise.all(adminIds.map((adminId) => notify({
     user_id: adminId,
-    titulo: "Pagamento PIX confirmado",
+    titulo: `Pagamento ${providerName} confirmado`,
     mensagem: message,
     tipo: "payment_approved",
     link: "/admin?module=finance",
@@ -189,6 +319,24 @@ async function notifyPaymentApproved(payment) {
     link: "/lider?module=finance",
     dedupe_key: `payment-approved:${payment.id}:leader:${payment.team_creator_id}`
   });
+}
+
+function formatPaymentResponse(payment) {
+  return {
+    id: payment.id,
+    entry_id: payment.entry_id,
+    provider: payment.provider,
+    payment_id: payment.payment_id,
+    external_reference: payment.external_reference,
+    status: payment.status,
+    valor: payment.valor,
+    currency: payment.currency || "BRL",
+    qr_code: payment.qr_code ?? null,
+    qr_code_base64: payment.qr_code_base64 ?? null,
+    copia_cola: payment.copia_cola ?? null,
+    checkout_url: payment.checkout_url ?? null,
+    paid_at: payment.paid_at ?? null
+  };
 }
 
 function validDateOrNow(value) {

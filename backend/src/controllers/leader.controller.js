@@ -2,6 +2,7 @@ import {
   addLeaderDocument,
   addLeaderEvent,
   archiveLeaderTeam,
+  captureLeaderPaypalPayment,
   createLeaderPayment,
   deleteLeaderMember,
   duplicateLeaderLineup,
@@ -42,7 +43,8 @@ export async function updateLineup(req, res) { return handle(res, () => saveLead
 export async function duplicateLineup(req, res) { return handle(res, () => duplicateLeaderLineup(req.user, req.params.id), 201); }
 export async function freezeLineup(req, res) { return handle(res, () => freezeLeaderLineup(req.user, req.params.id)); }
 export async function createEntry(req, res) { return handle(res, () => registerLeaderEntry(req.user, req.body), 201); }
-export async function createPayment(req, res) { return handle(res, () => createLeaderPayment(req.user, req.params.entryId), 201); }
+export async function createPayment(req, res) { return handle(res, () => createLeaderPayment(req.user, req.params.entryId, req.body?.provider), 201); }
+export async function capturePaypal(req, res) { return handle(res, () => captureLeaderPaypalPayment(req.user, req.body?.orderId)); }
 export async function syncPayments(req, res) { return handle(res, () => syncLeaderPayments(req.user)); }
 export async function tournamentCenter(req, res) { return handle(res, () => getLeaderTournamentCenter(req.user, req.params.id)); }
 export async function match(req, res) { return handle(res, () => getLeaderMatch(req.user, req.params.id)); }

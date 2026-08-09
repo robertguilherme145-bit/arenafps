@@ -50,6 +50,7 @@ import { useToast } from "../hooks/useToast";
 import { setArenaTheme } from "../utils/theme";
 import {
   archiveLeaderTeam,
+  captureLeaderPaypalPayment,
   createLeaderCompetitionRequest,
   createLeaderDispute,
   createLeaderDocument,
@@ -83,6 +84,7 @@ import type {
   LeaderLineup,
   LeaderMatch,
   LeaderMember,
+  LeaderPayment,
   LeaderTournament,
   LeaderTournamentCenter,
   LeaderWorkspace,
@@ -138,9 +140,56 @@ export function LeaderDashboardPage() {
 
   const pendingPaymentKey =
     workspace?.payments
-      .filter((payment) => payment.status === "pendente")
+      .filter(
+        (payment) =>
+          payment.provider === "mercadopago" && payment.status === "pendente",
+      )
       .map((payment) => payment.id)
       .join(",") ?? "";
+  const paypalReturnToken = searchParams.get("token");
+
+  useEffect(() => {
+    if (activeModule !== "finance" || !paypalReturnToken) return;
+
+    let cancelled = false;
+    const capture = async () => {
+      setBusy("paypal-capture");
+      try {
+        await captureLeaderPaypalPayment(paypalReturnToken);
+        if (!cancelled) {
+          toast.success(
+            "Pagamento PayPal confirmado",
+            "A inscrição foi atualizada automaticamente.",
+          );
+          await Promise.all([load(), refreshSession()]);
+        }
+      } catch (error) {
+        if (!cancelled) toast.error("PayPal não confirmado", messageOf(error));
+      } finally {
+        if (!cancelled) {
+          const next = new URLSearchParams(searchParams);
+          next.delete("token");
+          next.delete("PayerID");
+          next.delete("paypal");
+          setSearchParams(next, { replace: true });
+          setBusy(null);
+        }
+      }
+    };
+
+    void capture();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeModule,
+    load,
+    paypalReturnToken,
+    refreshSession,
+    searchParams,
+    setSearchParams,
+    toast,
+  ]);
 
   useEffect(() => {
     if (activeModule !== "finance" || !pendingPaymentKey) return;
@@ -2295,6 +2344,20 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
     subject: "Solicitacao de reembolso",
     description: "",
   });
+  const startPaypalPayment = (entryId: number) =>
+    run(
+      `paypal-${entryId}`,
+      async () => {
+        const payment = await createLeaderPayment(entryId, "paypal");
+        if (!payment.checkout_url) {
+          throw new Error("O PayPal nao retornou o link de pagamento.");
+        }
+        window.location.assign(payment.checkout_url);
+      },
+      "Redirecionando para o PayPal",
+      false,
+    );
+
   return (
     <div className="space-y-5">
       <div className="grid gap-4 md:grid-cols-3">
@@ -2357,19 +2420,30 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
               cell: (entry) =>
                 entry.payment_status === "aguardando" &&
                 Number(entry.valor) > 0 ? (
-                  <Button
-                    className="h-8 text-xs"
-                    loading={busy === `payment-${entry.id}`}
-                    onClick={() =>
-                      void run(
-                        `payment-${entry.id}`,
-                        () => createLeaderPayment(entry.id),
-                        "PIX gerado",
-                      )
-                    }
-                  >
-                    Gerar PIX
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      className="h-8 text-xs"
+                      loading={busy === `payment-${entry.id}`}
+                      onClick={() =>
+                        void run(
+                          `payment-${entry.id}`,
+                          () => createLeaderPayment(entry.id, "mercadopago"),
+                          "PIX gerado",
+                        )
+                      }
+                    >
+                      Gerar PIX
+                    </Button>
+                    <Button
+                      className="h-8 text-xs"
+                      icon={<ExternalLink className="h-3.5 w-3.5" />}
+                      loading={busy === `paypal-${entry.id}`}
+                      variant="secondary"
+                      onClick={() => void startPaypalPayment(entry.id)}
+                    >
+                      PayPal
+                    </Button>
+                  </div>
                 ) : (
                   <span className="text-xs text-arena-muted">
                     Sem ação pendente
@@ -2381,7 +2455,10 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
       </Card>
       {data.payments
         .filter(
-          (payment) => payment.copia_cola && payment.status === "pendente",
+          (payment) =>
+            payment.provider === "mercadopago" &&
+            payment.copia_cola &&
+            payment.status === "pendente",
         )
         .map((payment) => (
           <Card key={payment.id}>
@@ -2416,6 +2493,38 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
                   Copiar código
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        ))}
+      {data.payments
+        .filter(
+          (payment) =>
+            payment.provider === "paypal" &&
+            payment.checkout_url &&
+            payment.status === "pendente",
+        )
+        .map((payment) => (
+          <Card key={payment.id}>
+            <CardHeader>
+              <h2 className="font-display text-xl font-semibold">
+                PayPal - {payment.tournament_name}
+              </h2>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm text-arena-muted">
+                  Pagamento internacional pendente para esta inscricao.
+                </p>
+                <p className="mt-2 text-lg font-semibold">
+                  {formatPaymentCurrency(payment)}
+                </p>
+              </div>
+              <Button
+                icon={<ExternalLink className="h-4 w-4" />}
+                onClick={() => window.location.assign(payment.checkout_url!)}
+              >
+                Continuar no PayPal
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -3748,6 +3857,13 @@ function formatCurrency(value: number | string | null | undefined) {
     style: "currency",
     currency: "BRL",
   }).format(Number(value ?? 0));
+}
+function formatPaymentCurrency(payment: LeaderPayment) {
+  const currency = payment.currency || "BRL";
+  return new Intl.NumberFormat(currency === "BRL" ? "pt-BR" : "en-US", {
+    style: "currency",
+    currency,
+  }).format(Number(payment.valor ?? 0));
 }
 function formatDate(value: string | null | undefined) {
   return value

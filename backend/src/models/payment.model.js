@@ -14,6 +14,8 @@ export async function createPayment({
     qr_code = null,
     qr_code_base64 = null,
     copia_cola = null,
+    checkout_url = null,
+    currency = "BRL",
     paid_at = null
 
 }){
@@ -33,6 +35,8 @@ export async function createPayment({
             qr_code,
             qr_code_base64,
             copia_cola,
+            checkout_url,
+            currency,
             paid_at
 
         )
@@ -41,7 +45,7 @@ export async function createPayment({
 
         (
 
-            ?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?
 
         )
         `,
@@ -57,6 +61,8 @@ export async function createPayment({
             qr_code,
             qr_code_base64,
             copia_cola,
+            checkout_url,
+            currency,
             paid_at
 
         ]
@@ -76,6 +82,8 @@ export async function createPayment({
         qr_code,
         qr_code_base64,
         copia_cola,
+        checkout_url,
+        currency,
         paid_at
 
     };
@@ -159,6 +167,25 @@ export async function findPaymentByGatewayId(payment_id){
 
 }
 
+export async function findPaymentWithEntry(payment_id){
+
+    const [rows] = await pool.query(
+        `
+        SELECT p.*, e.team_id, e.tournament_id, t.nome AS tournament_name, tm.nome AS team_name
+        FROM payments p
+        INNER JOIN entries e ON e.id = p.entry_id
+        INNER JOIN tournaments t ON t.id = e.tournament_id
+        INNER JOIN teams tm ON tm.id = e.team_id
+        WHERE p.id = ?
+        LIMIT 1
+        `,
+        [payment_id]
+    );
+
+    return rows[0];
+
+}
+
 export async function findPendingPaymentsByTeam(team_id){
 
     const [rows] = await pool.query(
@@ -169,6 +196,7 @@ export async function findPendingPaymentsByTeam(team_id){
         WHERE e.team_id = ?
           AND p.status = 'pendente'
           AND p.payment_id IS NOT NULL
+          AND p.provider = 'mercadopago'
         ORDER BY p.created_at ASC
         `,
         [team_id]
@@ -187,6 +215,7 @@ export async function findPendingPayments(limit = 50){
         FROM payments p
         WHERE p.status = 'pendente'
           AND p.payment_id IS NOT NULL
+          AND p.provider = 'mercadopago'
         ORDER BY p.created_at ASC
         LIMIT ?
         `,
@@ -364,6 +393,46 @@ export async function updatePixData(
             qr_code,
             qr_code_base64,
             copia_cola,
+            id
+
+        ]
+
+    );
+
+}
+
+export async function updateCheckoutPaymentData(
+
+    id,
+
+    {
+
+        payment_id,
+        external_reference,
+        checkout_url
+
+    }
+
+){
+
+    await pool.query(
+
+        `
+        UPDATE payments
+        SET
+
+            payment_id = ?,
+            external_reference = ?,
+            checkout_url = ?
+
+        WHERE id = ?
+        `,
+
+        [
+
+            payment_id,
+            external_reference,
+            checkout_url,
             id
 
         ]

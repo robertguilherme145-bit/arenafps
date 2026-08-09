@@ -1060,9 +1060,11 @@ export type LeaderPayment = {
   external_reference: string | null;
   status: string;
   valor: number | string;
+  currency: string | null;
   qr_code: string | null;
   qr_code_base64: string | null;
   copia_cola: string | null;
+  checkout_url: string | null;
   paid_at: string | null;
   created_at: string;
 };

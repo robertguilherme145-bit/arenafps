@@ -30,6 +30,7 @@ import {
   updateMember,
   updateTeam,
   archiveTeam,
+  capturePaypal,
   veto,
   workspace
 } from "../controllers/leader.controller.js";
@@ -51,6 +52,7 @@ router.post("/lineups/:id/duplicate", duplicateLineup);
 router.post("/lineups/:id/freeze", freezeLineup);
 router.post("/entries", createEntry);
 router.post("/payments/sync", syncPayments);
+router.post("/payments/paypal/capture", capturePaypal);
 router.post("/payments/:entryId", createPayment);
 router.get("/tournaments/:id/center", tournamentCenter);
 router.get("/matches/:id", match);
