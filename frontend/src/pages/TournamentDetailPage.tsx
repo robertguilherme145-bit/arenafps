@@ -3,6 +3,7 @@ import {
   Activity,
   CalendarDays,
   Crown,
+  Download,
   Medal,
   Swords,
   Trophy,
@@ -23,6 +24,44 @@ import { useToast } from "../hooks/useToast";
 import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
 import type { PublicTournamentCenter } from "../types/api";
+
+function safeFileName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+function assetExtension(url: string) {
+  try {
+    const pathname = new URL(url, window.location.origin).pathname;
+    const extension = pathname.match(/\.[a-zA-Z0-9]+$/)?.[0];
+    return extension || ".png";
+  } catch {
+    return ".png";
+  }
+}
+
+async function downloadAsset(url: string, filename: string) {
+  const safeName = `${safeFileName(filename) || "logo"}${assetExtension(url)}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Falha ao baixar arquivo.");
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = safeName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
 
 export function TournamentDetailPage() {
   const id = Number(useParams().id);
@@ -591,6 +630,20 @@ function MatchMapDetails({
   onClose: () => void;
 }) {
   const heroImage = selectedMap?.map_image || match?.current_map_image;
+  const logoActions = match
+    ? [
+        {
+          label: match.team_a,
+          url: match.team_a_logo,
+        },
+        {
+          label: match.team_b,
+          url: match.team_b_logo,
+        },
+      ].filter((item): item is { label: string; url: string } =>
+        Boolean(item.url),
+      )
+    : [];
   return (
     <Modal
       open={Boolean(match)}
@@ -604,6 +657,33 @@ function MatchMapDetails({
       size="wide"
     >
       <div className="space-y-4">
+        {logoActions.length ? (
+          <div className="flex flex-col gap-3 border border-arena-line bg-black/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                Logos do confronto
+              </p>
+              <p className="mt-1 text-sm text-arena-muted">
+                Baixe as logos das equipes para montar banners e artes da partida.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {logoActions.map((team) => (
+                <button
+                  key={team.label}
+                  type="button"
+                  className="inline-flex items-center gap-2 border border-arena-line bg-arena-panel px-3 py-2 text-sm font-semibold text-arena-text transition hover:border-cyan-300 hover:text-cyan-100"
+                  onClick={() =>
+                    void downloadAsset(team.url, `logo-${team.label}`)
+                  }
+                >
+                  <Download className="h-4 w-4" />
+                  {team.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div
           className="relative min-h-72 overflow-hidden border border-arena-line bg-arena-bg bg-cover bg-center"
           style={
