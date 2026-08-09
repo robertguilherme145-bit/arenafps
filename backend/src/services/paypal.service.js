@@ -13,14 +13,21 @@ export function resolvePayPalCurrency(environment = process.env) {
   return String(environment.PAYPAL_CURRENCY || "USD").trim().toUpperCase();
 }
 
-export function resolvePayPalAmount(value, environment = process.env) {
+export async function resolvePayPalAmount(value, environment = process.env) {
+  const currency = resolvePayPalCurrency(environment);
+  const brlAmount = Number(value || 0);
   const override = Number(environment.PAYPAL_ENTRY_AMOUNT || 0);
   if (override > 0) return roundMoney(override);
 
-  const rate = Number(environment.PAYPAL_BRL_TO_USD_RATE || 0);
-  if (rate > 0) return roundMoney(Number(value) * rate);
+  if (currency === "BRL") return roundMoney(brlAmount);
 
-  return roundMoney(value);
+  try {
+    return await convertFromBrl(brlAmount, currency, environment);
+  } catch (error) {
+    const fallbackRate = Number(environment.PAYPAL_BRL_TO_USD_RATE || 0);
+    if (fallbackRate > 0 && currency === "USD") return roundMoney(brlAmount * fallbackRate);
+    throw new Error(`Nao foi possivel converter BRL para ${currency}: ${error.message}`);
+  }
 }
 
 export async function createPayPalOrder({ amount, currency, description, externalReference, returnUrl, cancelUrl }) {
@@ -165,6 +172,34 @@ function resolveFrontendUrl(environment) {
     .trim();
   const value = raw.endsWith("/") ? raw : `${raw}/`;
   return new URL(value);
+}
+
+async function convertFromBrl(amount, currency, environment) {
+  if (amount <= 0) return 0;
+
+  const baseUrl = String(environment.PAYPAL_EXCHANGE_API_URL || "https://api.frankfurter.app/latest").trim();
+  const url = new URL(baseUrl);
+  url.searchParams.set("amount", String(amount));
+  url.searchParams.set("from", "BRL");
+  url.searchParams.set("to", currency);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.message || `Erro de cambio HTTP ${response.status}`);
+  }
+
+  const converted = Number(data?.rates?.[currency]);
+  if (!Number.isFinite(converted) || converted <= 0) {
+    throw new Error("Resposta de cambio invalida.");
+  }
+
+  return roundMoney(converted);
 }
 
 function compactText(value) {

@@ -112,7 +112,7 @@ export async function createEntryPaypalPayment(userId, entryId) {
   if (!tournament) throw new Error("Torneio nao encontrado.");
 
   const currency = resolvePayPalCurrency();
-  const amount = resolvePayPalAmount(tournament.valor);
+  const amount = await resolvePayPalAmount(tournament.valor);
   if (amount <= 0) throw new Error("O valor do PayPal precisa ser maior que zero.");
 
   const externalReference = `ENTRY_${entryId}_PAYPAL_${randomUUID()}`;
