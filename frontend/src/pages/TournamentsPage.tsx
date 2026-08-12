@@ -72,7 +72,7 @@ export function TournamentsPage() {
                   <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
                     <Metric label="Equipes" value={String(tournament.max_teams)} />
                     <Metric label="Titulares" value={String(tournament.titulares)} />
-                    <Metric label="Valor" value={`R$ ${tournament.valor}`} />
+                    <Metric label="InscriÃ§Ã£o" value={entryFee(tournament)} />
                   </div>
                 </CardContent>
               </Card>
@@ -88,6 +88,23 @@ export function TournamentsPage() {
 
 function statusLabel(value: string) { return ({ criado:"Em preparacao", aberto:"Inscrições abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
 
+function entryFee(tournament: { valor?: string | number | null; format?: string | null }) {
+  const amount = Number(
+    String(tournament.valor ?? 0)
+      .replace(/[^\d,.-]/g, "")
+      .replace(",", ".")
+  );
+
+  if (!Number.isFinite(amount) || amount <= 0) return "Grátis";
+
+  const scope =
+    tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe";
+
+  return `${new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(amount)} ${scope}`;
+}
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-arena border border-arena-line bg-black/20 p-3">

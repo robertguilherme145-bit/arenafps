@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   CalendarDays,
+  CircleDollarSign,
   Crown,
   Download,
   Medal,
@@ -163,7 +164,7 @@ export function TournamentDetailPage() {
             </Badge>
           </div>
         ) : null}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <StatCard
             label="Status"
             value={status(tournament.status)}
@@ -178,6 +179,11 @@ export function TournamentDetailPage() {
             label="Premiação"
             value={tournament.premiacao || "A definir"}
             icon={<Medal className="h-5 w-5" />}
+          />
+          <StatCard
+            label="InscriÃ§Ã£o"
+            value={entryFee(tournament)}
+            icon={<CircleDollarSign className="h-5 w-5" />}
           />
           <StatCard
             label="Formato"
@@ -261,6 +267,7 @@ export function TournamentDetailPage() {
                 </h2>
               </CardHeader>
               <CardContent className="space-y-3">
+                <Metric label="InscriÃ§Ã£o" value={entryFee(tournament)} />
                 <Metric
                   label="Serie"
                   value={(tournament.best_of || "bo3").toUpperCase()}
@@ -885,6 +892,26 @@ function format(value: string) {
       } as Record<string, string>
     )[value] ?? "A definir"
   );
+}
+function entryFee(tournament: {
+  valor?: string | number | null;
+  format?: string | null;
+}) {
+  const amount = Number(
+    String(tournament.valor ?? 0)
+      .replace(/[^\d,.-]/g, "")
+      .replace(",", ".")
+  );
+
+  if (!Number.isFinite(amount) || amount <= 0) return "GrÃ¡tis";
+
+  const scope =
+    tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe";
+
+  return `${new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(amount)} ${scope}`;
 }
 function date(value: string | null | undefined) {
   return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir";
