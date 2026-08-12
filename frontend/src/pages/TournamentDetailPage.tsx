@@ -64,6 +64,28 @@ async function downloadAsset(url: string, filename: string) {
   }
 }
 
+const DEFAULT_TOURNAMENT_SUMMARY =
+  "Central pública da competição, com inscrições, classificação, partidas e regulamento oficial da Arena Camp.";
+
+function tournamentHeroSummary(description?: string | null) {
+  const cleanDescription = (description || "")
+    .replace(/[#*_`>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleanDescription) return DEFAULT_TOURNAMENT_SUMMARY;
+
+  const looksLikeFullRegulation =
+    cleanDescription.length > 360 ||
+    /regulamento|formato da competi|pontua|criterio|pick\s*&?\s*ban|map pool|denuncia|penalidade|w\.o\./i.test(
+      cleanDescription,
+    );
+
+  return looksLikeFullRegulation
+    ? DEFAULT_TOURNAMENT_SUMMARY
+    : cleanDescription;
+}
+
 export function TournamentDetailPage() {
   const id = Number(useParams().id);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -102,6 +124,7 @@ export function TournamentDetailPage() {
       </section>
     );
   const tournament = center.tournament;
+  const heroDescription = tournamentHeroSummary(tournament.descricao);
   const stats = statsQuery.data ?? [];
   const selectedMaps = selectedMatch
     ? center.match_maps.filter((map) => map.match_id === selectedMatch.id)
@@ -137,10 +160,7 @@ export function TournamentDetailPage() {
           <PageHeader
             eyebrow={`${tournament.game_short_name} · ${status(tournament.status)}`}
             title={tournament.nome}
-            description={
-              tournament.descricao ||
-              "Central pública da competição, com chaveamento, cronograma e estatísticas oficiais."
-            }
+            description={heroDescription}
           />
         </div>
       </div>

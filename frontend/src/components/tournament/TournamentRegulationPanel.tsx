@@ -28,9 +28,27 @@ const FORMATS: Record<string, { label: string; description: string }> = {
   custom: { label: "Personalizado", description: "Estrutura especial publicada pela organizacao no regulamento adicional." },
 };
 
+function cleanAdditionalRules(text?: string | null) {
+  return (text || "")
+    .replace(/\r/g, "\n")
+    .replace(/\s*#{2,}\s*/g, "\n")
+    .replace(/\s+(\d{1,2}\.\s+)/g, "\n$1")
+    .replace(/\s+(FORMATO DA COMPETIÇÃO|PONTUAÇÃO|CRITÉRIOS DE DESEMPATE|PICK & BAN|MAPAS HABILITADOS|EQUIPAMENTOS|LIMITE DE SNIPERS|RESPONSABILIDADE|EVIDÊNCIAS|DENÚNCIAS|PENALIDADES|ALTERAÇÕES)/gi, "\n$1")
+    .split(/\n+/)
+    .map((line) =>
+      line
+        .replace(/^#+\s*/, "")
+        .replace(/\*\*/g, "")
+        .replace(/^\s*[-*]\s*/, "")
+        .trim(),
+    )
+    .filter(Boolean);
+}
+
 export function TournamentRegulationPanel({ tournament, mapPool = [], compact = false }: { tournament: RegulationTournament; mapPool?: RegulationMap[]; compact?: boolean }) {
   const format = FORMATS[tournament.format || ""] || { label: tournament.format || "A definir", description: "A organizacao publicara a estrutura competitiva." };
   const series = String(tournament.best_of || "bo3").toUpperCase();
+  const additionalRules = cleanAdditionalRules(tournament.descricao);
   return <div className="space-y-5">
     <div className="border border-cyan-400/30 bg-cyan-400/[.06] p-4">
       <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" /><div><p className="font-semibold">{format.label} · {series}</p><p className="mt-1 text-sm text-arena-muted">{format.description}</p></div></div>
@@ -44,7 +62,7 @@ export function TournamentRegulationPanel({ tournament, mapPool = [], compact = 
       <Rule title="Inscrições" text={tournament.registration_approval === "automatic" ? "Aprovacao automatica quando os requisitos forem atendidos." : "Confirmação sujeita a validacao da organizacao."} />
     </div>
     {mapPool.length ? <div><p className="mb-3 text-sm font-semibold">Mapas habilitados</p><div className="flex flex-wrap gap-2">{mapPool.map((map) => <Badge key={map.id} tone="info">{map.nome}</Badge>)}</div></div> : null}
-    <div className="border border-arena-line p-4"><div className="flex items-center gap-2"><Scale className="h-4 w-4 text-cyan-200" /><p className="font-semibold">Regras adicionais da organização</p></div><p className="mt-3 whitespace-pre-wrap text-sm text-arena-muted">{tournament.descricao || "Nenhuma regra adicional foi publicada."}</p></div>
+    <div className="border border-arena-line p-4"><div className="flex items-center gap-2"><Scale className="h-4 w-4 text-cyan-200" /><p className="font-semibold">Regras adicionais da organização</p></div>{additionalRules.length ? <div className="mt-3 max-h-[520px] space-y-3 overflow-y-auto pr-2">{additionalRules.map((line, index) => <p key={`${line}-${index}`} className="text-sm leading-6 text-arena-muted">{line}</p>)}</div> : <p className="mt-3 text-sm text-arena-muted">Nenhuma regra adicional foi publicada.</p>}</div>
     <div className="flex items-start gap-2 text-xs text-arena-muted"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><p>O aceite fica registrado na inscrição. Alteracoes relevantes devem ser comunicadas oficialmente pela organizacao.</p></div>
   </div>;
 }
