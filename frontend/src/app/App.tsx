@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 
 import { AuthProvider } from "../contexts/AuthContext";
 import { AppErrorBoundary } from "../components/ui/AppErrorBoundary";
+import { I18nProvider } from "../i18n/I18nProvider";
 import { router } from "../routes/router";
 import "../styles/globals.css";
 import { initializeArenaTheme } from "../utils/theme";
@@ -26,9 +27,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-arena-bg text-sm font-semibold text-cyan-100">Carregando Arena Camp...</div>}>
-            <RouterProvider router={router} />
-          </Suspense>
+          <I18nProvider>
+            <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-arena-bg text-sm font-semibold text-cyan-100">Carregando Arena Camp...</div>}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </I18nProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppErrorBoundary>
