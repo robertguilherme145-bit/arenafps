@@ -18,9 +18,9 @@ type RegulationTournament = {
 type RegulationMap = { id: number; nome: string; imagem?: string | null };
 
 const FORMATS: Record<string, { label: string; description: string }> = {
-  single_elimination: { label: "Eliminacao simples", description: "Quem perde a serie e eliminado; o vencedor avanca até a final." },
-  double_elimination: { label: "Eliminacao dupla", description: "A equipe permanece no torneio até sofrer a segunda derrota." },
-  swiss: { label: "Sistema suico", description: "Equipes com campanhas semelhantes se enfrentam; classificação por pontos e criterios protegidos." },
+  single_elimination: { label: "Eliminação simples", description: "Quem perde a serie e eliminado; o vencedor avanca até a final." },
+  double_elimination: { label: "Eliminação dupla", description: "A equipe permanece no torneio até sofrer a segunda derrota." },
+  swiss: { label: "Sistema suíço", description: "Equipes com campanhas semelhantes se enfrentam; classificação por pontos e criterios protegidos." },
   round_robin: { label: "Todos contra todos", description: "Todas as equipes se enfrentam e a classificação e definida pela campanha completa." },
   league: { label: "Liga", description: "Temporada por pontos, com confrontos programados e classificação acumulada." },
   group_playoffs: { label: "Grupos e eliminatorias", description: "A fase de grupos classifica as melhores equipes para confrontos eliminatorios." },
@@ -54,7 +54,7 @@ export function TournamentRegulationPanel({ tournament, mapPool = [], compact = 
       <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" /><div><p className="font-semibold">{format.label} · {series}</p><p className="mt-1 text-sm text-arena-muted">{format.description}</p></div></div>
     </div>
     <div className={`grid gap-3 ${compact ? "sm:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}>
-      <Rule title="Pontuacao" text="3 pontos por vitoria de serie. Não existem pontos artificiais por mapas que não foram jogados." />
+      <Rule title="Pontuação" text="3 pontos por vitoria de serie. Não existem pontos artificiais por mapas que não foram jogados." />
       <Rule title="Desempate protegido" text="Pontos, confronto direto, aproveitamento e saldo medio por mapa realmente jogado." />
       <Rule title="Serie encerrada" text={`Em ${series}, a serie termina ao atingir a maioria. Um 2 x 0 continua 2 x 0; o mapa restante e cancelado.`} />
       <Rule title="Pick & Ban" text={tournament.pick_ban_enabled ? "Ativo, seguindo a ordem publicada pela organizacao." : "Desativado para este torneio."} />

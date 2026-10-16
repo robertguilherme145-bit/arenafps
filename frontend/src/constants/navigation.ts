@@ -42,7 +42,7 @@ export const footerNavigation = [
 ];
 
 export const adminNavigation = [
-  { label: "Visao geral", href: "/admin?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { label: "Visão geral", href: "/admin?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Torneios e inscrições", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
   { label: "Central de partidas", href: "/admin?module=operations", icon: Swords, module: "operations" }
 ];
@@ -62,7 +62,7 @@ export const adminActionNavigation = [
 ];
 
 export const leaderNavigation = [
-  { label: "Visao geral", href: "/lider?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { label: "Visão geral", href: "/lider?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Minha equipe", href: "/lider?module=team", icon: Shield, module: "team" },
   { label: "Elenco", href: "/lider?module=roster", icon: Users, module: "roster" },
   { label: "Lineups", href: "/lider?module=lineups", icon: ClipboardList, module: "lineups" },
@@ -79,11 +79,11 @@ export const leaderControlNavigation = [
   { label: "Financeiro", href: "/lider?module=finance", icon: CreditCard, module: "finance" },
   { label: "Comunicação", href: "/lider?module=communication", icon: MessageSquare, module: "communication" },
   { label: "Histórico", href: "/lider?module=history", icon: History, module: "history" },
-  { label: "Configuracoes", href: "/lider?module=settings", icon: Settings2, module: "settings" }
+  { label: "Configurações", href: "/lider?module=settings", icon: Settings2, module: "settings" }
 ];
 
 export const captainNavigation = [
-  { label: "Visao geral", href: "/capitao?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { label: "Visão geral", href: "/capitao?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Partidas", href: "/capitao?module=matches", icon: Swords, module: "matches" },
   { label: "Pick & Ban", href: "/capitao?module=veto", icon: Crosshair, module: "veto" }
 ];
@@ -98,11 +98,11 @@ export const captainTeamNavigation = [
 export const captainControlNavigation = [
   { label: "Estatísticas", href: "/capitao?module=statistics", icon: BarChart3, module: "statistics" },
   { label: "Histórico", href: "/capitao?module=history", icon: History, module: "history" },
-  { label: "Configuracoes", href: "/capitao?module=settings", icon: Settings2, module: "settings" }
+  { label: "Configurações", href: "/capitao?module=settings", icon: Settings2, module: "settings" }
 ];
 
 export const playerNavigation = [
-  { label: "Visao geral", href: "/jogador?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { label: "Visão geral", href: "/jogador?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Meu perfil", href: "/jogador?module=profile", icon: UserRound, module: "profile" },
   { label: "Equipes e convites", href: "/jogador?module=teams", icon: Users, module: "teams" },
   { label: "Torneios Mix", href: "/jogador?module=mix", icon: Shuffle, module: "mix" },
@@ -113,5 +113,5 @@ export const playerNavigation = [
   { label: "Carreira", href: "/jogador?module=career", icon: Medal, module: "career" },
   { label: "Mensagens", href: "/jogador?module=messages", icon: MessageSquare, module: "messages" },
   { label: "Suporte", href: "/jogador?module=support", icon: CircleHelp, module: "support" },
-  { label: "Configuracoes", href: "/jogador?module=settings", icon: Settings2, module: "settings" }
+  { label: "Configurações", href: "/jogador?module=settings", icon: Settings2, module: "settings" }
 ];

@@ -1,11 +1,13 @@
 import { createContactMessage, findPortalSnapshot, findPublicTeamProfile, findPublicTournamentCenter, listContactMessages, listPublicContentAdmin, savePublicContentAdmin, searchPortal, updateContactMessage } from "../models/publicPortal.model.js";
 import { getTournamentTeamRanking } from "./ranking.service.js";
 import { optionalHttpUrl } from "../utils/safeUrl.js";
+import { pickFeaturedMatch } from "./featuredMatch.js";
 
 export async function getPortal(gameId) {
-  const data = await findPortalSnapshot(gameId || null);
+  const { featuredCandidates, ...data } = await findPortalSnapshot(gameId || null);
   return {
     ...data,
+    featured_match:pickFeaturedMatch(featuredCandidates, new Date()),
     stats:Object.fromEntries(Object.entries(data.stats).map(([key,value]) => [key,Number(value || 0)])),
     games:data.games.map(numbers), tournaments:data.tournaments.map(numbers), results:data.results.map(numbers),
     players:data.players.map((item) => ({ ...numbers(item), kd:ratio(item.kills,item.deaths), hs_percent:percent(item.headshots,item.kills), win_rate:percent(item.wins,item.matches) })),

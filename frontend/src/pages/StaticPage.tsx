@@ -37,7 +37,7 @@ const headings = {
     "Regras para uma operação competitiva justa, segura e auditavel.",
   ],
   noticias: [
-    "Noticias",
+    "Notícias",
     "Atualizacoes oficiais, resultados e destaques da comunidade.",
   ],
 } as const;
@@ -301,7 +301,7 @@ function Legal({ type }: { type: "privacidade" | "termos" }) {
         </div>
       ))}
       <p className="pt-4 text-sm text-arena-muted">
-        Ultima atualizacao: {new Date().toLocaleDateString("pt-BR")}
+        Última atualizacao: {new Date().toLocaleDateString("pt-BR")}
       </p>
     </div>
   );

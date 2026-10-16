@@ -28,6 +28,7 @@ import { Input, Select } from "../../components/ui/Form";
 import { Modal } from "../../components/ui/Modal";
 import { ImageUploadField } from "../../components/ui/ImageUploadField";
 import { StatCard } from "../../components/ui/StatCard";
+import { NextMatchBanner } from "./NextMatchBanner";
 import {
   cancelPlayerTeamRequest,
   leavePlayerWorkspaceTeam,
@@ -63,6 +64,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
   const latest = data.career.history.slice(0, 4);
   return (
     <div className="space-y-5">
+      <NextMatchBanner match={next} teamName={data.current_team?.team_name ?? null} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Nivel competitivo"
@@ -98,72 +100,7 @@ export function PlayerDashboardModule({ data }: PlayerModuleProps) {
         />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-semibold">
-                  Próxima partida
-                </h2>
-                <p className="mt-1 text-sm text-arena-muted">
-                  Sala, presença e informações oficiais.
-                </p>
-              </div>
-              {next ? <StatusBadge value={next.status} /> : null}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {next ? (
-              <div className="space-y-5">
-                <div className="flex flex-col justify-between gap-4 border-b border-arena-line pb-5 sm:flex-row sm:items-center">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-cyan-200">
-                      {next.tournament_name}
-                    </p>
-                    <h3 className="mt-2 font-display text-3xl font-bold">
-                      vs {next.opponent}
-                    </h3>
-                    <p className="mt-2 text-sm text-arena-muted">
-                      {formatDate(next.scheduled_at)} ·{" "}
-                      {next.best_of.toUpperCase()}
-                    </p>
-                  </div>
-                  <div className="flex h-16 w-16 items-center justify-center border border-cyan-400/30 bg-cyan-400/10">
-                    <Swords className="h-7 w-7 text-cyan-200" />
-                  </div>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Metric label="Mapas" value={next.maps || "A definir"} />
-                  <Metric
-                    label="Presença"
-                    value={
-                      next.attendance_status
-                        ? String(next.attendance_status)
-                        : "Pendente"
-                    }
-                  />
-                  <Metric
-                    label="Lineup"
-                    value={
-                      next.in_official_lineup ? "Escalado" : "Acompanhando"
-                    }
-                  />
-                </div>
-                <Link to="/jogador?module=matches">
-                  <Button
-                    className="w-full"
-                    icon={<ChevronRight className="h-4 w-4" />}
-                  >
-                    Abrir sala da partida
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <InlineEmpty text="Nenhuma partida agendada para sua equipe." />
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-5">
         <Card>
           <CardHeader>
             <h2 className="font-display text-xl font-semibold">Minha equipe</h2>

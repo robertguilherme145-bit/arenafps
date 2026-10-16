@@ -106,7 +106,7 @@ function NavGroup({
   const activeWorkspaceModule = new URLSearchParams(location.search).get("module") ?? "dashboard";
   const linkClass = (active: boolean) => cn(
     "flex h-10 items-center gap-3 rounded-arena px-3 text-sm font-semibold text-arena-muted transition hover:bg-white/[.07] hover:text-arena-text",
-    active && "bg-cyan-400/10 text-cyan-100"
+    active && "bg-arena-panel text-arena-text shadow-[inset_3px_0_0_#3d8bff]"
   );
 
   return (
