@@ -1,86 +1,215 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, CalendarDays, CheckCircle2, ChevronRight, CircleDollarSign, Gamepad2, Medal, Search, ShieldCheck, Swords, Trophy, UserRound, Users } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, ChevronRight, Gamepad2, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
-import hero from "../assets/arena-hero.png";
+import { ActivityFeed } from "../components/broadcast/ActivityFeed";
+import { Scoreboard } from "../components/broadcast/Scoreboard";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { DataTable } from "../components/ui/DataTable";
 import { Skeleton } from "../components/ui/Skeleton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
+import { buildActivityFeed } from "../lib/activityFeed";
 import { getPublicPortal } from "../services/api";
 import type { PublicPortalData } from "../types/api";
+
+type PortalTournament = PublicPortalData["tournaments"][number];
+
+const STEPS = ["Criar conta", "Criar equipe", "Inscrever", "Competir", "Ganhar", "Construir histórico"];
 
 export function HomePage() {
   const { user } = useAuth();
   const { error } = useToast();
+  const reduceMotion = useReducedMotion();
   const [portal, setPortal] = useState<PublicPortalData | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
   const [rankingTab, setRankingTab] = useState<"players" | "teams">("players");
   const [loading, setLoading] = useState(true);
-  useEffect(() => { setLoading(true); void getPublicPortal(gameId).then(setPortal).catch((reason) => error("Falha ao carregar o portal", reason instanceof Error ? reason.message : "Tente novamente.")).finally(() => setLoading(false)); }, [gameId]);
-  const activeGame = portal?.games.find((game) => game.id === gameId) ?? null;
-  const featured = useMemo(() => portal?.tournaments.slice(0, 3) ?? [], [portal]);
-  const dashboardHref = roleHref(user?.active_role);
+  useEffect(() => {
+    setLoading(true);
+    void getPublicPortal(gameId)
+      .then(setPortal)
+      .catch((reason) => error("Falha ao carregar o portal", reason instanceof Error ? reason.message : "Tente novamente."))
+      .finally(() => setLoading(false));
+  }, [gameId]);
+
+  const upcoming = useMemo(() => (portal?.tournaments ?? []).filter((item) => ["aberto", "criado"].includes(item.status)), [portal]);
+  const openTournament = upcoming.find((item) => item.status === "aberto") ?? null;
+  const spotlight = portal?.tournaments.find((item) => item.status === "aberto") ?? portal?.tournaments.find((item) => item.status === "em_andamento") ?? upcoming[0] ?? null;
+  const feed = useMemo(() => (portal ? buildActivityFeed(portal) : []), [portal]);
+  const rankingStarted = Boolean(portal && (portal.players.some((item) => item.matches > 0) || portal.teams.some((item) => item.matches > 0)));
+  const rankingStart = upcoming.map((item) => item.inicio).filter(Boolean).sort()[0] ?? null;
+  const isLeader = Boolean(user?.roles?.includes("lider"));
 
   return <div className="pb-12">
-    <section className="arena-media-surface relative min-h-[calc(100svh-7.5rem)] overflow-hidden border-b border-arena-line">
-      <img src={hero} alt="Arena de competição de eSports" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-black/55" />
-      <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-[#020711] via-[#020711]/80 to-transparent lg:w-4/5" />
-      <div className="relative mx-auto flex min-h-[calc(100svh-7.5rem)] max-w-[1500px] items-center px-4 py-14 lg:px-8">
-        <motion.div className="max-w-3xl" initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} transition={{ duration:.5 }}>
-          <Badge tone="info">Competicoes em tempo real</Badge>
-          <h1 className="mt-5 font-display text-4xl font-bold leading-tight min-[360px]:text-5xl md:text-7xl">Arena Camp</h1>
-          <p className="mt-5 max-w-2xl text-xl font-semibold text-white">Organize. Compita. Evolua.</p>
-          <p className="mt-3 max-w-2xl text-base leading-6 text-slate-300 min-[360px]:leading-7 md:text-lg">A plataforma completa para gerenciamento de competicoes de eSports, com carreira competitiva, estatísticas por mapa e chaveamentos ao vivo.</p>
-          <div className="mt-8 flex flex-wrap gap-3">{user ? <Link to={dashboardHref}><Button icon={<ShieldCheck className="h-4 w-4" />}>Abrir workspace</Button></Link> : <Link to="/criar-conta"><Button icon={<UserRound className="h-4 w-4" />}>Criar conta</Button></Link>}<Link to="/torneios"><Button variant="secondary" icon={<Trophy className="h-4 w-4" />}>Explorar campeonatos</Button></Link></div>
-          <div className="mt-10 grid max-w-3xl grid-cols-2 gap-px border border-white/15 bg-white/15 sm:grid-cols-4">
-            <HeroMetric label="Ao vivo" value={portal?.stats.live_matches ?? 0} /><HeroMetric label="Jogadores" value={portal?.stats.players ?? 0} /><HeroMetric label="Equipes" value={portal?.stats.teams ?? 0} /><HeroMetric label="Premiacoes" value={currency(portal?.stats.prize_pool ?? 0)} />
-          </div>
-        </motion.div>
+    <section className="arena-grid border-b border-arena-line bg-[radial-gradient(700px_320px_at_8%_0%,rgba(61,139,255,.16),transparent_60%),radial-gradient(640px_300px_at_95%_0%,rgba(255,176,32,.12),transparent_60%)]">
+      <div className="mx-auto max-w-[1500px] px-4 pb-10 pt-12 lg:px-8 lg:pt-16">
+        <h1 className="max-w-[15ch] font-display text-4xl font-bold leading-[1.05] min-[380px]:text-5xl md:text-6xl">Seu time no servidor. Seu nome no placar.</h1>
+        <p className="mt-4 max-w-2xl text-lg text-arena-muted">Campeonatos de FPS com inscrição por PIX, veto de mapas, estatísticas por partida e ranking oficial.</p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          {!user ? <>
+            <Link to="/criar-conta"><Button variant="urgent">Inscrever minha equipe</Button></Link>
+            <Link to="/torneios"><Button variant="secondary">Ver campeonatos</Button></Link>
+          </> : <>
+            {isLeader && openTournament ? <Link to={`/torneios/${openTournament.id}`}><Button variant="urgent">Inscrever minha equipe</Button></Link> : null}
+            <Link to={roleHref(user.active_role)}><Button variant={isLeader && openTournament ? "secondary" : "primary"}>Abrir meu painel</Button></Link>
+            {!isLeader || !openTournament ? <Link to="/torneios"><Button variant="secondary">Ver campeonatos</Button></Link> : null}
+          </>}
+        </div>
+        <div className="mt-9 max-w-4xl">
+          {loading ? <Skeleton className="h-28 w-full" /> : portal?.featured_match ? (
+            <motion.div animate={{ opacity:1 }} initial={reduceMotion ? false : { opacity:0 }} transition={{ duration:.25 }}>
+              <Scoreboard match={portal.featured_match} />
+            </motion.div>
+          ) : spotlight ? <TournamentSpotlight compact tournament={spotlight} /> : null}
+        </div>
       </div>
     </section>
 
-    <section className="border-b border-arena-line bg-arena-panel2 py-6"><div className="mx-auto max-w-[1500px] px-4 lg:px-8"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs font-semibold uppercase text-cyan-200">Jogos disponiveis</p><h2 className="mt-1 font-display text-2xl font-bold">Escolha sua arena</h2></div><div className="flex gap-2 overflow-x-auto pb-1"><button className={`shrink-0 border px-4 py-3 text-sm font-semibold ${gameId === null ? "border-cyan-400 bg-cyan-400/10 text-white" : "border-arena-line text-arena-muted"}`} onClick={() => setGameId(null)}>Todos</button>{portal?.games.map((game) => <button className={`flex shrink-0 items-center gap-3 border px-4 py-3 text-left ${game.id === gameId ? "border-cyan-400 bg-cyan-400/10" : "border-arena-line bg-black/20"}`} key={game.id} onClick={() => setGameId(game.id)}>{game.logo ? <img className="h-7 w-7 object-contain" src={game.logo} alt="" /> : <Gamepad2 className="h-5 w-5 text-cyan-200" />}<span><span className="block text-sm font-semibold">{game.nome_curto}</span><span className="block text-xs text-arena-muted">{game.tournament_count} torneios</span></span></button>)}</div></div></div></section>
+    {portal && portal.games.length > 1 ? <nav aria-label="Filtrar por jogo" className="border-b border-arena-line">
+      <div className="mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 py-3 scrollbar-thin lg:px-8">
+        <GameChip active={gameId === null} label="Todos os jogos" onClick={() => setGameId(null)} />
+        {portal.games.map((game) => <GameChip active={game.id === gameId} icon={game.logo ? <img alt="" className="h-5 w-5 object-contain" src={game.logo} /> : <Gamepad2 className="h-4 w-4" />} key={game.id} label={game.nome_curto} onClick={() => setGameId(game.id)} />)}
+      </div>
+    </nav> : null}
+
+    <ActivityFeed items={feed} />
 
     <main>
-      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8"><SectionHeading eyebrow={activeGame?.nome ?? "Arena Camp"} title="Campeonatos em destaque" action="Ver todos" href="/torneios" />{loading ? <div className="grid gap-4 lg:grid-cols-3"><Skeleton className="h-72" /><Skeleton className="h-72" /><Skeleton className="h-72" /></div> : <div className="grid gap-4 lg:grid-cols-3">{featured.map((tournament) => <Link className="group overflow-hidden border border-arena-line bg-arena-panel transition hover:border-cyan-400/50" to={`/torneios/${tournament.id}`} key={tournament.id}><div className="relative aspect-[16/7] overflow-hidden bg-[#0a1726]">{tournament.banner ? <img className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" src={tournament.banner} alt="" /> : <div className="flex h-full items-center justify-center"><Trophy className="h-12 w-12 text-cyan-300" /></div>}<Badge className="absolute right-3 top-3" tone={tournament.status === "aberto" ? "success" : tournament.status === "em_andamento" ? "info" : "neutral"}>{status(tournament.status)}</Badge></div><div className="p-5"><p className="text-xs font-semibold uppercase text-cyan-200">{tournament.game_short_name}</p><h3 className="mt-2 font-display text-xl font-bold">{tournament.nome}</h3><div className="mt-5 grid grid-cols-2 gap-3 border-t border-arena-line pt-4 text-sm sm:grid-cols-5"><SmallMetric label="Premiação" value={tournament.premiacao || "A definir"} /><SmallMetric label="Inscrição" value={entryFee(tournament)} /><SmallMetric label="Formato" value={format(tournament.format)} /><SmallMetric label="Equipes" value={`${tournament.entry_count}/${tournament.max_teams}`} /><SmallMetric label="Início" value={date(tournament.inicio)} /></div></div></Link>)}{!featured.length ? <EmptyLine text="Nenhum campeonato no filtro atual." /> : null}</div>}</section>
+      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8">
+        <SectionHeading action="Ver todos" href="/torneios" title="Campeonatos" />
+        {loading ? <Skeleton className="h-56 w-full" /> : spotlight ? <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
+          <TournamentSpotlight tournament={spotlight} />
+          {upcoming.filter((item) => item.id !== spotlight.id).length ? <div className="overflow-hidden border border-arena-line">
+            <DataTable data={upcoming.filter((item) => item.id !== spotlight.id).slice(0, 5)} columns={[
+              { header:"Campeonato", cell:(item) => <Link className="font-semibold hover:text-cyan-200" to={`/torneios/${item.id}`}>{item.nome}</Link> },
+              { header:"Início", cell:(item) => date(item.inicio) },
+              { header:"Prêmio", cell:(item) => prize(item.premiacao) },
+              { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` }
+            ]} />
+          </div> : null}
+        </div> : <EmptyLine>Nenhum campeonato publicado ainda. <Link className="font-semibold text-cyan-200" to="/contato">Fale com a organização</Link> para trazer o seu.</EmptyLine>}
+      </section>
 
-      <section className="border-y border-arena-line bg-black/20 py-12"><div className="mx-auto grid max-w-[1500px] gap-10 px-4 lg:grid-cols-[1.2fr_.8fr] lg:px-8"><div><SectionHeading eyebrow="Agenda competitiva" title="Proximos campeonatos" /><div className="overflow-hidden border border-arena-line"><DataTable data={portal?.tournaments.filter((item) => ["criado","aberto"].includes(item.status)).slice(0,6) ?? []} columns={[{ header:"Campeonato",cell:(item)=><div><Link className="font-semibold hover:text-cyan-200" to={`/torneios/${item.id}`}>{item.nome}</Link><p className="text-xs text-arena-muted">{item.game_short_name}</p></div>},{header:"Data",cell:(item)=>date(item.inicio)},{header:"Premiação",cell:(item)=>item.premiacao || "A definir"},{header:"Inscrição",cell:(item)=>entryFee(item)},{header:"Vagas",cell:(item)=>`${item.entry_count}/${item.max_teams}`},{header:"Status",cell:(item)=><Badge tone={item.status === "aberto" ? "success" : "neutral"}>{status(item.status)}</Badge>}]} /></div></div><div><SectionHeading eyebrow="Placares oficiais" title="Ultimos resultados" /><div className="space-y-2">{portal?.results.slice(0,6).map((result) => <Link className="block border border-arena-line bg-arena-panel p-4 transition hover:bg-white/[.04]" to={`/torneios/${result.tournament_id}`} key={result.id}><div className="mb-3 flex items-center justify-between text-xs text-arena-muted"><span>{result.tournament_name}</span><span>{result.game_short_name}</span></div><div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3"><span className="truncate text-right font-semibold">{result.team_a}</span><strong className="border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 font-display text-lg">{result.score_team_a} x {result.score_team_b}</strong><span className="truncate font-semibold">{result.team_b}</span></div></Link>)}{!portal?.results.length ? <EmptyLine text="Os resultados oficiais aparecerao aqui." /> : null}</div></div></div></section>
+      <section className="border-y border-arena-line bg-arena-panel2 py-12">
+        <div className="mx-auto max-w-[1500px] px-4 lg:px-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <SectionHeading title="Ranking oficial" />
+            {rankingStarted ? <div className="mb-6 flex border border-arena-line p-1" role="tablist">
+              {([["players", "Jogadores"], ["teams", "Equipes"]] as const).map(([value, label]) => <button aria-selected={rankingTab === value} className={`px-4 py-1.5 text-sm font-semibold ${rankingTab === value ? "bg-arena-panel text-arena-text" : "text-arena-muted"}`} key={value} onClick={() => setRankingTab(value)} role="tab">{label}</button>)}
+            </div> : null}
+          </div>
+          {loading ? <Skeleton className="h-64 w-full" /> : rankingStarted ? <>
+            <div className="overflow-hidden border border-arena-line bg-arena-panel">
+              {rankingTab === "players" ? <DataTable data={(portal?.players ?? []).slice(0, 8)} columns={[
+                { header:"#", cell:(item) => <span className="font-display text-arena-muted">{(portal?.players.indexOf(item) ?? 0) + 1}</span> },
+                { header:"Jogador", cell:(item) => <Link className="font-semibold hover:text-cyan-200" to={`/jogador/${item.nickname || item.id}`}>{item.nickname || item.nick}</Link> },
+                { header:"Equipe", cell:(item) => item.team_name },
+                { header:"K/D", cell:(item) => <span className="font-display font-semibold text-arena-success">{item.kd}</span> },
+                { header:"HS", cell:(item) => `${item.hs_percent}%` },
+                { header:"MVP", cell:(item) => item.mvps }
+              ]} /> : <DataTable data={(portal?.teams ?? []).slice(0, 8)} columns={[
+                { header:"#", cell:(item) => <span className="font-display text-arena-muted">{(portal?.teams.indexOf(item) ?? 0) + 1}</span> },
+                { header:"Equipe", cell:(item) => <Link className="font-semibold hover:text-cyan-200" to={`/equipe/${item.slug}`}>{item.nome}</Link> },
+                { header:"Partidas", cell:(item) => item.matches },
+                { header:"Vitórias", cell:(item) => item.wins },
+                { header:"Aproveitamento", cell:(item) => `${item.win_rate}%` }
+              ]} />}
+            </div>
+            <div className="mt-5 flex justify-end"><Link to="/ranking"><Button variant="secondary">Ver ranking completo <ArrowRight className="h-4 w-4" /></Button></Link></div>
+          </> : <EmptyLine>{rankingStart ? `O ranking começa na primeira rodada, em ${date(rankingStart)}.` : "O ranking começa na primeira partida oficial."}</EmptyLine>}
+        </div>
+      </section>
 
-      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><SectionHeading eyebrow="Desempenho oficial" title="Ranking Arena Camp" /><div className="flex border border-arena-line p-1"><button className={`px-4 py-2 text-sm font-semibold ${rankingTab === "players" ? "bg-cyan-400/15 text-cyan-100" : "text-arena-muted"}`} onClick={() => setRankingTab("players")}>Jogadores</button><button className={`px-4 py-2 text-sm font-semibold ${rankingTab === "teams" ? "bg-cyan-400/15 text-cyan-100" : "text-arena-muted"}`} onClick={() => setRankingTab("teams")}>Equipes</button></div></div>{rankingTab === "players" ? <div className="overflow-hidden border border-arena-line"><DataTable data={portal?.players ?? []} columns={[{header:"#",cell:(item)=>`#${(portal?.players.indexOf(item) ?? 0)+1}`},{header:"Jogador",cell:(item)=><Link className="font-semibold hover:text-cyan-200" to={`/jogador/${item.nickname || item.id}`}>{item.nickname || item.nick}</Link>},{header:"Equipe",cell:(item)=>item.team_name},{header:"Jogo",cell:(item)=>item.game_short_name},{header:"K/D",cell:(item)=>item.kd},{header:"HS",cell:(item)=>`${item.hs_percent}%`},{header:"MVP",cell:(item)=>item.mvps}]} /></div> : <div className="overflow-hidden border border-arena-line"><DataTable data={portal?.teams ?? []} columns={[{header:"#",cell:(item)=>`#${(portal?.teams.indexOf(item) ?? 0)+1}`},{header:"Equipe",cell:(item)=><Link className="font-semibold hover:text-cyan-200" to={`/equipe/${item.slug}`}>{item.nome}</Link>},{header:"Jogo",cell:(item)=>item.game_short_name},{header:"Partidas",cell:(item)=>item.matches},{header:"Vitorias",cell:(item)=>item.wins},{header:"Win rate",cell:(item)=>`${item.win_rate}%`}]} /></div>}<div className="mt-5 flex justify-end"><Link to="/ranking"><Button variant="secondary">Ver ranking completo <ArrowRight className="h-4 w-4" /></Button></Link></div></section>
+      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8">
+        <SectionHeading title="Como funciona" />
+        <ol className="grid gap-px border border-arena-line bg-arena-line sm:grid-cols-3 xl:grid-cols-6">
+          {STEPS.map((step, index) => <li className="bg-arena-bg p-5" key={step}>
+            <span className="font-display text-2xl font-bold text-arena-amber">{index + 1}</span>
+            <p className="mt-2 font-semibold">{step}</p>
+          </li>)}
+        </ol>
+      </section>
 
-      <section className="border-y border-arena-line bg-arena-panel2 py-12"><div className="mx-auto max-w-[1500px] px-4 lg:px-8"><div className="grid gap-10 xl:grid-cols-2"><div><SectionHeading eyebrow="Organizacoes competitivas" title="Equipes em destaque" /><div className="grid gap-3 sm:grid-cols-2">{portal?.teams.slice(0,4).map((team) => <Link className="flex items-center gap-4 border border-arena-line bg-black/20 p-4 hover:border-cyan-400/40" to={`/equipe/${team.slug}`} key={team.id}>{team.logo ? <img className="h-14 w-14 object-contain" src={team.logo} alt="" /> : <span className="flex h-14 w-14 items-center justify-center border border-arena-line"><Users className="h-6 w-6" /></span>}<span className="min-w-0 flex-1"><span className="block truncate font-display text-lg font-bold">{team.nome}</span><span className="mt-1 block text-sm text-arena-muted">{team.game_short_name} · {team.wins} vitorias</span></span><ChevronRight className="h-5 w-5 text-arena-muted" /></Link>)}</div></div><div><SectionHeading eyebrow="Carreiras em ascensao" title="Jogadores em destaque" /><div className="grid gap-3 sm:grid-cols-2">{portal?.players.slice(0,4).map((player) => <Link className="flex items-center gap-4 border border-arena-line bg-black/20 p-4 hover:border-cyan-400/40" to={`/jogador/${player.nickname || player.id}`} key={`${player.id}-${player.player_id}`}>{player.avatar || player.foto ? <img className="h-14 w-14 object-cover" src={player.avatar || player.foto || ""} alt="" /> : <span className="flex h-14 w-14 items-center justify-center border border-arena-line"><UserRound className="h-6 w-6" /></span>}<span className="min-w-0 flex-1"><span className="block truncate font-display text-lg font-bold">{player.nickname || player.nick}</span><span className="mt-1 block text-sm text-arena-muted">K/D {player.kd} · {player.mvps} MVPs</span></span><Badge tone="info">#{(portal.players.indexOf(player))+1}</Badge></Link>)}</div></div></div></div></section>
+      {portal?.content.news.length ? <section className="border-y border-arena-line bg-arena-panel2 py-12"><div className="mx-auto max-w-[1500px] px-4 lg:px-8">
+        <SectionHeading action="Todas as notícias" href="/noticias" title="Notícias" />
+        <div className="grid gap-4 md:grid-cols-3">{portal.content.news.slice(0, 3).map((item) => <article className="border border-arena-line bg-arena-panel p-5" key={item.id}>
+          <p className="text-sm text-arena-muted">{date(item.published_at)}</p>
+          <h3 className="mt-2 font-display text-xl font-bold">{item.title}</h3>
+          <p className="mt-2 line-clamp-3 text-sm leading-6 text-arena-muted">{item.subtitle || item.body}</p>
+        </article>)}</div>
+      </div></section> : null}
 
-      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8"><SectionHeading eyebrow="Hall da fama" title="Ultimos campeoes" />{portal?.champions.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{portal.champions.map((champion) => <Link className="border border-arena-line bg-arena-panel p-5 hover:border-cyan-400/40" to={`/torneios/${champion.tournament_id}`} key={champion.tournament_id}><Medal className="h-7 w-7 text-yellow-300" /><p className="mt-5 text-xs uppercase text-arena-muted">{champion.tournament_name}</p><h3 className="mt-2 font-display text-xl font-bold">{champion.team_name}</h3><p className="mt-2 text-sm text-arena-muted">{champion.game_short_name} · {date(champion.fim)}</p></Link>)}</div> : <EmptyLine text="Os campeoes serao publicados ao encerrar os torneios." />}</section>
-
-      <section className="border-y border-arena-line bg-black/20 py-12"><div className="mx-auto max-w-[1500px] px-4 lg:px-8"><SectionHeading eyebrow="Da conta ao podio" title="Como funciona" /><div className="grid gap-px border border-arena-line bg-arena-line sm:grid-cols-3 xl:grid-cols-6">{["Criar conta","Criar equipe","Inscrever","Competir","Ganhar","Construir histórico"].map((step,index)=><div className="bg-arena-bg p-5" key={step}><span className="flex h-8 w-8 items-center justify-center border border-cyan-400/40 bg-cyan-400/10 text-sm font-bold text-cyan-200">{index+1}</span><p className="mt-4 font-semibold">{step}</p></div>)}</div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[[Trophy,"Gerenciamento completo"],[Swords,"Pick/Ban e brackets"],[CircleDollarSign,"Pagamentos PIX"],[ShieldCheck,"Estatísticas e punicoes"]].map(([Icon,label])=><div className="flex items-center gap-3 border-l-2 border-cyan-400 bg-black/20 p-4" key={String(label)}><Icon className="h-5 w-5 text-cyan-200" /><span className="font-semibold">{String(label)}</span></div>)}</div></div></section>
-
-      <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8"><SectionHeading eyebrow="Plataforma em numeros" title="Competição que vira histórico" /><div className="grid grid-cols-2 gap-px border border-arena-line bg-arena-line lg:grid-cols-5"><Counter label="Jogadores" value={portal?.stats.players ?? 0} /><Counter label="Equipes" value={portal?.stats.teams ?? 0} /><Counter label="Campeonatos" value={portal?.stats.tournaments ?? 0} /><Counter label="Partidas" value={portal?.stats.matches ?? 0} /><Counter label="Premiacoes" value={currency(portal?.stats.prize_pool ?? 0)} /></div></section>
-
-      {portal?.content.news.length ? <section className="border-y border-arena-line bg-arena-panel2 py-12"><div className="mx-auto max-w-[1500px] px-4 lg:px-8"><SectionHeading eyebrow="Arena Camp News" title="Ultimas noticias" href="/noticias" action="Todas as noticias" /><div className="grid gap-4 md:grid-cols-3">{portal.content.news.slice(0,3).map((item)=><article className="border border-arena-line bg-black/20 p-5" key={item.id}><p className="text-xs uppercase text-cyan-200">{date(item.published_at)}</p><h3 className="mt-3 font-display text-xl font-bold">{item.title}</h3><p className="mt-2 line-clamp-3 text-sm leading-6 text-arena-muted">{item.subtitle || item.body}</p></article>)}</div></div></section> : null}
-
-      <section className="mx-auto grid max-w-[1500px] gap-10 px-4 py-12 lg:grid-cols-2 lg:px-8"><div><SectionHeading eyebrow="Duvidas frequentes" title="FAQ" /><div className="divide-y divide-arena-line border-y border-arena-line">{portal?.content.faq.map((item)=><details className="group py-4" key={item.id}><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">{item.title}<ChevronRight className="h-4 w-4 transition group-open:rotate-90" /></summary><p className="pt-3 text-sm leading-6 text-arena-muted">{item.body}</p></details>)}</div></div><div className="border border-cyan-400/30 bg-cyan-400/[.06] p-7 lg:p-10"><Trophy className="h-10 w-10 text-cyan-200" /><h2 className="mt-8 font-display text-3xl font-bold">Pronto para competir?</h2><p className="mt-3 max-w-lg leading-7 text-arena-muted">Entre na Arena Camp, monte sua equipe e transforme cada partida em parte da sua carreira competitiva.</p><div className="mt-7 flex flex-wrap gap-3"><Link to="/criar-conta"><Button>Criar conta</Button></Link><Link to="/torneios"><Button variant="secondary">Explorar campeonatos</Button></Link></div></div></section>
+      {portal?.content.faq.length || !user ? <section className="mx-auto grid max-w-[1500px] gap-10 px-4 py-12 lg:grid-cols-2 lg:px-8">
+        {portal?.content.faq.length ? <div>
+          <SectionHeading title="Dúvidas frequentes" />
+          <div className="divide-y divide-arena-line border-y border-arena-line">{portal.content.faq.map((item) => <details className="group py-4" key={item.id}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">{item.title}<ChevronRight className="h-4 w-4 transition group-open:rotate-90" /></summary>
+            <p className="pt-3 text-sm leading-6 text-arena-muted">{item.body}</p>
+          </details>)}</div>
+        </div> : <div />}
+        {!user ? <div className="border border-arena-line border-t-4 border-t-arena-amber bg-arena-panel p-7 lg:p-10">
+          <Trophy className="h-9 w-9 text-arena-amber" />
+          <h2 className="mt-6 font-display text-3xl font-bold">Pronto para competir?</h2>
+          <p className="mt-3 max-w-lg leading-7 text-arena-muted">Crie sua conta, monte a equipe e transforme cada partida em histórico.</p>
+          <div className="mt-7 flex flex-wrap gap-3"><Link to="/criar-conta"><Button variant="urgent">Criar conta</Button></Link><Link to="/torneios"><Button variant="secondary">Ver campeonatos</Button></Link></div>
+        </div> : null}
+      </section> : null}
     </main>
 
-    <footer className="border-t border-arena-line bg-arena-panel2 px-4 py-10 lg:px-8"><div className="mx-auto grid max-w-[1500px] gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]"><div><p className="font-display text-xl font-bold">Arena Camp</p><p className="mt-3 max-w-sm text-sm leading-6 text-arena-muted">Competition Engine para organizacoes, equipes e jogadores construirem competicoes confiaveis.</p></div><FooterGroup title="Competição" links={[["Campeonatos","/torneios"],["Calendário","/calendario"],["Resultados","/resultados"],["Ranking","/ranking"]]} /><FooterGroup title="Comunidade" links={[["Equipes","/equipes"],["Jogadores","/jogadores"],["Noticias","/noticias"],["Jogos","/jogos"]]} /><FooterGroup title="Arena Camp" links={[["Sobre","/sobre"],["FAQ","/faq"],["Contato","/contato"],["Privacidade","/privacidade"],["Termos","/termos"]]} /></div><div className="mx-auto mt-8 flex max-w-[1500px] items-center justify-between border-t border-arena-line pt-5 text-xs text-arena-muted"><span>© {new Date().getFullYear()} Arena Camp</span><span>Competition Engine</span></div></footer>
-
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-arena-line bg-arena-panel2/95 px-3 py-2 backdrop-blur"><div className="mx-auto flex max-w-[1500px] items-center justify-center gap-5 overflow-x-auto text-xs font-semibold sm:justify-between"><LiveItem label="Torneios ao vivo" value={portal?.stats.live_matches ?? 0} /><LiveItem label="Inscrições abertas" value={portal?.stats.open_tournaments ?? 0} /><LiveItem label="Partidas registradas" value={portal?.stats.matches ?? 0} /><Link className="shrink-0 text-cyan-200" to="/calendario">Abrir calendário</Link></div></div>
+    <footer className="border-t border-arena-line bg-arena-panel2 px-4 py-10 lg:px-8">
+      <div className="mx-auto grid max-w-[1500px] gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div><p className="font-display text-xl font-bold">Arena Camp</p><p className="mt-3 max-w-sm text-sm leading-6 text-arena-muted">Campeonatos de FPS para equipes e jogadores, do cadastro ao pódio.</p></div>
+        <FooterGroup links={[["Campeonatos", "/torneios"], ["Calendário", "/calendario"], ["Resultados", "/resultados"], ["Ranking", "/ranking"]]} title="Competição" />
+        <FooterGroup links={[["Equipes", "/equipes"], ["Jogadores", "/jogadores"], ["Notícias", "/noticias"], ["Jogos", "/jogos"]]} title="Comunidade" />
+        <FooterGroup links={[["Sobre", "/sobre"], ["Dúvidas frequentes", "/faq"], ["Contato", "/contato"], ["Privacidade", "/privacidade"], ["Termos", "/termos"]]} title="Arena Camp" />
+      </div>
+      <p className="mx-auto mt-8 max-w-[1500px] border-t border-arena-line pt-5 text-xs text-arena-muted">© {new Date().getFullYear()} Arena Camp</p>
+    </footer>
   </div>;
 }
 
-function SectionHeading({ eyebrow,title,action,href }: { eyebrow:string; title:string; action?:string; href?:string }) { return <div className="mb-6 flex items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase text-cyan-200">{eyebrow}</p><h2 className="mt-2 font-display text-3xl font-bold">{title}</h2></div>{action&&href?<Link className="hidden items-center gap-2 text-sm font-semibold text-cyan-200 sm:flex" to={href}>{action}<ArrowRight className="h-4 w-4" /></Link>:null}</div>; }
-function HeroMetric({label,value}:{label:string;value:string|number}){return <div className="bg-black/55 p-4 backdrop-blur"><p className="font-display text-xl font-bold">{value}</p><p className="mt-1 text-xs text-slate-300">{label}</p></div>;}
-function SmallMetric({label,value}:{label:string;value:string}){return <div className="min-w-0"><p className="text-[11px] uppercase text-arena-muted">{label}</p><p className="mt-1 truncate font-semibold">{value}</p></div>;}
-function Counter({label,value}:{label:string;value:string|number}){return <div className="bg-arena-bg p-5 text-center lg:p-7"><p className="font-display text-2xl font-bold text-white lg:text-3xl">{value}</p><p className="mt-2 text-xs uppercase text-arena-muted">{label}</p></div>;}
-function LiveItem({label,value}:{label:string;value:number}){return <span className="flex shrink-0 items-center gap-2 text-arena-muted"><span className="h-2 w-2 bg-emerald-400" />{label}<strong className="text-white">{value}</strong></span>;}
-function FooterGroup({title,links}:{title:string;links:string[][]}){return <div><p className="font-semibold">{title}</p><div className="mt-4 space-y-2">{links.map(([label,href])=><Link className="block text-sm text-arena-muted hover:text-white" key={href} to={href}>{label}</Link>)}</div></div>;}
-function EmptyLine({text}:{text:string}){return <div className="border border-dashed border-arena-line p-8 text-center text-sm text-arena-muted">{text}</div>;}
-function status(value:string){return ({criado:"Em preparacao",aberto:"Inscrições abertas",fechado:"Inscrições encerradas",em_andamento:"Ao vivo",finalizado:"Finalizado",cancelado:"Cancelado"} as Record<string,string>)[value]??value;}
-function format(value:string|null){return ({mix_single_elimination:"Mix Individual",single_elimination:"Eliminacao simples",double_elimination:"Eliminacao dupla",swiss:"Sistema suico",round_robin:"Pontos corridos",group_playoffs:"Grupos e playoffs",league:"Liga",custom:"Personalizado"} as Record<string,string>)[value??""]??"A definir";}
-function entryFee(tournament:{valor?:string|number|null;format?:string|null}){const amount=Number(String(tournament.valor??0).replace(/[^\d,.-]/g,"").replace(",","."));if(!Number.isFinite(amount)||amount<=0)return"Grátis";const scope=tournament.format==="mix_single_elimination"?"por jogador":"por equipe";return`${new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(amount)} ${scope}`;}
-function currency(value:number){return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}).format(value);}
-function date(value:string|null|undefined){return value?new Date(value).toLocaleDateString("pt-BR"):"A definir";}
-function roleHref(role?:string|null){return role==="admin"?"/admin":role==="lider"?"/lider":role==="capitao"?"/capitao":"/jogador";}
+function TournamentSpotlight({ tournament, compact = false }: { tournament: PortalTournament; compact?: boolean }) {
+  const filled = tournament.max_teams ? Math.min(100, Math.round((tournament.entry_count / tournament.max_teams) * 100)) : 0;
+  return <Link className="chamfer block border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" to={`/torneios/${tournament.id}`}>
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge tone={tournament.status === "aberto" ? "warning" : tournament.status === "em_andamento" ? "live" : "neutral"}>{status(tournament.status)}</Badge>
+      <span className="text-sm text-arena-muted">{tournament.game_short_name}</span>
+    </div>
+    <h3 className={`mt-3 font-display font-bold leading-tight ${compact ? "text-2xl" : "text-3xl"}`}>{tournament.nome}</h3>
+    <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <Fact label="Prêmio" value={prize(tournament.premiacao)} />
+      <Fact label="Inscrição" value={entryFee(tournament)} />
+      <Fact label="Formato" value={format(tournament.format)} />
+      <Fact label="Início" value={date(tournament.inicio)} />
+    </dl>
+    {tournament.max_teams ? <div className="mt-4">
+      <p className="text-sm text-arena-muted">{tournament.entry_count} de {tournament.max_teams} vagas preenchidas</p>
+      <div className="mt-2 h-2 bg-arena-line"><div className="h-full bg-arena-amber" style={{ width:`${filled}%` }} /></div>
+    </div> : null}
+    {!compact && tournament.status === "aberto" ? <span className="chamfer mt-5 inline-flex h-10 items-center bg-arena-amber px-4 text-sm font-bold text-arena-ink">Inscrever equipe</span> : null}
+  </Link>;
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return <div className="min-w-0 border-t-2 border-arena-line pt-2"><dt className="text-xs text-arena-muted">{label}</dt><dd className="truncate font-display text-lg font-semibold">{value}</dd></div>;
+}
+function GameChip({ active, label, icon, onClick }: { active: boolean; label: string; icon?: ReactNode; onClick: () => void }) {
+  return <button aria-pressed={active} className={`flex shrink-0 items-center gap-2 border px-3 py-1.5 text-sm font-semibold ${active ? "border-arena-blue bg-arena-blue/10 text-arena-text" : "border-arena-line text-arena-muted hover:text-arena-text"}`} onClick={onClick}>{icon}{label}</button>;
+}
+function SectionHeading({ title, action, href }: { title: string; action?: string; href?: string }) {
+  return <div className="mb-6 flex items-end justify-between gap-4"><h2 className="font-display text-3xl font-bold">{title}</h2>{action && href ? <Link className="hidden items-center gap-2 text-sm font-semibold text-cyan-200 sm:flex" to={href}>{action}<ArrowRight className="h-4 w-4" /></Link> : null}</div>;
+}
+function FooterGroup({ title, links }: { title: string; links: string[][] }) {
+  return <div><p className="font-semibold">{title}</p><div className="mt-4 space-y-2">{links.map(([label, href]) => <Link className="block text-sm text-arena-muted hover:text-arena-text" key={href} to={href}>{label}</Link>)}</div></div>;
+}
+function EmptyLine({ children }: { children: ReactNode }) {
+  return <div className="border border-dashed border-arena-line p-8 text-center text-arena-muted">{children}</div>;
+}
+function status(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Inscrições encerradas", em_andamento:"Em andamento", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string, string>)[value] ?? value; }
+function format(value: string | null) { return ({ mix_single_elimination:"Mix individual", single_elimination:"Eliminação simples", double_elimination:"Eliminação dupla", swiss:"Sistema suíço", round_robin:"Pontos corridos", group_playoffs:"Grupos e playoffs", league:"Liga", custom:"Personalizado" } as Record<string, string>)[value ?? ""] ?? "A definir"; }
+function entryFee(tournament: { valor?: string | number | null; format?: string | null }) { const amount = Number(String(tournament.valor ?? 0).replace(/[^\d,.-]/g, "").replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) return "Grátis"; const scope = tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe"; return `${new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(amount)} ${scope}`; }
+function prize(value: string | null | undefined) { const text = String(value ?? "").trim(); if (!text) return "A definir"; return /^r\$/i.test(text) || !/^[\d.,\s]+$/.test(text) ? text : `R$ ${text}`; }
+function date(value: string | null | undefined) { return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir"; }
+function roleHref(role?: string | null) { return role === "admin" ? "/admin" : role === "lider" ? "/lider" : role === "capitao" ? "/capitao" : "/jogador"; }
