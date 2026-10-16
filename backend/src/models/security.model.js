@@ -1,12 +1,20 @@
 import pool from "../config/database.js";
+import { openSecret, sealSecret } from "../utils/secretBox.js";
 
+// O segredo do 2FA fica criptografado no banco. Se nao puder ser aberto, o erro sobe
+// e o login com 2FA falha (nunca e tratado como "sem segredo").
 export async function findTwoFactor(userId) {
   const [[row]] = await pool.query("SELECT * FROM user_two_factor WHERE user_id = ? LIMIT 1", [userId]);
-  return row ?? null;
+  if (!row) return null;
+  const secret = openSecret(row.secret);
+  if (!String(row.secret).startsWith("v1.")) {
+    await pool.query("UPDATE user_two_factor SET secret = ? WHERE user_id = ?", [sealSecret(secret), userId]);
+  }
+  return { ...row, secret };
 }
 
 export async function saveTwoFactorSecret(userId, secret) {
-  await pool.query("INSERT INTO user_two_factor (user_id, secret, enabled) VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE secret=VALUES(secret), enabled=0, confirmed_at=NULL", [userId, secret]);
+  await pool.query("INSERT INTO user_two_factor (user_id, secret, enabled) VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE secret=VALUES(secret), enabled=0, confirmed_at=NULL", [userId, sealSecret(secret)]);
 }
 
 export async function enableTwoFactor(userId) {
