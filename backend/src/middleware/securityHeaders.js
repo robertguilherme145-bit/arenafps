@@ -12,14 +12,13 @@ const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
-  "upgrade-insecure-requests"
-].join("; ");
+  "frame-ancestors 'none'"
+];
 
 export function securityHeaders({ production = process.env.NODE_ENV === "production" } = {}) {
   return (req, res, next) => {
     res.set({
-      "Content-Security-Policy":CONTENT_SECURITY_POLICY,
+      "Content-Security-Policy":[...CONTENT_SECURITY_POLICY, ...(production ? ["upgrade-insecure-requests"] : [])].join("; "),
       "X-Frame-Options":"DENY",
       "X-Content-Type-Options":"nosniff",
       "Referrer-Policy":"strict-origin-when-cross-origin",
