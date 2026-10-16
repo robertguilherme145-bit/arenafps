@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ChevronRight, Gamepad2, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ActivityFeed } from "../components/broadcast/ActivityFeed";
@@ -22,7 +21,6 @@ const STEPS = ["Criar conta", "Criar equipe", "Inscrever", "Competir", "Ganhar",
 export function HomePage() {
   const { user } = useAuth();
   const { error } = useToast();
-  const reduceMotion = useReducedMotion();
   const [portal, setPortal] = useState<PublicPortalData | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
   const [rankingTab, setRankingTab] = useState<"players" | "teams">("players");
@@ -63,9 +61,9 @@ export function HomePage() {
         </div>
         <div className="mt-9 max-w-4xl">
           {loading ? <Skeleton className="h-28 w-full" /> : portal?.featured_match ? (
-            <motion.div animate={{ opacity:1 }} initial={reduceMotion ? false : { opacity:0 }} transition={{ duration:.25 }}>
+            <div className="arena-fade-in">
               <Scoreboard match={portal.featured_match} />
-            </motion.div>
+            </div>
           ) : spotlight ? <TournamentSpotlight compact tournament={spotlight} /> : null}
         </div>
       </div>
