@@ -9,6 +9,8 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import routes from "./routes/index.js";
+import { parseTrustProxy } from "./middleware/rateLimit.middleware.js";
+import { securityHeaders } from "./middleware/securityHeaders.js";
 import pool from "./config/database.js";
 import { ensureAdminTables } from "./database/ensureAdminTables.js";
 import { ensureCompetitionTables } from "./database/ensureCompetitionTables.js";
@@ -57,8 +59,9 @@ const productionOrigins = String(process.env.FRONTEND_URL || "")
  .map((origin) => origin.trim().replace(/\/$/, ""))
  .filter(Boolean);
 
-app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
+app.set("trust proxy", parseTrustProxy(process.env.TRUST_PROXY_HOPS));
 app.disable("x-powered-by");
+app.use(securityHeaders());
 app.use(cors({
  origin:process.env.NODE_ENV === "production"
   ? (origin, callback) => callback(null, !origin || productionOrigins.includes(origin.replace(/\/$/, "")))

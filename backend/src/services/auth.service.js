@@ -10,6 +10,7 @@ import { sendTransactionalMail } from "./mail.service.js";
 import { oauthProviderEnabled } from "./oauth.service.js";
 import { createAuthenticatedSession } from "./sessionAuth.service.js";
 import { countActiveGames } from "../models/game.model.js";
+import { escapeHtml } from "../utils/html.js";
 
 export async function register(payload) {
   const email = String(payload.email || "").trim().toLowerCase();
@@ -45,8 +46,7 @@ export async function register(payload) {
 
 export async function login({ email, password, two_factor_code }, metadata = {}) {
   const user = await findUserByEmail(String(email || "").trim().toLowerCase());
-  if (!user) throw new Error("Usuario nao encontrado.");
-  if (!await bcrypt.compare(password, user.senha_hash)) throw new Error("Senha invalida.");
+  if (!await passwordMatches(user, password)) throw new Error("E-mail ou senha incorretos.");
   if (user.banned_permanent || (user.banned_until && new Date(user.banned_until).getTime() > Date.now())) {
     const until = user.banned_permanent ? "permanentemente" : `ate ${new Date(user.banned_until).toLocaleString("pt-BR")}`;
     throw new Error(`Conta banida ${until}. ${user.ban_reason || "Entre em contato com o suporte."}`);
@@ -57,6 +57,14 @@ export async function login({ email, password, two_factor_code }, metadata = {})
   if (twoFactor?.enabled && !verifyTotp(twoFactor.secret, two_factor_code)) throw new Error("Codigo de autenticacao invalido.");
 
   return await createAuthenticatedSession(user.id, user.role, metadata);
+}
+
+// Mesma mensagem e o mesmo custo de bcrypt quando o email nao existe, para nao revelar contas.
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString("hex"), 10);
+export async function passwordMatches(user, password) {
+  if (typeof password !== "string" || !password) return false;
+  const matches = await bcrypt.compare(password, user?.senha_hash || DUMMY_HASH);
+  return Boolean(user) && matches;
 }
 
 export async function verifyEmail(token) {
@@ -121,7 +129,7 @@ async function issueEmailVerification(userId, email, name) {
   return { sent:mail.sent };
 }
 
-function mailTemplate(title, text, url, action) { return `<div style="font-family:Arial,sans-serif;background:#07111f;color:#f7fbff;padding:32px"><h1>${title}</h1><p style="color:#b8c4d6">${text}</p><p><a href="${url}" style="display:inline-block;background:#16c8e5;color:#001018;padding:12px 18px;text-decoration:none;font-weight:700">${action}</a></p><p style="color:#7d8ca3;font-size:12px">Se voce nao solicitou esta acao, ignore esta mensagem.</p></div>`; }
+function mailTemplate(title, text, url, action) { return `<div style="font-family:Arial,sans-serif;background:#07111f;color:#f7fbff;padding:32px"><h1>${escapeHtml(title)}</h1><p style="color:#b8c4d6">${escapeHtml(text)}</p><p><a href="${escapeHtml(url)}" style="display:inline-block;background:#16c8e5;color:#001018;padding:12px 18px;text-decoration:none;font-weight:700">${action}</a></p><p style="color:#7d8ca3;font-size:12px">Se voce nao solicitou esta acao, ignore esta mensagem.</p></div>`; }
 function hashToken(token) { return crypto.createHash("sha256").update(String(token || "")).digest("hex"); }
 function frontendUrl() { return String(process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0].trim().replace(/\/$/, ""); }
 function required(value, message, max) { const text = String(value || "").trim(); if (!text) throw new Error(message); return text.slice(0, max); }

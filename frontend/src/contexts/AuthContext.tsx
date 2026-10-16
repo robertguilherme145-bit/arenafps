@@ -65,7 +65,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(sessionToken, identityData);
     } catch (err) {
       clearSession();
-      error("Sessao encerrada", err instanceof Error ? err.message : "Faca login novamente.");
+      error("Sessão encerrada", err instanceof Error ? err.message : "Faca login novamente.");
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   function logout() {
     void logoutPlayerSession().catch(() => undefined);
     clearSession();
-    success("Sessao encerrada", "Sua conta foi desconectada com seguranca.");
+    success("Sessão encerrada", "Sua conta foi desconectada com seguranca.");
   }
 
   async function switchContext(input: { role: string; game_id?: number | null; team_id?: number | null }) {

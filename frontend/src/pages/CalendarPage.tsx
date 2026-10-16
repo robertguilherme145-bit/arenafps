@@ -11,7 +11,7 @@ export function CalendarPage() {
   const days = Array.from({ length:new Date(year, month + 1, 0).getDate() }, (_, index) => index + 1);
   const monthName = new Intl.DateTimeFormat("pt-BR", { month:"long", year:"numeric" }).format(now);
   const events = tournaments.flatMap((tournament) => [
-    { date:new Date(tournament.inicio), label:`Inicio: ${tournament.nome}` },
+    { date:new Date(tournament.inicio), label:`Início: ${tournament.nome}` },
     { date:new Date(tournament.fim), label:`Final: ${tournament.nome}` }
   ]).filter((event) => event.date.getFullYear() === year && event.date.getMonth() === month);
 

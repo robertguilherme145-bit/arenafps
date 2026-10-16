@@ -20,7 +20,7 @@ import mixTournamentRoutes from "./mixTournament.routes.js";
 
 const router=Router();
 
-router.get("/api/health",(req,res)=>{res.json({nome:"Arena Camp API",status:"online",environment:process.env.NODE_ENV||"development"});});
+router.get("/api/health",(req,res)=>{res.json({nome:"Arena Camp API",status:"online"});});
 
 router.use("/auth", authRoutes);
 router.use("/player", playerRoutes);

@@ -636,7 +636,7 @@ function DashboardModule({
         <Card>
           <CardHeader>
             <h2 className="font-display text-xl font-semibold">
-              Proximas partidas
+              Próximas partidas
             </h2>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -651,7 +651,7 @@ function DashboardModule({
         <Card>
           <CardHeader>
             <h2 className="font-display text-xl font-semibold">
-              Ultimos resultados
+              Últimos resultados
             </h2>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1121,7 +1121,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
                 ),
             },
             {
-              header: "Ultimo acesso",
+              header: "Último acesso",
               cell: (member) =>
                 member.last_seen_at
                   ? formatDate(member.last_seen_at)
@@ -1561,7 +1561,7 @@ function TournamentsModule({
                   label="Equipes"
                   value={`${tournament.registered_teams}/${tournament.max_teams}`}
                 />
-                <Metric label="Inicio" value={formatDate(tournament.inicio)} />
+                <Metric label="Início" value={formatDate(tournament.inicio)} />
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 {!tournament.entry_id ? (
@@ -1723,7 +1723,7 @@ function TournamentCenterPanel({
           role="tablist"
         >
           {[
-            ["overview", "Visao geral"],
+            ["overview", "Visão geral"],
             ["bracket", "Chaveamento"],
             ["standings", "Tabela"],
             ["team", "Minha equipe"],
@@ -2055,7 +2055,7 @@ function MatchesModule({ data, busy, run }: ModuleProps) {
                   </h2>
                   <p className="mt-1 text-sm text-arena-muted">
                     {operations.veto.expected_step
-                      ? `Proxima acao: ${operations.veto.expected_step.action.toUpperCase()} · Equipe ${operations.veto.expected_step.team}`
+                      ? `Próxima acao: ${operations.veto.expected_step.action.toUpperCase()} · Equipe ${operations.veto.expected_step.team}`
                       : "Sequencia concluida"}
                   </p>
                 </div>
@@ -2202,7 +2202,7 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
             </Select>
           </Field>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Inicio">
+            <Field label="Início">
               <Input
                 type="datetime-local"
                 value={form.starts_at}
@@ -3234,7 +3234,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
           icon={<Crown className="h-5 w-5" />}
         />
         <StatCard
-          label="Vitorias"
+          label="Vitórias"
           value={String(data.statistics.wins)}
           icon={<Trophy className="h-5 w-5" />}
         />
@@ -3302,7 +3302,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
             columns={[
               { header: "Adversario", cell: (item) => item.opponent },
               { header: "Jogos", cell: (item) => item.matches },
-              { header: "Vitorias", cell: (item) => item.wins },
+              { header: "Vitórias", cell: (item) => item.wins },
               { header: "Derrotas", cell: (item) => item.losses },
             ]}
           />
@@ -3316,7 +3316,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
             columns={[
               { header: "Temporada", cell: (item) => item.season },
               { header: "Jogos", cell: (item) => item.matches },
-              { header: "Vitorias", cell: (item) => item.wins },
+              { header: "Vitórias", cell: (item) => item.wins },
               { header: "Derrotas", cell: (item) => item.losses },
             ]}
           />
@@ -3889,9 +3889,9 @@ function formatLabel(value: string | null) {
   return (
     (
       {
-        single_elimination: "Eliminacao simples",
-        double_elimination: "Eliminacao dupla",
-        swiss: "Sistema suico",
+        single_elimination: "Eliminação simples",
+        double_elimination: "Eliminação dupla",
+        swiss: "Sistema suíço",
         round_robin: "Todos contra todos",
         group_playoffs: "Grupos + eliminatorias",
         league: "Liga",
@@ -3965,9 +3965,11 @@ function printReceipt(
   if (!receipt) return;
   receipt.opener = null;
   receipt.document.write(
-    `<!doctype html><html><head><title>Recibo Arena Camp</title><style>body{font-family:Arial,sans-serif;color:#101828;max-width:680px;margin:48px auto;padding:0 24px}h1{font-size:26px}section{border:1px solid #d0d5dd;padding:24px;margin-top:24px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #eaecf0;padding:12px 0}.ok{color:#067647;font-weight:700}@media print{button{display:none}}</style></head><body><h1>Arena Camp</h1><p>Recibo de inscricao competitiva</p><section><div class="row"><span>Equipe</span><strong>${escapeHtml(team.nome)}</strong></div><div class="row"><span>Torneio</span><strong>${escapeHtml(payment.tournament_name)}</strong></div><div class="row"><span>Valor</span><strong>${formatCurrency(payment.valor)}</strong></div><div class="row"><span>Referencia</span><strong>${escapeHtml(payment.external_reference || payment.payment_id || `#${payment.id}`)}</strong></div><div class="row"><span>Data</span><strong>${formatDate(payment.paid_at || payment.created_at)}</strong></div><div class="row"><span>Status</span><span class="ok">Pagamento aprovado</span></div></section><p>Documento gerado a partir dos dados oficiais da plataforma.</p><button onclick="window.print()">Imprimir recibo</button></body></html>`,
+    `<!doctype html><html><head><title>Recibo Arena Camp</title><style>body{font-family:Arial,sans-serif;color:#101828;max-width:680px;margin:48px auto;padding:0 24px}h1{font-size:26px}section{border:1px solid #d0d5dd;padding:24px;margin-top:24px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #eaecf0;padding:12px 0}.ok{color:#067647;font-weight:700}@media print{button{display:none}}</style></head><body><h1>Arena Camp</h1><p>Recibo de inscricao competitiva</p><section><div class="row"><span>Equipe</span><strong>${escapeHtml(team.nome)}</strong></div><div class="row"><span>Torneio</span><strong>${escapeHtml(payment.tournament_name)}</strong></div><div class="row"><span>Valor</span><strong>${formatCurrency(payment.valor)}</strong></div><div class="row"><span>Referencia</span><strong>${escapeHtml(payment.external_reference || payment.payment_id || `#${payment.id}`)}</strong></div><div class="row"><span>Data</span><strong>${formatDate(payment.paid_at || payment.created_at)}</strong></div><div class="row"><span>Status</span><span class="ok">Pagamento aprovado</span></div></section><p>Documento gerado a partir dos dados oficiais da plataforma.</p><button id="print-receipt" type="button">Imprimir recibo</button></body></html>`,
   );
   receipt.document.close();
+  // A janela herda a CSP do site, que bloqueia onclick inline; o clique e ligado daqui.
+  receipt.document.getElementById("print-receipt")?.addEventListener("click", () => receipt.print());
 }
 function escapeHtml(value: string) {
   return value.replace(

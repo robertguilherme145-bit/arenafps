@@ -35,3 +35,10 @@ test("preserva query string e exige HTTPS no webhook", () => {
     /HTTPS/
   );
 });
+
+test("em producao sem segredo, webhook sem assinatura e ignorado", async () => {
+  const { acceptsUnsignedWebhook } = await import("../src/controllers/payment.controller.js");
+  assert.equal(acceptsUnsignedWebhook({ NODE_ENV:"production" }), false);
+  assert.equal(acceptsUnsignedWebhook({ NODE_ENV:"development" }), true);
+  assert.equal(acceptsUnsignedWebhook({}), true);
+});

@@ -138,15 +138,8 @@ export async function getPublicPlayerProfile(slug) {
   const careerData = await findPlayerCareerData(account.id, null, publicGameId);
   const context = contexts[0] ?? null;
   const ranking = context ? await getTeamPlayerRanking(context.team_id) : { team_id: 0, generated_at: new Date().toISOString(), players: [] };
-  const profile = normalizeProfile(profileRow);
-  delete profile.email;
-  delete profile.birth_date;
-  delete profile.phone;
-  delete profile.whatsapp_opt_in;
-  delete profile.pix_key;
-  delete profile.pix_key_type;
   return {
-    profile,
+    profile: toPublicProfile(normalizeProfile(profileRow)),
     games: games.map(normalizeGame).filter((game) => game.selected),
     current_team: context ? normalizeContext(context) : null,
     team_ranking: ranking,
@@ -402,6 +395,12 @@ function groupLineups(rows) {
     grouped.set(Number(row.entry_id), lineup);
   }
   return [...grouped.values()];
+}
+
+// Lista branca: campos novos do perfil so ficam publicos se forem adicionados aqui.
+const PUBLIC_PROFILE_FIELDS = ["id", "nickname", "avatar", "banner", "bio", "pais", "estado", "cidade", "languages", "links", "created_at"];
+export function toPublicProfile(profile) {
+  return Object.fromEntries(PUBLIC_PROFILE_FIELDS.map((field) => [field, profile[field] ?? null]));
 }
 
 function normalizeProfile(row) {

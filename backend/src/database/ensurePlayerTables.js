@@ -46,7 +46,7 @@ export async function ensurePlayerTables() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_two_factor (
       user_id INT NOT NULL,
-      secret VARCHAR(64) NOT NULL,
+      secret VARCHAR(255) NOT NULL,
       enabled TINYINT(1) NOT NULL DEFAULT 0,
       confirmed_at TIMESTAMP NULL,
       updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -54,6 +54,8 @@ export async function ensurePlayerTables() {
       CONSTRAINT fk_user_two_factor_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
+  // O segredo do 2FA passou a ser gravado criptografado e precisa de mais espaco.
+  await pool.query(`ALTER TABLE user_two_factor MODIFY secret VARCHAR(255) NOT NULL`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_sessions (

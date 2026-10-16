@@ -121,11 +121,9 @@ export async function registerTeam(userId, dados){
  */
 export async function listMembers(userId, teamId){
 
-    console.log("teamId recebido:", teamId);
     // Equipe existe?
     const team = await findTeam(teamId);
 
-    console.log("Equipe encontrada:", team);
 
     if(!team){
         throw new Error("Equipe não encontrada.");}

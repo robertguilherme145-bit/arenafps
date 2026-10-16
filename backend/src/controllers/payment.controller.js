@@ -33,6 +33,25 @@ export async function create(req,res){
 }
 
 /**
+ * Em producao, webhook sem assinatura so e aceito se houver MP_WEBHOOK_SECRET.
+ * Sem o segredo, a conciliacao automatica (paymentReconciliation) confirma os pagamentos.
+ */
+export function acceptsUnsignedWebhook(environment){
+
+    return environment.NODE_ENV !== "production";
+
+}
+
+let missingSecretWarned = false;
+function warnMissingSecret(){
+
+    if(missingSecretWarned) return;
+    missingSecretWarned = true;
+    console.warn("MP_WEBHOOK_SECRET ausente: webhooks do Mercado Pago sem assinatura sao ignorados; a conciliacao automatica segue confirmando pagamentos.");
+
+}
+
+/**
  * Webhook Mercado Pago
  */
 export async function webhook(req,res){
@@ -50,6 +69,11 @@ export async function webhook(req,res){
         ).trim();
 
         if(!/^\d+$/.test(dataId)) return res.sendStatus(200);
+
+        if(!process.env.MP_WEBHOOK_SECRET && !acceptsUnsignedWebhook(process.env)){
+            warnMissingSecret();
+            return res.sendStatus(202);
+        }
 
         if(process.env.MP_WEBHOOK_SECRET){
             WebhookSignatureValidator.validate({

@@ -1,16 +1,33 @@
 import type { Config } from "tailwindcss";
 
+// A escala "cyan" foi remapeada para o lado azul da identidade Transmissao,
+// para que as classes cyan-* ja usadas no app herdem a nova cor.
+const sideA = {
+  50: "#eaf2ff",
+  100: "#d3e4ff",
+  200: "#a9caff",
+  300: "#78acff",
+  400: "#3d8bff",
+  500: "#2f74e0",
+  600: "#245cb6",
+  700: "#1c478c",
+  800: "#153668",
+  900: "#0b2a57",
+  950: "#071a37"
+};
+
 export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui"],
-        display: ["Space Grotesk", "Inter", "ui-sans-serif"],
-        accent: ["Poppins", "Inter", "ui-sans-serif"]
+        sans: ["Barlow", "ui-sans-serif", "system-ui"],
+        display: ["Chakra Petch", "Barlow", "ui-sans-serif"],
+        accent: ["Chakra Petch", "Barlow", "ui-sans-serif"]
       },
       colors: {
+        cyan: sideA,
         arena: {
           bg: "rgb(var(--arena-bg) / <alpha-value>)",
           panel: "rgb(var(--arena-panel) / <alpha-value>)",
@@ -18,20 +35,23 @@ export default {
           line: "rgb(var(--arena-line) / <alpha-value>)",
           text: "rgb(var(--arena-text) / <alpha-value>)",
           muted: "rgb(var(--arena-muted) / <alpha-value>)",
-          blue: "#1f8bff",
-          cyan: "#22d3ee",
+          blue: "#3d8bff",
+          cyan: "#3d8bff",
+          amber: "#ffb020",
           purple: "#8b5cf6",
-          success: "#22c55e",
-          warning: "#f59e0b",
-          danger: "#ef4444"
+          success: "#3ccf8e",
+          warning: "#ffb020",
+          danger: "#ff4d5e",
+          live: "#ff4d5e",
+          ink: "#08111f"
         }
       },
       boxShadow: {
-        glow: "0 0 32px rgba(31, 139, 255, .22)",
-        panel: "0 18px 70px rgba(0, 0, 0, .45)"
+        glow: "none",
+        panel: "none"
       },
       borderRadius: {
-        arena: "8px"
+        arena: "2px"
       }
     }
   },
