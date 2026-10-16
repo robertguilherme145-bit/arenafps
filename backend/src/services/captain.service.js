@@ -29,6 +29,7 @@ import { getMatchOperations, performParticipantVetoAction, resolveExpiredVetoAct
 import { notify } from "./notification.service.js";
 import { getTeamPlayerRanking } from "./teamRanking.service.js";
 import { getPlayerCareerSummary } from "./playerWorkspace.service.js";
+import { optionalHttpUrl } from "../utils/safeUrl.js";
 
 export async function getCaptainWorkspace(user) {
   const context = await requireCaptainContext(user.id);
@@ -268,5 +269,5 @@ function requiredText(value, message, maxLength) {
 
 function optionalText(value, maxLength) { const text = String(value ?? "").trim(); return text ? text.slice(0, maxLength) : null; }
 function eventHasEnded(event) { const boundary = event.ends_at || event.starts_at; return Boolean(boundary && new Date(boundary).getTime() < Date.now()); }
-function validUrl(value) { try { return new URL(String(value)).toString(); } catch { throw new Error("Informe uma URL valida para o anexo."); } }
+function validUrl(value) { const url = optionalHttpUrl(value, "Informe uma URL valida para o anexo."); if (!url) throw new Error("Informe uma URL valida para o anexo."); return url; }
 async function audit(actorUserId, action, entityType, entityId, details) { await createAuditLog({ actor_user_id: actorUserId, action, entity_type: entityType, entity_id: entityId, details }); }

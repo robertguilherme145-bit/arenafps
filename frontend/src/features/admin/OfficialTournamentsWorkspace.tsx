@@ -15,6 +15,7 @@ import {
   saveAdminOfficialTournament,
 } from "../../services/api";
 import type { OfficialMatch, OfficialTournament } from "../../types/api";
+import { safeHref } from "../../utils/safeHref";
 
 const emptyEvent = { name: "", organizer: "", game_name: "", logo_url: "", banner_url: "", description: "", location: "", prize_pool: "", format_label: "", official_url: "", starts_at: "", ends_at: "", status: "anunciado", featured: false, published: true };
 const emptyMatch = { stage_label: "", team_a: "", team_a_logo: "", team_b: "", team_b_logo: "", score_a: "", score_b: "", best_of: "bo3", map_summary: "", scheduled_at: "", status: "agendada", stream_url: "" };
@@ -123,7 +124,7 @@ export function OfficialTournamentsWorkspace() {
       <div className="flex gap-3"><Button loading={busy} icon={<Save className="h-4 w-4" />} onClick={() => void saveMatch()}>{editingMatchId ? "Atualizar partida" : "Adicionar partida"}</Button>{editingMatchId ? <Button variant="secondary" onClick={() => { setEditingMatchId(null); setMatchForm(emptyMatch); }}>Cancelar edicao</Button> : null}</div>
       <div className="space-y-2">{matches.length ? matches.map((item) => <div key={item.id} className="grid items-center gap-3 border border-arena-line p-3 md:grid-cols-[1fr_auto_auto]">
         <div><p className="font-semibold">{item.team_a} <span className="mx-2 text-cyan-200">{item.score_a ?? "-"} x {item.score_b ?? "-"}</span> {item.team_b}</p><p className="mt-1 text-xs text-arena-muted">{item.stage_label || "Fase não informada"} · {item.best_of.toUpperCase()} · {statusLabel(item.status)}{item.winner_name ? ` · Vencedor: ${item.winner_name}` : ""}</p></div>
-        {item.stream_url ? <a className="inline-flex items-center gap-2 text-sm text-cyan-200" href={item.stream_url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" />Transmissao</a> : <span />}
+        {item.stream_url ? <a className="inline-flex items-center gap-2 text-sm text-cyan-200" href={safeHref(item.stream_url)} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" />Transmissao</a> : <span />}
         <div className="flex gap-2"><Button className="px-3" variant="secondary" icon={<PencilLine className="h-4 w-4" />} onClick={() => editMatch(item)} aria-label="Editar partida" /><Button className="px-3" variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => void removeMatch(item.id)} aria-label="Excluir partida" /></div>
       </div>) : <EmptyState title="Nenhuma partida cadastrada" description="Adicione a agenda ou os resultados deste evento." />}</div>
     </CardContent></Card> : null}

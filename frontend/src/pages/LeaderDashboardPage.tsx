@@ -90,6 +90,7 @@ import type {
   LeaderWorkspace,
   MatchOperations,
 } from "../types/api";
+import { safeHref } from "../utils/safeHref";
 
 const modules = [
   "dashboard",
@@ -3529,7 +3530,7 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
             {data.documents.map((item) => (
               <a
                 className="flex items-center justify-between border border-arena-line p-3 hover:bg-white/[.04]"
-                href={item.url}
+                href={safeHref(item.url)}
                 key={item.id}
                 rel="noreferrer"
                 target="_blank"
@@ -3626,7 +3627,7 @@ function MessageList({
           {message.attachment_url ? (
             <a
               className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-cyan-200 hover:underline"
-              href={message.attachment_url}
+              href={safeHref(message.attachment_url)}
               rel="noreferrer"
               target="_blank"
             >
