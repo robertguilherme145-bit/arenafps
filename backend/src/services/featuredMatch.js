@@ -1,12 +1,15 @@
-// Escolhe a partida do placar da home: ao vivo > agendada futura > agendada sem data
+// Partida agendada continua em destaque ate 2 horas depois do horario, enquanto o admin nao inicia.
+export const SCHEDULE_GRACE_MS = 2 * 60 * 60 * 1000;
+
+// Escolhe a partida do placar da home: ao vivo > agendada proxima > agendada sem data
 // de torneio em andamento. Sem candidatas, devolve null e a home esconde o placar.
 export function pickFeaturedMatch(rows, now = new Date()) {
-  const live = rows.filter((item) => item.status === "andamento").sort((a, b) => recency(b) - recency(a));
+  const live = rows.filter((item) => item.status === "andamento").sort((a, b) => Number(b.id) - Number(a.id));
   if (live.length) return toFeatured(live[0], "ao_vivo");
 
   const scheduled = rows.filter((item) => item.status === "agendada");
   const upcoming = scheduled
-    .filter((item) => item.scheduled_at && new Date(item.scheduled_at).getTime() > now.getTime())
+    .filter((item) => item.scheduled_at && new Date(item.scheduled_at).getTime() > now.getTime() - SCHEDULE_GRACE_MS)
     .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
   if (upcoming.length) return toFeatured(upcoming[0], "agendada");
 
@@ -14,10 +17,6 @@ export function pickFeaturedMatch(rows, now = new Date()) {
     .filter((item) => !item.scheduled_at && item.tournament_status === "em_andamento")
     .sort((a, b) => Number(a.id) - Number(b.id));
   return undated.length ? toFeatured(undated[0], "agendada") : null;
-}
-
-function recency(item) {
-  return item.updated_at ? new Date(item.updated_at).getTime() : Number(item.id);
 }
 
 function toFeatured(item, status) {

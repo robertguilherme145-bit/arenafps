@@ -10,7 +10,6 @@ function row(overrides) {
     status:"agendada", scheduled_at:null, score_team_a:0, score_team_b:0, best_of:"bo3",
     current_map_name:null, current_map_number:null,
     team_a:"GameOver", team_a_tag:"GO", team_a_logo:null, team_b:"BREAkers", team_b_tag:"BK", team_b_logo:null,
-    updated_at:"2026-09-05T19:00:00Z",
     ...overrides
   };
 }
@@ -27,12 +26,18 @@ test("prefere a partida ao vivo", () => {
   assert.deepEqual(featured.team_a, { name:"GameOver", tag:"GO", logo:null });
 });
 
-test("entre ao vivo, escolhe a atualizada por ultimo", () => {
-  const featured = pickFeaturedMatch([
-    row({ id:4, status:"andamento", updated_at:"2026-09-05T19:10:00Z" }),
-    row({ id:5, status:"andamento", updated_at:"2026-09-05T19:55:00Z" })
-  ], now);
+test("entre ao vivo, escolhe a mais recente pelo id", () => {
+  const featured = pickFeaturedMatch([row({ id:5, status:"andamento" }), row({ id:4, status:"andamento" })], now);
   assert.equal(featured.id, 5);
+});
+
+test("agendada atrasada ha menos de 2 horas continua no placar", () => {
+  const featured = pickFeaturedMatch([
+    row({ id:20, scheduled_at:"2026-09-05T19:01:00Z" }),
+    row({ id:21, scheduled_at:"2026-09-06T20:00:00Z" })
+  ], now);
+  assert.equal(featured.id, 20);
+  assert.equal(pickFeaturedMatch([row({ id:22, scheduled_at:"2026-09-05T17:30:00Z", tournament_status:"aberto" })], now), null);
 });
 
 test("sem ao vivo, escolhe a agendada futura mais proxima", () => {

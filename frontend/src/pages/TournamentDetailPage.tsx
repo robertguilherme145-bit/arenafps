@@ -104,7 +104,7 @@ export function TournamentDetailPage() {
   }, [id]);
   const bracketColumns = useMemo(
     () =>
-      center && !["round_robin", "league"].includes(center.tournament.format)
+      center
         ? buildBracketColumns({
             format: center.tournament.format,
             teamCount: center.participants.length,

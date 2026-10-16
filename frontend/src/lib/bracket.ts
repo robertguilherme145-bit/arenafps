@@ -29,6 +29,8 @@ export function buildBracketColumns(input: { format:string | null; teamCount:num
 }
 
 function singleElimination(teamCount: number, matches: BracketMatch[]): BracketColumn[] {
+  // Sem partidas, a chave ainda nao foi gerada e a pagina mostra o aviso de "nao publicado".
+  if (!matches.length) return [];
   const highestRound = matches.reduce((max, item) => Math.max(max, item.round), 0);
   const totalRounds = Math.max(teamCount > 1 ? Math.ceil(Math.log2(teamCount)) : 0, highestRound);
   const columns: BracketColumn[] = [];
@@ -36,7 +38,9 @@ function singleElimination(teamCount: number, matches: BracketMatch[]): BracketC
     const fromEnd = totalRounds - round;
     const size = 2 ** fromEnd;
     const existing: BracketSlot[] = matches.filter((item) => item.round === round).map((item) => ({ match:item }));
-    const placeholders: BracketSlot[] = Array.from({ length:Math.max(0, size - existing.length) }, () => ({ placeholder:true }));
+    // A primeira rodada nunca recebe vagas: equipes com bye nao jogam e a vaga nunca seria preenchida.
+    const missing = round === 1 ? 0 : Math.max(0, size - existing.length);
+    const placeholders: BracketSlot[] = Array.from({ length:missing }, () => ({ placeholder:true }));
     columns.push({ key:`round-${round}`, title:FINAL_ROUND_NAMES[fromEnd] ?? `Rodada ${round}`, slots:[...existing, ...placeholders] });
   }
   return columns;

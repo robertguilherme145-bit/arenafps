@@ -14,11 +14,20 @@ test("eliminacao simples com 8 equipes completa as rodadas futuras", () => {
   assert.deepEqual(columns.map(slotsOf), [["partida", "partida", "partida", "partida"], ["vaga", "vaga"], ["vaga"]]);
 });
 
-test("6 equipes arredondam para 3 rodadas", () => {
-  const columns = buildBracketColumns({ format:"single_elimination", teamCount:6, matches:[1, 2, 3].map((id) => match(id, 1)) });
+test("6 equipes arredondam para 3 rodadas sem vagas fantasmas de bye na primeira", () => {
+  const columns = buildBracketColumns({ format:"single_elimination", teamCount:6, matches:[1, 2].map((id) => match(id, 1)) });
   assert.equal(columns.length, 3);
+  assert.deepEqual(slotsOf(columns[0]), ["partida", "partida"]);
   assert.deepEqual(columns.slice(1).map((column) => column.slots.length), [2, 1]);
-  assert.deepEqual(slotsOf(columns[0]), ["partida", "partida", "partida", "vaga"]);
+});
+
+test("chave sem nenhuma partida ainda nao e desenhada", () => {
+  assert.deepEqual(buildBracketColumns({ format:"single_elimination", teamCount:8, matches:[] }), []);
+});
+
+test("liga mostra as rodadas existentes", () => {
+  const columns = buildBracketColumns({ format:"league", teamCount:4, matches:[match(1, 1, { stage:"league" }), match(2, 2, { stage:"league" })] });
+  assert.deepEqual(columns.map((column) => column.title), ["Rodada 1", "Rodada 2"]);
 });
 
 test("rodada criada pela metade mistura partida e vaga", () => {
@@ -27,7 +36,7 @@ test("rodada criada pela metade mistura partida e vaga", () => {
 });
 
 test("16 equipes nomeiam oitavas", () => {
-  const columns = buildBracketColumns({ format:"single_elimination", teamCount:16, matches:[] });
+  const columns = buildBracketColumns({ format:"single_elimination", teamCount:16, matches:[match(1, 1)] });
   assert.deepEqual(columns.map((column) => column.title), ["Oitavas de final", "Quartas de final", "Semifinal", "Final"]);
 });
 
