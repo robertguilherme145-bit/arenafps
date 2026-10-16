@@ -9,6 +9,7 @@ import { I18nProvider } from "../i18n/I18nProvider";
 import { router } from "../routes/router";
 import "../styles/globals.css";
 import { initializeArenaTheme } from "../utils/theme";
+import { BootScreen } from "../components/brand/BootScreen";
 
 initializeArenaTheme();
 
@@ -28,7 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <I18nProvider>
-            <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-arena-bg text-sm font-semibold text-cyan-100">Carregando Arena Camp...</div>}>
+            <Suspense fallback={<BootScreen />}>
               <RouterProvider router={router} />
             </Suspense>
           </I18nProvider>
