@@ -43,8 +43,6 @@ export async function create(req,res){
  */
 export async function members(req,res){
 
-    console.log("params:", req.params);
-    console.log("user:", req.user.id);
 
     try{
 
