@@ -1,16 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Activity,
-  CalendarDays,
-  CircleDollarSign,
-  Crown,
-  Download,
-  Medal,
-  Swords,
-  Trophy,
-  Users,
-} from "lucide-react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Crown, Download, Trophy, Users } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { TournamentRegulationPanel } from "../components/tournament/TournamentRegulationPanel";
 import { Badge } from "../components/ui/Badge";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
@@ -18,12 +9,12 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { DataTable } from "../components/ui/DataTable";
 import { EmptyState } from "../components/ui/EmptyState";
-import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/Skeleton";
-import { StatCard } from "../components/ui/StatCard";
 import { useToast } from "../hooks/useToast";
 import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
+import { BracketView } from "../components/broadcast/BracketView";
+import { buildBracketColumns } from "../lib/bracket";
 import type { PublicTournamentCenter } from "../types/api";
 
 function safeFileName(value: string) {
@@ -90,6 +81,7 @@ export function TournamentDetailPage() {
   const id = Number(useParams().id);
   const [searchParams, setSearchParams] = useSearchParams();
   const { error } = useToast();
+  const { user } = useAuth();
   const [center, setCenter] = useState<PublicTournamentCenter | null>(null);
   const [tab, setTab] = useState<
     "overview" | "standings" | "bracket" | "matches" | "statistics" | "rules"
@@ -109,11 +101,15 @@ export function TournamentDetailPage() {
         ),
       );
   }, [id]);
-  const rounds = useMemo(
+  const bracketColumns = useMemo(
     () =>
-      [
-        ...new Set(center?.matches.map((match) => Number(match.round)) ?? []),
-      ].sort((a, b) => a - b),
+      center && !["round_robin", "league"].includes(center.tournament.format)
+        ? buildBracketColumns({
+            format: center.tournament.format,
+            teamCount: center.participants.length,
+            matches: center.matches,
+          })
+        : [],
     [center],
   );
   if (!center)
@@ -147,23 +143,33 @@ export function TournamentDetailPage() {
   };
   return (
     <section className="pb-12">
-      <div
-        className="relative min-h-72 border-b border-arena-line bg-arena-panel bg-cover bg-center"
-        style={
-          tournament.banner
-            ? { backgroundImage: `url(${tournament.banner})` }
-            : undefined
-        }
-      >
-        <div className="absolute inset-0 bg-black/70" />
-        <div className="relative mx-auto flex min-h-72 max-w-[1500px] items-end px-4 py-9 lg:px-8">
-          <PageHeader
-            eyebrow={`${tournament.game_short_name} · ${status(tournament.status)}`}
-            title={tournament.nome}
-            description={heroDescription}
-          />
+      <header className="border-b border-arena-line bg-arena-panel2">
+        <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-8 lg:grid-cols-[1fr_auto] lg:items-end lg:px-8">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={statusTone(tournament.status)}>{status(tournament.status)}</Badge>
+              <span className="text-sm text-arena-muted">{tournament.game_short_name}</span>
+            </div>
+            <h1 className="mt-3 font-display text-3xl font-bold leading-tight md:text-5xl">{tournament.nome}</h1>
+            {heroDescription ? <p className="mt-3 max-w-3xl text-arena-muted">{heroDescription}</p> : null}
+            <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
+              <HeaderFact label="Premiação" value={prize(tournament.premiacao)} />
+              <HeaderFact label="Inscrição" value={entryFee(tournament)} />
+              <HeaderFact label="Equipes" value={`${center.participants.length}/${tournament.max_teams}`} />
+              <HeaderFact label="Formato" value={format(tournament.format)} />
+              <HeaderFact label="Início" value={date(tournament.inicio)} />
+            </dl>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tournament.status === "aberto" ? (
+              <Link to={user ? (user.roles?.includes("lider") ? "/lider" : "/jogador") : "/criar-conta"}>
+                <Button variant="urgent">Inscrever equipe</Button>
+              </Link>
+            ) : null}
+            <Button variant="secondary" onClick={() => { setTab("rules"); setSearchParams({ tab: "rules" }); }}>Regulamento</Button>
+          </div>
         </div>
-      </div>
+      </header>
       <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-8">
         {center.result ? (
           <div className="mb-6 grid items-center gap-5 border border-amber-300/40 bg-amber-300/[.07] p-5 md:grid-cols-[auto_1fr_auto]">
@@ -172,53 +178,21 @@ export function TournamentDetailPage() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase text-amber-200">
-                Campeao oficial
+                Campeão oficial
               </p>
               <div className="mt-2 flex items-center gap-3">{center.result.champion_logo ? <img className="h-14 w-14 object-contain" src={center.result.champion_logo} alt={`Logo ${center.result.champion_name}`} /> : null}<h2 className="font-display text-3xl font-bold">{center.result.champion_name}</h2></div>
               <p className="mt-1 text-sm text-arena-muted">
-                Vice-campeao: {center.result.runner_up_name || "Não definido"}
+                Vice-campeão: {center.result.runner_up_name || "Não definido"}
               </p>
             </div>
             <Badge tone="success">
-              <Crown className="mr-1 h-4 w-4" /> Campeao
+              <Crown className="mr-1 h-4 w-4" /> Campeão
             </Badge>
           </div>
         ) : null}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <StatCard
-            label="Status"
-            value={status(tournament.status)}
-            icon={<Activity className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Equipes"
-            value={`${center.participants.length}/${tournament.max_teams}`}
-            icon={<Users className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Premiação"
-            value={tournament.premiacao || "A definir"}
-            icon={<Medal className="h-5 w-5" />}
-          />
-          <StatCard
-            label="InscriÃ§Ã£o"
-            value={entryFee(tournament)}
-            icon={<CircleDollarSign className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Formato"
-            value={format(tournament.format)}
-            icon={<Swords className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Inicio"
-            value={date(tournament.inicio)}
-            icon={<CalendarDays className="h-5 w-5" />}
-          />
-        </div>
-        <div className="mt-6 flex gap-2 overflow-x-auto border-b border-arena-line pb-3">
+        <div className="flex gap-1 overflow-x-auto border-b border-arena-line" role="tablist">
           {[
-            ["overview", "Visao geral"],
+            ["overview", "Visão geral"],
             ["standings", "Classificação"],
             ["bracket", "Chaveamento"],
             ["matches", "Partidas"],
@@ -226,8 +200,10 @@ export function TournamentDetailPage() {
             ["rules", "Regulamento"],
           ].map(([value, label]) => (
             <button
-              className={`shrink-0 border px-4 py-2 text-sm font-semibold ${tab === value ? "border-cyan-400 bg-cyan-400/10 text-white" : "border-arena-line text-arena-muted"}`}
+              aria-selected={tab === value}
+              className={`shrink-0 px-4 py-3 text-sm font-semibold transition ${tab === value ? "text-arena-text shadow-[inset_0_-3px_0_#ffb020]" : "text-arena-muted hover:text-arena-text"}`}
               key={value}
+              role="tab"
               onClick={() => { setTab(value as typeof tab); setSearchParams(value === "overview" ? {} : { tab: value }); }}
             >
               {label}
@@ -287,7 +263,7 @@ export function TournamentDetailPage() {
                 </h2>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Metric label="InscriÃ§Ã£o" value={entryFee(tournament)} />
+                <Metric label="Inscrição" value={entryFee(tournament)} />
                 <Metric
                   label="Serie"
                   value={(tournament.best_of || "bo3").toUpperCase()}
@@ -338,68 +314,27 @@ export function TournamentDetailPage() {
               { header: "V-D", cell: (team) => `${team.wins}-${team.losses}` },
               { header: "Mapas", cell: (team) => `${team.score_for}-${team.score_against}` },
               { header: "Mapas jogados", cell: (team) => team.maps_played ?? 0 },
-              { header: "Saldo medio de rounds", cell: (team) => Number(team.round_balance_per_map ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) },
+              { header: "Saldo médio de rounds", cell: (team) => Number(team.round_balance_per_map ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) },
               { header: "Aproveitamento", cell: (team) => `${team.win_rate}%` },
             ]} />
           </Card>
         ) : null}
         {tab === "bracket" ? (
-          <div className="mt-6 overflow-x-auto pb-4">
-            <div
-              className="grid min-w-[760px] gap-5"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(rounds.length, 1)}, minmax(240px,1fr))`,
-              }}
-            >
-              {rounds.map((round) => (
-                <div key={round}>
-                  <p className="mb-3 text-xs font-semibold uppercase text-cyan-200">
-                    Rodada {round}
-                  </p>
-                  <div className="space-y-4">
-                    {center.matches
-                      .filter((match) => Number(match.round) === round)
-                      .map((match) => (
-                        <div
-                          className="border border-arena-line bg-arena-panel p-4"
-                          key={match.id}
-                        >
-                          <BracketTeam
-                            name={match.team_a}
-                            logo={match.team_a_logo}
-                            score={
-                              match.status === "finalizada"
-                                ? match.score_team_a
-                                : null
-                            }
-                            winner={match.winner_team_id === match.team_a_id}
-                          />
-                          <div className="my-2 h-px bg-arena-line" />
-                          <BracketTeam
-                            name={match.team_b}
-                            logo={match.team_b_logo}
-                            score={
-                              match.status === "finalizada"
-                                ? match.score_team_b
-                                : null
-                            }
-                            winner={match.winner_team_id === match.team_b_id}
-                          />
-                          <p className="mt-3 border-t border-arena-line pt-2 text-xs text-arena-muted">
-                            {dateTime(match.scheduled_at)}
-                          </p>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ))}
-              {!rounds.length ? (
-                <EmptyState
-                  title="Chaveamento ainda não publicado"
-                  description="A organizacao publicara os confrontos quando as inscrições forem encerradas."
-                />
-              ) : null}
-            </div>
+          <div className="mt-6">
+            {bracketColumns.length ? (
+              <BracketView
+                columns={bracketColumns}
+                onOpen={(matchId) => {
+                  const match = center.matches.find((item) => item.id === matchId);
+                  if (match) openMatch(match);
+                }}
+              />
+            ) : (
+              <EmptyState
+                title="Chaveamento ainda não publicado"
+                description="A organização publica os confrontos quando as inscrições forem encerradas."
+              />
+            )}
           </div>
         ) : null}
         {tab === "matches" ? (
@@ -848,26 +783,6 @@ function MatchMapDetails({
   );
 }
 
-function BracketTeam({
-  name,
-  logo,
-  score,
-  winner,
-}: {
-  name: string;
-  logo: string | null;
-  score: number | null;
-  winner: boolean;
-}) {
-  return (
-    <div
-      className={`flex items-center justify-between gap-3 ${winner ? "text-emerald-300" : ""}`}
-    >
-      <span className="flex min-w-0 items-center gap-2"><TeamLogo logo={logo} name={name} size="sm" /><span className="truncate font-semibold">{name}</span>{winner ? <Crown className="h-4 w-4 shrink-0" aria-label="Vencedor" /> : null}</span>
-      <strong>{score ?? "-"}</strong>
-    </div>
-  );
-}
 function TeamIdentity({ name, logo, winner, large = false }: { name: string; logo: string | null | undefined; winner?: boolean; large?: boolean }) {
   return <div className={`flex items-center gap-3 transition-colors ${large ? "min-h-20 border px-4 py-3" : winner ? "-mx-2 border border-emerald-400/20 bg-emerald-400/[0.06] px-2 py-1.5" : ""} ${large && winner ? "border-emerald-400/35 bg-emerald-400/[0.11] text-emerald-200" : large ? "border-white/10 bg-black/25 text-arena-text" : winner ? "text-emerald-300" : "text-arena-text"}`}><TeamLogo logo={logo} name={name} size={large ? "lg" : "sm"} /><span className={`${large ? "min-w-0 flex-1 text-base" : "text-sm"} font-semibold`}>{name}</span>{winner ? <Badge tone="success"><Crown className="mr-1 h-3 w-3" /> Vencedor</Badge> : null}</div>;
 }
@@ -882,6 +797,22 @@ function Metric({ label, value }: { label: string; value: string }) {
       <strong className="text-sm">{value}</strong>
     </div>
   );
+}
+function HeaderFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs text-arena-muted">{label}</dt>
+      <dd className="font-display text-lg font-semibold">{value}</dd>
+    </div>
+  );
+}
+function prize(value: string | null | undefined) {
+  const text = String(value ?? "").trim();
+  if (!text) return "A definir";
+  return /^r$/i.test(text) || !/^[d.,s]+$/.test(text) ? text : `R$ ${text}`;
+}
+function statusTone(value: string) {
+  return value === "em_andamento" ? "live" : value === "aberto" ? "warning" : value === "finalizado" ? "success" : "neutral";
 }
 function status(value: string) {
   return (
@@ -923,7 +854,7 @@ function entryFee(tournament: {
       .replace(",", ".")
   );
 
-  if (!Number.isFinite(amount) || amount <= 0) return "GrÃ¡tis";
+  if (!Number.isFinite(amount) || amount <= 0) return "Grátis";
 
   const scope =
     tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe";

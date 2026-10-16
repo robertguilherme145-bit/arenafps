@@ -72,7 +72,7 @@ export function TournamentsPage() {
                   <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
                     <Metric label="Equipes" value={String(tournament.max_teams)} />
                     <Metric label="Titulares" value={String(tournament.titulares)} />
-                    <Metric label="InscriÃ§Ã£o" value={entryFee(tournament)} />
+                    <Metric label="Inscrição" value={entryFee(tournament)} />
                   </div>
                 </CardContent>
               </Card>
