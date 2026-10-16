@@ -50,7 +50,7 @@ export function GamesPage() {
               key={game.id}
               onClick={() => setSelectedId(game.id)}
             >
-              <div className="relative aspect-[16/7] overflow-hidden bg-[#071321]">
+              <div className="relative aspect-[16/7] overflow-hidden bg-arena-panel2">
                 {game.banner ? (
                   <img
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
@@ -100,14 +100,14 @@ export function GamesPage() {
             if (event.currentTarget === event.target) setSelectedId(null);
           }}
         >
-          <div className="mx-auto my-4 max-w-6xl overflow-hidden border border-arena-line bg-[#070b12] shadow-2xl">
+          <div className="mx-auto my-4 max-w-6xl overflow-hidden border border-arena-line bg-arena-panel2 shadow-2xl">
             {loadingGame || !selected ? (
               <div className="flex min-h-96 items-center justify-center text-sm text-arena-muted">
                 {t("games.loadingMaps")}
               </div>
             ) : (
               <>
-                <div className="relative min-h-56 overflow-hidden bg-[#071321]">
+                <div className="relative min-h-56 overflow-hidden bg-arena-panel2">
                   {selected.banner ? (
                     <img className="absolute inset-0 h-full w-full object-cover opacity-55" src={selected.banner} alt="" />
                   ) : null}
@@ -186,7 +186,7 @@ function MapArtwork({ src, name }: { src: string | null; name: string }) {
   const { t, format } = useI18n();
 
   return (
-    <div className="aspect-video overflow-hidden bg-[#09121d]">
+    <div className="aspect-video overflow-hidden bg-arena-panel2">
       {src && !failed ? (
         <img
           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
