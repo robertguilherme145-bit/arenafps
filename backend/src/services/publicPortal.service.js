@@ -2,8 +2,16 @@ import { createContactMessage, findPortalSnapshot, findPublicTeamProfile, findPu
 import { getTournamentTeamRanking } from "./ranking.service.js";
 import { optionalHttpUrl } from "../utils/safeUrl.js";
 import { pickFeaturedMatch } from "./featuredMatch.js";
+import { createMicroCache } from "../utils/microCache.js";
+
+// Home e pagina de campeonato sao as mais acessadas: 15s de cache e consultas simultaneas unificadas.
+const publicCache = createMicroCache({ ttlMs:15000 });
 
 export async function getPortal(gameId) {
+  return publicCache.get(`portal:${gameId || "all"}`, () => buildPortal(gameId));
+}
+
+async function buildPortal(gameId) {
   const { featuredCandidates, ...data } = await findPortalSnapshot(gameId || null);
   return {
     ...data,
@@ -16,10 +24,11 @@ export async function getPortal(gameId) {
   };
 }
 export async function globalSearch(query, gameId) { if (String(query || "").trim().length < 2) return []; return await searchPortal(query, gameId || null); }
-export async function getPublicTournament(tournamentId) { const center=await findPublicTournamentCenter(tournamentId); if(!center.tournament){const error=new Error("Torneio nao encontrado.");error.status=404;throw error;} return { ...center, standings:await getTournamentTeamRanking(tournamentId) }; }
+export async function getPublicTournament(tournamentId) { return publicCache.get(`tournament:${Number(tournamentId)}`, () => buildPublicTournament(tournamentId)); }
+async function buildPublicTournament(tournamentId) { const center=await findPublicTournamentCenter(tournamentId); if(!center.tournament){const error=new Error("Torneio nao encontrado.");error.status=404;throw error;} return { ...center, standings:await getTournamentTeamRanking(tournamentId) }; }
 export async function getPublicTeam(slug) { const profile=await findPublicTeamProfile(String(slug||"").trim()); if(!profile){const error=new Error("Equipe nao encontrada.");error.status=404;throw error;} return profile; }
 export async function adminContent() { return await listPublicContentAdmin(); }
-export async function saveAdminContent(user,id,payload) { const input=validateContent(payload); const savedId=await savePublicContentAdmin(id,user.id,input); return (await listPublicContentAdmin()).find((item)=>Number(item.id)===savedId); }
+export async function saveAdminContent(user,id,payload) { const input=validateContent(payload); const savedId=await savePublicContentAdmin(id,user.id,input); publicCache.clear(); return (await listPublicContentAdmin()).find((item)=>Number(item.id)===savedId); }
 export async function sendContact(payload){const name=required(payload.name,"Informe seu nome.",120);const email=required(payload.email,"Informe seu email.",255);if(!/^\S+@\S+\.\S+$/.test(email))throw new Error("Informe um email valido.");const subject=required(payload.subject,"Informe o assunto.",180);const message=required(payload.message,"Escreva sua mensagem.",5000);const id=await createContactMessage({name,email,subject,message});return{id,mensagem:"Mensagem recebida. Nossa equipe respondera pelo email informado."};}
 export async function adminContacts(){return await listContactMessages();}
 export async function updateAdminContact(user,id,payload){const status=["novo","em_atendimento","respondido","arquivado"].includes(payload.status)?payload.status:"em_atendimento";await updateContactMessage(id,user.id,{status,admin_notes:optional(payload.admin_notes,5000)});return(await listContactMessages()).find((item)=>Number(item.id)===Number(id));}
