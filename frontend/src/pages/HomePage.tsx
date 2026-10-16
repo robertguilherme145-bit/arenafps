@@ -41,6 +41,9 @@ export function HomePage() {
   const rankingStarted = Boolean(portal && (portal.players.some((item) => item.matches > 0) || portal.teams.some((item) => item.matches > 0)));
   const rankingStart = upcoming.map((item) => item.inicio).filter(Boolean).sort()[0] ?? null;
   const isLeader = Boolean(user?.roles?.includes("lider"));
+  // Sem partida no placar, o campeonato em destaque ja aparece no topo; a secao abaixo mostra so a agenda.
+  const heroShowsSpotlight = !portal?.featured_match && Boolean(spotlight);
+  const agenda = heroShowsSpotlight ? upcoming : upcoming.filter((item) => item.id !== spotlight?.id);
 
   return <div className="pb-12">
     <section className="arena-grid border-b border-arena-line bg-[radial-gradient(700px_320px_at_8%_0%,rgba(61,139,255,.16),transparent_60%),radial-gradient(640px_300px_at_95%_0%,rgba(255,176,32,.12),transparent_60%)]">
@@ -79,16 +82,18 @@ export function HomePage() {
     <main>
       <section className="mx-auto max-w-[1500px] px-4 py-12 lg:px-8">
         <SectionHeading action="Ver todos" href="/torneios" title="Campeonatos" />
-        {loading ? <Skeleton className="h-56 w-full" /> : spotlight ? <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
-          <TournamentSpotlight tournament={spotlight} />
-          {upcoming.filter((item) => item.id !== spotlight.id).length ? <div className="overflow-hidden border border-arena-line">
-            <DataTable data={upcoming.filter((item) => item.id !== spotlight.id).slice(0, 5)} columns={[
+        {loading ? <Skeleton className="h-56 w-full" /> : spotlight ? <div className={heroShowsSpotlight ? "" : "grid gap-6 xl:grid-cols-[1.1fr_.9fr]"}>
+          {heroShowsSpotlight ? null : <TournamentSpotlight tournament={spotlight} />}
+          {agenda.length ? <div className="overflow-hidden border border-arena-line">
+            <DataTable data={agenda.slice(0, 6)} columns={[
               { header:"Campeonato", cell:(item) => <Link className="font-semibold hover:text-cyan-200" to={`/torneios/${item.id}`}>{item.nome}</Link> },
               { header:"Início", cell:(item) => date(item.inicio) },
               { header:"Prêmio", cell:(item) => prize(item.premiacao) },
-              { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` }
+              { header:"Inscrição", cell:(item) => entryFee(item) },
+              { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` },
+              { header:"Situação", cell:(item) => <Badge tone={item.status === "aberto" ? "warning" : "neutral"}>{status(item.status)}</Badge> }
             ]} />
-          </div> : null}
+          </div> : heroShowsSpotlight ? <EmptyLine>Novos campeonatos aparecem aqui assim que forem publicados.</EmptyLine> : null}
         </div> : <EmptyLine>Nenhum campeonato publicado ainda. <Link className="font-semibold text-cyan-200" to="/contato">Fale com a organização</Link> para trazer o seu.</EmptyLine>}
       </section>
 
@@ -193,7 +198,7 @@ function TournamentSpotlight({ tournament, compact = false }: { tournament: Port
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
-  return <div className="min-w-0 border-t-2 border-arena-line pt-2"><dt className="text-xs text-arena-muted">{label}</dt><dd className="truncate font-display text-lg font-semibold">{value}</dd></div>;
+  return <div className="min-w-0 border-t-2 border-arena-line pt-2"><dt className="text-xs text-arena-muted">{label}</dt><dd className="font-display text-lg font-semibold leading-snug">{value}</dd></div>;
 }
 function GameChip({ active, label, icon, onClick }: { active: boolean; label: string; icon?: ReactNode; onClick: () => void }) {
   return <button aria-pressed={active} className={`flex shrink-0 items-center gap-2 border px-3 py-1.5 text-sm font-semibold ${active ? "border-arena-blue bg-arena-blue/10 text-arena-text" : "border-arena-line text-arena-muted hover:text-arena-text"}`} onClick={onClick}>{icon}{label}</button>;
