@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createOAuthAuthorization, oauthProviderEnabled, validateOAuthState } from "../src/services/oauth.service.js";
+import { createOAuthAuthorization, existingAccountAction, oauthProviderEnabled, validateOAuthState } from "../src/services/oauth.service.js";
 
 test("gera autorizacao Google com callback e estado protegidos", () => {
   withEnv({
@@ -37,3 +37,11 @@ function withEnv(values, action) {
     for (const [key, value] of Object.entries(previous)) value === undefined ? delete process.env[key] : process.env[key] = value;
   }
 }
+
+test("vincula login social a conta existente apenas com email confirmado dos dois lados", () => {
+  const verifiedProfile = { email_verified:true };
+  assert.equal(existingAccountAction({ email_verified_at:new Date() }, verifiedProfile), "link");
+  assert.equal(existingAccountAction({ email_verified_at:null }, verifiedProfile), "claim");
+  assert.equal(existingAccountAction(null, verifiedProfile), "create");
+  assert.equal(existingAccountAction({ email_verified_at:new Date() }, { email_verified:false }), "create");
+});

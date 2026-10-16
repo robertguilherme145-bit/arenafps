@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import { findUserByEmail } from "../models/user.model.js";
-import { consumeOAuthLoginCode, createOAuthLoginCode, createOAuthUser, findOAuthAccount, linkOAuthAccount, touchOAuthAccount } from "../models/oauth.model.js";
+import { consumeOAuthLoginCode, createOAuthLoginCode, createOAuthUser, findOAuthAccount, linkOAuthAccount, reclaimUnverifiedAccount, touchOAuthAccount } from "../models/oauth.model.js";
 import { createAuthenticatedSession } from "./sessionAuth.service.js";
 
 const PROVIDERS = ["google", "discord", "steam"];
@@ -68,8 +68,14 @@ export async function finishOAuthCallback(provider, query) {
     await touchOAuthAccount(account.id);
   } else {
     const email = normalizedEmail(profile.email);
-    const existing = email && profile.email_verified ? await findUserByEmail(email) : null;
-    if (existing) {
+    const existing = email ? await findUserByEmail(email) : null;
+    const action = existingAccountAction(existing, profile);
+    if (action === "claim") {
+      // Conta criada com este email mas nunca confirmada: quem provou ser dono do email
+      // no provedor assume a conta, e senha, sessoes, 2FA e vinculos anteriores sao descartados.
+      await reclaimUnverifiedAccount(Number(existing.id), await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10));
+    }
+    if (action === "link" || action === "claim") {
       userId = Number(existing.id);
       await linkOAuthAccount(userId, oauthInput(provider, profile));
     } else {
@@ -87,6 +93,11 @@ export async function finishOAuthCallback(provider, query) {
   const rawCode = crypto.randomBytes(32).toString("hex");
   await createOAuthLoginCode(userId, hash(rawCode));
   return rawCode;
+}
+
+export function existingAccountAction(existing, profile) {
+  if (!existing || !profile.email_verified) return "create";
+  return existing.email_verified_at ? "link" : "claim";
 }
 
 export async function exchangeOAuthCode(code, metadata) {

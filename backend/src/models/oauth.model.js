@@ -55,6 +55,22 @@ export async function linkOAuthAccount(userId, input) {
   }
 }
 
+export async function reclaimUnverifiedAccount(userId, passwordHash) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [[user]] = await connection.query("SELECT id FROM users WHERE id=? AND email_verified_at IS NULL FOR UPDATE", [userId]);
+    if (!user) { await connection.commit(); return false; }
+    await connection.query("UPDATE users SET senha_hash=? WHERE id=?", [passwordHash, userId]);
+    await connection.query("UPDATE user_sessions SET revoked_at=NOW() WHERE user_id=? AND revoked_at IS NULL", [userId]);
+    await connection.query("DELETE FROM user_two_factor WHERE user_id=?", [userId]);
+    await connection.query("DELETE FROM oauth_accounts WHERE user_id=?", [userId]);
+    await connection.commit();
+    return true;
+  } catch (error) { await connection.rollback(); throw error; }
+  finally { connection.release(); }
+}
+
 export async function touchOAuthAccount(id) {
   await pool.query(`UPDATE oauth_accounts SET last_login_at=NOW() WHERE id=?`, [id]);
 }
