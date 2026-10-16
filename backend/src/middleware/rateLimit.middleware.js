@@ -50,5 +50,7 @@ export const loginIpLimiter = () => limiter({ windowMs:FIFTEEN_MINUTES, limit:50
 export const registerLimiter = () => limiter({ windowMs:ONE_HOUR, limit:10, skipFailedRequests:true });
 // Acoes que disparam email.
 export const emailLimiter = () => limiter({ windowMs:ONE_HOUR, limit:5 });
+// Uploads de imagem por conta (cada imagem ocupa espaco no banco).
+export const uploadLimiter = () => limiter({ windowMs:ONE_HOUR, limit:30, key:(req) => `upload:${req.user?.id ?? clientKey(req.ip)}` });
 // Tokens de verificacao, recuperacao, troca de codigo OAuth e confirmacao de 2FA.
 export const tokenLimiter = () => limiter({ windowMs:FIFTEEN_MINUTES, limit:20 });
