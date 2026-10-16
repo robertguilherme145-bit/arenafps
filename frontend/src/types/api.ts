@@ -353,7 +353,14 @@ export type OAuthProfileCompletion = {
   email_sent?: boolean;
 };
 
+export type FeaturedMatch = {
+  id:number; tournament_id:number; tournament_name:string; status:"ao_vivo" | "agendada";
+  team_a:{ name:string; tag:string | null; logo:string | null }; team_b:{ name:string; tag:string | null; logo:string | null };
+  score_a:number; score_b:number; map_name:string | null; map_number:number | null; best_of:string | null; scheduled_at:string | null;
+};
+
 export type PublicPortalData = {
+  featured_match:FeaturedMatch | null;
   stats: { players:number; teams:number; tournaments:number; matches:number; live_matches:number; open_tournaments:number; prize_pool:number };
   games: Array<Game & { tournament_count:number; open_count:number; live_count:number }>;
   tournaments: Array<Tournament & { game_name:string; game_short_name:string; game_slug:string; format:string | null; best_of:string | null; entry_count:number }>;
