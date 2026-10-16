@@ -57,7 +57,7 @@ const productionOrigins = String(process.env.FRONTEND_URL || "")
  .map((origin) => origin.trim().replace(/\/$/, ""))
  .filter(Boolean);
 
-app.set("trust proxy", 1);
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.disable("x-powered-by");
 app.use(cors({
  origin:process.env.NODE_ENV === "production"
