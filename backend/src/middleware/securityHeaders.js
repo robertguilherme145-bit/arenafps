@@ -25,7 +25,7 @@ export function securityHeaders({ production = process.env.NODE_ENV === "product
       "Permissions-Policy":"camera=(), microphone=(), geolocation=(), payment=()",
       "Cross-Origin-Opener-Policy":"same-origin-allow-popups"
     });
-    if (production) res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    if (production) res.set("Strict-Transport-Security", "max-age=31536000");
     next();
   };
 }

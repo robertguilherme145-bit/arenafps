@@ -42,6 +42,14 @@ PAYMENT_RECONCILIATION_INTERVAL_MS=15000
 
 O `PORT` deve ser o valor fornecido pela Hostinger. Se a plataforma o injeta automaticamente, nao o duplique.
 
+## Seguranca (variaveis e cuidados)
+
+- `TRUST_PROXY_HOPS=1`: numero de proxies na frente do app. Os limites de tentativas usam o IP real do visitante; se todo o site passar a ser bloqueado junto, ajuste este valor.
+- `MP_WEBHOOK_SECRET`: em producao, webhooks do Mercado Pago sem assinatura sao ignorados. Sem o segredo, os pagamentos continuam sendo confirmados pela conciliacao automatica (a cada `PAYMENT_RECONCILIATION_INTERVAL_MS`).
+- `TOTP_ENCRYPTION_KEY` (opcional): chave que criptografa os segredos de 2FA. Sem ela, deriva do `JWT_SECRET`. Nunca troque nenhuma das duas depois que houver contas com 2FA.
+- Se alguem receber "O 2FA desta conta precisa ser redefinido", apague a linha da pessoa no phpMyAdmin: `DELETE FROM user_two_factor WHERE user_id = <id>;`. Ela entra so com a senha e ativa o 2FA de novo.
+- Rode `npm install` no deploy (nao `npm ci`): o backend usa `express-rate-limit`.
+
 ## Depois da implantacao
 
 1. Abra `https://arenafps.com.br/api/health` e confirme `status: online`.

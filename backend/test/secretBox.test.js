@@ -30,3 +30,11 @@ test("TOTP_ENCRYPTION_KEY tem prioridade sobre o JWT_SECRET", () => {
   const sealed = sealSecret("ABC", { ...env, TOTP_ENCRYPTION_KEY:"chave-propria" });
   assert.equal(openSecret(sealed, { JWT_SECRET:"mudou", TOTP_ENCRYPTION_KEY:"chave-propria" }), "ABC");
 });
+
+test("2FA com chave trocada: configuracao nao concluida e descartada, ativa pede redefinicao", async () => {
+  const { readTwoFactorSecret } = await import("../src/models/security.model.js");
+  const sealed = sealSecret("ABC", { JWT_SECRET:"chave-antiga" });
+  assert.deepEqual(readTwoFactorSecret({ secret:sealed, enabled:0 }, { JWT_SECRET:"chave-nova" }), { discard:true });
+  assert.throws(() => readTwoFactorSecret({ secret:sealed, enabled:1 }, { JWT_SECRET:"chave-nova" }), /redefinido/);
+  assert.deepEqual(readTwoFactorSecret({ secret:sealed, enabled:1 }, { JWT_SECRET:"chave-antiga" }), { secret:"ABC" });
+});
