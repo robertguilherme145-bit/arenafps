@@ -47,6 +47,7 @@ import { captureEntryPaypalPayment, createEntryPayment, createEntryPaypalPayment
 import { getTeamPlayerRanking } from "./teamRanking.service.js";
 import { getPlayerCareerSummary } from "./playerWorkspace.service.js";
 import { notifyTournamentRegulationToTeam } from "./tournamentRegulation.service.js";
+import { optionalHttpUrl } from "../utils/safeUrl.js";
 
 const MEMBER_ROLES = ["captain", "manager", "player"];
 const MEMBER_STATUSES = ["ativo", "inativo"];
@@ -495,13 +496,11 @@ function optionalText(value, maxLength) {
 
 function requiredUrl(value, message) {
   const text = requiredText(value, message, 500);
-  try { return new URL(text).toString(); } catch { throw new Error(message); }
+  return optionalHttpUrl(text, message);
 }
 
 function optionalUrl(value) {
-  const text = String(value ?? "").trim();
-  if (!text) return null;
-  try { return new URL(text).toString(); } catch { throw new Error("Informe uma URL valida."); }
+  return optionalHttpUrl(value);
 }
 
 function validDate(value, message) {

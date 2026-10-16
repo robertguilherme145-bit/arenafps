@@ -13,6 +13,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { useToast } from "../hooks/useToast";
 import { getPublicPortal, sendPublicContact } from "../services/api";
 import type { PublicPortalData } from "../types/api";
+import { safeHref } from "../utils/safeHref";
 
 const headings = {
   sobre: [
@@ -100,7 +101,7 @@ function News({ data }: { data: PublicPortalData | null }) {
             {item.link_url ? (
               <a
                 className="mt-4 inline-block text-sm font-semibold text-cyan-200"
-                href={item.link_url}
+                href={safeHref(item.link_url)}
               >
                 Ler publicação
               </a>

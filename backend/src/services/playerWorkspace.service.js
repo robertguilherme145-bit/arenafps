@@ -45,6 +45,7 @@ import { notify } from "./notification.service.js";
 import { getTeamPlayerRanking } from "./teamRanking.service.js";
 import { createTotpSecret, createTotpUri, verifyTotp } from "../utils/totp.js";
 import { evaluateAchievements } from "./achievement.service.js";
+import { optionalHttpUrl } from "../utils/safeUrl.js";
 
 export async function getPlayerWorkspace(user, requestedTeamId = null) {
   const [profileRow, games, contexts, requests, notifications, twoFactor, sessions] = await Promise.all([
@@ -429,7 +430,7 @@ function attendanceStatus(value) { if (!["confirmado", "ausente", "talvez"].incl
 function eventHasEnded(event) { const boundary = event.ends_at || event.starts_at; return Boolean(boundary && new Date(boundary).getTime() < Date.now()); }
 function requiredText(value, message, max) { const text = String(value ?? "").trim(); if (!text) throw new Error(message); return text.slice(0, max); }
 function optionalText(value, max) { const text = String(value ?? "").trim(); return text ? text.slice(0, max) : null; }
-function optionalUrl(value) { const text = String(value ?? "").trim(); if (!text) return null; try { return new URL(text).toString(); } catch { throw new Error("Informe uma URL valida."); } }
+function optionalUrl(value) { return optionalHttpUrl(value); }
 function optionalDate(value) { if (!value) return null; const date = new Date(value); if (Number.isNaN(date.getTime()) || date > new Date()) throw new Error("Data de nascimento invalida."); return date.toISOString().slice(0, 10); }
 function optionalPhone(value) { const phone=String(value??"").replace(/\D/g,""); if (!phone) return null; if (phone.length<10||phone.length>15) throw new Error("Informe um telefone valido com DDD e codigo do pais."); return `+${phone}`; }
 function optionalPixType(value) { const type=String(value??"").trim(); return ["cpf","cnpj","email","telefone","aleatoria"].includes(type) ? type : null; }

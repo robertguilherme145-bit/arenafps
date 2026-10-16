@@ -1,38 +1,14 @@
 import { Router } from "express";
-
-import {create, members, me, show, changeRole, transfer, kick}
-
-from "../controllers/team.controller.js";
-
-import {auth}
-
-from "../middleware/auth.middleware.js";
+import { create } from "../controllers/team.controller.js";
+import { auth } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 /**
  * Criar equipe
+ * As demais rotas antigas de /team foram removidas: o gerenciamento
+ * de membros acontece em /leader e /captain, que verificam o cargo.
  */
-router.post( "/", auth, create);
-
-/**
- * Minha equipe
- */
-router.get("/me", auth, me);
-
-/**
- * Listar membros
- */
-router.get("/:id/members", auth, members);
-
-router.patch("/member/:id", auth, changeRole);
-
-router.patch("/transfer-leader/:id", auth, transfer);
-
-router.delete("/member/:id", auth, kick);
-
-router.get("/:id", auth, show);
-
-
+router.post("/", auth, create);
 
 export default router;
