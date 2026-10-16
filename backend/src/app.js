@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import routes from "./routes/index.js";
 import { parseTrustProxy } from "./middleware/rateLimit.middleware.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
+import { isBrowserPageRequest } from "./utils/spaRequest.js";
 import pool from "./config/database.js";
 import { ensureAdminTables } from "./database/ensureAdminTables.js";
 import { ensureCompetitionTables } from "./database/ensureCompetitionTables.js";
@@ -71,6 +72,12 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/uploads", express.static(uploadDirectory, { maxAge:"7d", immutable:true }));
+// Recarregar /admin (e outras paginas com prefixo igual ao da API) entrega o site, nao o JSON da API.
+app.use((req,res,next) => {
+ if (!publicIndexHtml || !isBrowserPageRequest(req)) return next();
+ res.set({ "Cache-Control":"no-store, no-cache, must-revalidate, proxy-revalidate", Pragma:"no-cache", Expires:"0" });
+ return res.type("html").send(publicIndexHtml);
+});
 app.use(routes);
 
 if (publicDirectory) {
