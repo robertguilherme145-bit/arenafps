@@ -15,6 +15,7 @@ import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
 import { BracketView } from "../components/broadcast/BracketView";
 import { buildBracketColumns } from "../lib/bracket";
+import { formatPrize } from "../lib/money";
 import type { PublicTournamentCenter } from "../types/api";
 
 function safeFileName(value: string) {
@@ -85,7 +86,7 @@ export function TournamentDetailPage() {
   const [center, setCenter] = useState<PublicTournamentCenter | null>(null);
   const [tab, setTab] = useState<
     "overview" | "standings" | "bracket" | "matches" | "statistics" | "rules"
-  >(searchParams.get("tab") === "rules" ? "rules" : "overview");
+  >(initialTab(searchParams.get("tab")));
   const [selectedMatch, setSelectedMatch] = useState<
     PublicTournamentCenter["matches"][number] | null
   >(null);
@@ -153,7 +154,7 @@ export function TournamentDetailPage() {
             <h1 className="mt-3 font-display text-3xl font-bold leading-tight md:text-5xl">{tournament.nome}</h1>
             {heroDescription ? <p className="mt-3 max-w-3xl text-arena-muted">{heroDescription}</p> : null}
             <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-              <HeaderFact label="Premiação" value={prize(tournament.premiacao)} />
+              <HeaderFact label="Premiação" value={formatPrize(tournament.premiacao)} />
               <HeaderFact label="Inscrição" value={entryFee(tournament)} />
               <HeaderFact label="Equipes" value={`${center.participants.length}/${tournament.max_teams}`} />
               <HeaderFact label="Formato" value={format(tournament.format)} />
@@ -190,7 +191,7 @@ export function TournamentDetailPage() {
             </Badge>
           </div>
         ) : null}
-        <div className="flex gap-1 overflow-x-auto border-b border-arena-line" role="tablist">
+        <div className="flex gap-1 overflow-x-auto border-b border-arena-line scrollbar-thin" role="tablist">
           {[
             ["overview", "Visão geral"],
             ["standings", "Classificação"],
@@ -798,6 +799,10 @@ function Metric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+const TABS = ["overview", "standings", "bracket", "matches", "statistics", "rules"] as const;
+function initialTab(value: string | null): (typeof TABS)[number] {
+  return TABS.find((tab) => tab === value) ?? "overview";
+}
 function HeaderFact({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -806,11 +811,6 @@ function HeaderFact({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function prize(value: string | null | undefined) {
-  const text = String(value ?? "").trim();
-  if (!text) return "A definir";
-  return /^r$/i.test(text) || !/^[d.,s]+$/.test(text) ? text : `R$ ${text}`;
-}
 function statusTone(value: string) {
   return value === "em_andamento" ? "live" : value === "aberto" ? "warning" : value === "finalizado" ? "success" : "neutral";
 }
@@ -818,7 +818,7 @@ function status(value: string) {
   return (
     (
       {
-        criado: "Em preparacao",
+        criado: "Em preparação",
         aberto: "Inscrições abertas",
         fechado: "Inscrições encerradas",
         em_andamento: "Ao vivo",
@@ -833,9 +833,9 @@ function format(value: string) {
     (
       {
         mix_single_elimination: "Mix Individual",
-        single_elimination: "Eliminacao simples",
-        double_elimination: "Eliminacao dupla",
-        swiss: "Sistema suico",
+        single_elimination: "Eliminação simples",
+        double_elimination: "Eliminação dupla",
+        swiss: "Sistema suíço",
         round_robin: "Pontos corridos",
         group_playoffs: "Grupos e playoffs",
         league: "Liga",

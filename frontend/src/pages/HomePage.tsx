@@ -11,6 +11,7 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
 import { buildActivityFeed } from "../lib/activityFeed";
+import { formatPrize } from "../lib/money";
 import { getPublicPortal } from "../services/api";
 import type { PublicPortalData } from "../types/api";
 
@@ -88,7 +89,7 @@ export function HomePage() {
             <DataTable data={agenda.slice(0, 6)} columns={[
               { header:"Campeonato", cell:(item) => <Link className="font-semibold hover:text-cyan-200" to={`/torneios/${item.id}`}>{item.nome}</Link> },
               { header:"Início", cell:(item) => date(item.inicio) },
-              { header:"Prêmio", cell:(item) => prize(item.premiacao) },
+              { header:"Prêmio", cell:(item) => formatPrize(item.premiacao) },
               { header:"Inscrição", cell:(item) => entryFee(item) },
               { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` },
               { header:"Situação", cell:(item) => <Badge tone={item.status === "aberto" ? "warning" : "neutral"}>{status(item.status)}</Badge> }
@@ -184,7 +185,7 @@ function TournamentSpotlight({ tournament, compact = false }: { tournament: Port
     </div>
     <h3 className={`mt-3 font-display font-bold leading-tight ${compact ? "text-2xl" : "text-3xl"}`}>{tournament.nome}</h3>
     <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <Fact label="Prêmio" value={prize(tournament.premiacao)} />
+      <Fact label="Prêmio" value={formatPrize(tournament.premiacao)} />
       <Fact label="Inscrição" value={entryFee(tournament)} />
       <Fact label="Formato" value={format(tournament.format)} />
       <Fact label="Início" value={date(tournament.inicio)} />
@@ -215,6 +216,5 @@ function EmptyLine({ children }: { children: ReactNode }) {
 function status(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Inscrições encerradas", em_andamento:"Em andamento", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string, string>)[value] ?? value; }
 function format(value: string | null) { return ({ mix_single_elimination:"Mix individual", single_elimination:"Eliminação simples", double_elimination:"Eliminação dupla", swiss:"Sistema suíço", round_robin:"Pontos corridos", group_playoffs:"Grupos e playoffs", league:"Liga", custom:"Personalizado" } as Record<string, string>)[value ?? ""] ?? "A definir"; }
 function entryFee(tournament: { valor?: string | number | null; format?: string | null }) { const amount = Number(String(tournament.valor ?? 0).replace(/[^\d,.-]/g, "").replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) return "Grátis"; const scope = tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe"; return `${new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(amount)} ${scope}`; }
-function prize(value: string | null | undefined) { const text = String(value ?? "").trim(); if (!text) return "A definir"; return /^r\$/i.test(text) || !/^[\d.,\s]+$/.test(text) ? text : `R$ ${text}`; }
 function date(value: string | null | undefined) { return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir"; }
 function roleHref(role?: string | null) { return role === "admin" ? "/admin" : role === "lider" ? "/lider" : role === "capitao" ? "/capitao" : "/jogador"; }

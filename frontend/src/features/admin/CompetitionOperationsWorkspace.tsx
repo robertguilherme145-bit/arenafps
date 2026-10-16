@@ -978,9 +978,9 @@ function TournamentRules({ tournaments, games, competition, busy, onTournamentCh
 }
 
 const FORMAT_EXPLANATIONS: Record<TournamentCompetition["format"], string> = {
-  single_elimination: "Eliminacao simples: perdeu uma serie, está eliminado. O vencedor avanca até a final.",
-  double_elimination: "Eliminacao dupla: a equipe sai somente apos a segunda derrota.",
-  swiss: "Sistema suico: equipes com campanhas parecidas se enfrentam, sem repetir adversarios quando possivel.",
+  single_elimination: "Eliminação simples: perdeu uma serie, está eliminado. O vencedor avanca até a final.",
+  double_elimination: "Eliminação dupla: a equipe sai somente apos a segunda derrota.",
+  swiss: "Sistema suíço: equipes com campanhas parecidas se enfrentam, sem repetir adversarios quando possivel.",
   round_robin: "Todos contra todos: cada equipe enfrenta todas as outras uma vez. A classificação e por pontos.",
   group_playoffs: "Grupos + eliminatorias: todos contra todos dentro do grupo; os dois melhores avancam ao mata-mata.",
   league: "Liga: todos se enfrentam em turno e returno. A classificação final e por pontos.",

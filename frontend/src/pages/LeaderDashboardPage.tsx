@@ -636,7 +636,7 @@ function DashboardModule({
         <Card>
           <CardHeader>
             <h2 className="font-display text-xl font-semibold">
-              Proximas partidas
+              Próximas partidas
             </h2>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -651,7 +651,7 @@ function DashboardModule({
         <Card>
           <CardHeader>
             <h2 className="font-display text-xl font-semibold">
-              Ultimos resultados
+              Últimos resultados
             </h2>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1121,7 +1121,7 @@ function RosterModule({ data, busy, run }: ModuleProps) {
                 ),
             },
             {
-              header: "Ultimo acesso",
+              header: "Último acesso",
               cell: (member) =>
                 member.last_seen_at
                   ? formatDate(member.last_seen_at)
@@ -1561,7 +1561,7 @@ function TournamentsModule({
                   label="Equipes"
                   value={`${tournament.registered_teams}/${tournament.max_teams}`}
                 />
-                <Metric label="Inicio" value={formatDate(tournament.inicio)} />
+                <Metric label="Início" value={formatDate(tournament.inicio)} />
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 {!tournament.entry_id ? (
@@ -1723,7 +1723,7 @@ function TournamentCenterPanel({
           role="tablist"
         >
           {[
-            ["overview", "Visao geral"],
+            ["overview", "Visão geral"],
             ["bracket", "Chaveamento"],
             ["standings", "Tabela"],
             ["team", "Minha equipe"],
@@ -2055,7 +2055,7 @@ function MatchesModule({ data, busy, run }: ModuleProps) {
                   </h2>
                   <p className="mt-1 text-sm text-arena-muted">
                     {operations.veto.expected_step
-                      ? `Proxima acao: ${operations.veto.expected_step.action.toUpperCase()} · Equipe ${operations.veto.expected_step.team}`
+                      ? `Próxima acao: ${operations.veto.expected_step.action.toUpperCase()} · Equipe ${operations.veto.expected_step.team}`
                       : "Sequencia concluida"}
                   </p>
                 </div>
@@ -2202,7 +2202,7 @@ function CalendarModule({ data, busy, run }: ModuleProps) {
             </Select>
           </Field>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Inicio">
+            <Field label="Início">
               <Input
                 type="datetime-local"
                 value={form.starts_at}
@@ -3234,7 +3234,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
           icon={<Crown className="h-5 w-5" />}
         />
         <StatCard
-          label="Vitorias"
+          label="Vitórias"
           value={String(data.statistics.wins)}
           icon={<Trophy className="h-5 w-5" />}
         />
@@ -3302,7 +3302,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
             columns={[
               { header: "Adversario", cell: (item) => item.opponent },
               { header: "Jogos", cell: (item) => item.matches },
-              { header: "Vitorias", cell: (item) => item.wins },
+              { header: "Vitórias", cell: (item) => item.wins },
               { header: "Derrotas", cell: (item) => item.losses },
             ]}
           />
@@ -3316,7 +3316,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
             columns={[
               { header: "Temporada", cell: (item) => item.season },
               { header: "Jogos", cell: (item) => item.matches },
-              { header: "Vitorias", cell: (item) => item.wins },
+              { header: "Vitórias", cell: (item) => item.wins },
               { header: "Derrotas", cell: (item) => item.losses },
             ]}
           />
@@ -3889,9 +3889,9 @@ function formatLabel(value: string | null) {
   return (
     (
       {
-        single_elimination: "Eliminacao simples",
-        double_elimination: "Eliminacao dupla",
-        swiss: "Sistema suico",
+        single_elimination: "Eliminação simples",
+        double_elimination: "Eliminação dupla",
+        swiss: "Sistema suíço",
         round_robin: "Todos contra todos",
         group_playoffs: "Grupos + eliminatorias",
         league: "Liga",

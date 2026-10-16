@@ -36,7 +36,7 @@ export function TournamentsPage() {
   return (
     <section className="px-4 pb-12 lg:px-8">
       <PageHeader
-        eyebrow="Competicoes"
+        eyebrow="Competições"
         title="Torneios"
         description="Lista pública de campeonatos com status, datas, premiação e capacidade de equipes."
         action={user?.roles.includes("admin") ?
@@ -50,7 +50,7 @@ export function TournamentsPage() {
           <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-arena-muted" />
           <Input className="pl-9" placeholder="Pesquisar torneio" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
-        <Select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os status</option><option value="criado">Em preparacao</option><option value="aberto">Inscrições abertas</option><option value="fechado">Inscrições encerradas</option><option value="em_andamento">Ao vivo</option><option value="finalizado">Finalizado</option></Select>
+        <Select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os status</option><option value="criado">Em preparação</option><option value="aberto">Inscrições abertas</option><option value="fechado">Inscrições encerradas</option><option value="em_andamento">Ao vivo</option><option value="finalizado">Finalizado</option></Select>
         <Select aria-label="Jogo" value={game} onChange={(event) => setGame(event.target.value)}><option value="">Todos os jogos</option>{[...new Map(data.filter((item) => item.game_id).map((item) => [String(item.game_id), item.game_name || item.game_short_name || item.game])).entries()].map(([id,name]) => <option key={id} value={id}>{name}</option>)}</Select>
       </div>
 
@@ -86,7 +86,7 @@ export function TournamentsPage() {
   );
 }
 
-function statusLabel(value: string) { return ({ criado:"Em preparacao", aberto:"Inscrições abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
+function statusLabel(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
 
 function entryFee(tournament: { valor?: string | number | null; format?: string | null }) {
   const amount = Number(

@@ -52,7 +52,7 @@ export function RankingPage() {
         { header: "Posição", cell: (item) => <Badge tone={(data?.teams.indexOf(item) ?? 3) < 3 ? "info" : "neutral"}>#{(data?.teams.indexOf(item) ?? 0) + 1}</Badge> },
         { header: "Equipe", cell: (item) => <Link className="flex items-center gap-3 font-semibold hover:text-cyan-200" to={`/equipe/${item.slug}`}><RankingTeamLogo logo={item.logo} name={item.nome} /><span>{item.nome}</span></Link> },
         { header: "Jogo", cell: (item) => item.game_short_name }, { header: "Partidas", cell: (item) => item.matches },
-        { header: "Vitorias", cell: (item) => item.wins }, { header: "Derrotas", cell: (item) => item.losses },
+        { header: "Vitórias", cell: (item) => item.wins }, { header: "Derrotas", cell: (item) => item.losses },
         { header: "Win rate", cell: (item) => `${item.win_rate}%` },
       ]} />}
     </Card>

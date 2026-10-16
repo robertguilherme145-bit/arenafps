@@ -43,7 +43,7 @@ function MatchCard({ match, onOpen, emphasize }: { match: BracketMatch; onOpen?:
       <Row name={match.team_a} score={finished || live ? match.score_team_a : null} side="a" winner={finished && match.winner_team_id === match.team_a_id} />
       <Row name={match.team_b} score={finished || live ? match.score_team_b : null} side="b" winner={finished && match.winner_team_id === match.team_b_id} />
       <div className="flex items-center justify-between gap-2 border-t border-arena-line px-3 py-1.5 text-xs text-arena-muted">
-        {live ? <Badge className="h-5" tone="live">Ao vivo</Badge> : <span>{when(match)}</span>}
+        {live ? <Badge className="h-5" tone="live">Ao vivo</Badge> : <span>{finished && !match.scheduled_at ? "" : when(match)}</span>}
         <span>{finished ? "Encerrada" : live ? "" : "Agendada"}</span>
       </div>
     </button>

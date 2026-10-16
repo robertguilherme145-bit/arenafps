@@ -122,7 +122,7 @@ const statusLabels: Record<Tournament["status"], string> = {
 const adminModules = [
   {
     id: "dashboard",
-    title: "Visao geral",
+    title: "Visão geral",
     description: "Acompanhe indicadores, pendencias e o ritmo da plataforma.",
   },
   {
@@ -717,7 +717,7 @@ export function AdminDashboardPage() {
       });
       toast.success(
         "Torneio atualizado",
-        "Configuracoes principais salvas com sucesso.",
+        "Configurações principais salvas com sucesso.",
       );
       await refetchTournaments();
     } catch (err) {
@@ -1573,7 +1573,7 @@ export function AdminDashboardPage() {
           </div>
 
           <Card className="mt-6">
-            <CardHeader><h2 className="font-display text-xl font-semibold">Ultimos pagamentos</h2><p className="mt-1 text-sm text-arena-muted">Transacoes reais mais recentes no filtro selecionado.</p></CardHeader>
+            <CardHeader><h2 className="font-display text-xl font-semibold">Últimos pagamentos</h2><p className="mt-1 text-sm text-arena-muted">Transacoes reais mais recentes no filtro selecionado.</p></CardHeader>
             <DataTable data={scopedLatestPayments} empty={<div className="p-6 text-sm text-arena-muted">Nenhum pagamento registrado.</div>} columns={[
               { header: "Equipe", cell: (item) => item.team_name },
               { header: "Torneio", cell: (item) => item.tournament_name },
@@ -1739,7 +1739,7 @@ export function AdminDashboardPage() {
                           }
                         />
                       </Field>
-                      <Field label="Inicio">
+                      <Field label="Início">
                         <Input
                           type="datetime-local"
                           value={tournamentForm.inicio}
@@ -2522,7 +2522,7 @@ export function AdminDashboardPage() {
                       }))
                     }
                   >
-                    <option value="wins">Vitorias</option>
+                    <option value="wins">Vitórias</option>
                     <option value="kills">Eliminacoes</option>
                     <option value="assists">Assistencias</option>
                     <option value="headshots">Headshots</option>
@@ -3420,7 +3420,7 @@ export function AdminDashboardPage() {
               {
                 header: "Admin",
                 cell: (item) =>
-                  item.actor_name ?? `Usuario ${item.actor_user_id}`,
+                  item.actor_name ?? `Usuário ${item.actor_user_id}`,
               },
               { header: "Ação", cell: (item) => item.action },
               {
@@ -3578,7 +3578,7 @@ function playerTone(status: AdminPlayer["status"]) {
 
 function achievementMetricLabel(metric: AchievementDefinition["metric"]) {
   const labels: Record<AchievementDefinition["metric"], string> = {
-    wins: "Vitorias",
+    wins: "Vitórias",
     kills: "Eliminacoes",
     assists: "Assistencias",
     headshots: "Headshots",
