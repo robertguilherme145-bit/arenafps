@@ -1060,3 +1060,33 @@ export async function updateTournamentStream(tournamentId: number, streamUrl: st
   const { data } = await api.put<{ tournament_id: number; stream_url: string | null }>(`/admin/competition/tournaments/${tournamentId}/stream`, { stream_url: streamUrl });
   return data;
 }
+
+export type AdminTournamentOverview = {
+  tournament: { id:number; nome:string; status:string; inicio:string | null; fim:string | null; max_teams:number; titulares:number; reservas:number; valor:string; premiacao:string | null; banner:string | null; descricao:string | null; game:string; stream_url:string | null };
+  settings: { format:string | null; best_of:string | null; pick_ban_enabled:number; registration_closes_at:string | null } | null;
+  entries: { total:number; confirmed:number; pending_payment:number };
+  matchCount: number;
+  mapCount: number;
+  kind: "equipes" | "mix" | "custom";
+  stage: string | null;
+  stages: Array<{ key:string; label:string; state:"feito" | "atual" | "pendente" }>;
+  checklist: Array<{ key:string; label:string; required:boolean; done:boolean; hint:string }>;
+  ready: boolean;
+  nextAction: { key:"publish" | "close" | "structure" | "start" | "draw" | "manual"; label:string; status?:string; href?:string } | null;
+  note: string | null;
+};
+
+export async function createAdminTournamentDraft(input: { tournament: Record<string, unknown>; competition: Record<string, unknown>; mix?: Record<string, unknown> }) {
+  const { data } = await api.post<{ id:number }>("/admin/tournaments", input);
+  return data;
+}
+
+export async function getAdminTournamentOverview(tournamentId: number) {
+  const { data } = await api.get<AdminTournamentOverview>(`/admin/tournaments/${tournamentId}/overview`);
+  return data;
+}
+
+export async function duplicateAdminTournament(tournamentId: number) {
+  const { data } = await api.post<{ id:number }>(`/admin/tournaments/${tournamentId}/duplicate`);
+  return data;
+}

@@ -28,11 +28,10 @@ import { ImageUploadField } from "../components/ui/ImageUploadField";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
 import {
-  createTournament,
-  getAdminCompetitionGames,
+  createAdminTournamentDraft, getAdminCompetitionGames,
   getGameMaps,
-  updateTournamentCompetition
-  ,configureMixTournament
+
+
 } from "../services/api";
 import type { AdminCompetitionGame, GameMap, VetoStep } from "../types/api";
 import { cn } from "../utils/cn";
@@ -43,6 +42,7 @@ const schema = z.object({
   descricao: z.string().trim().min(10, "Descreva a proposta do torneio."),
   inicio: z.string().min(1, "Informe o inicio."),
   fim: z.string().min(1, "Informe o encerramento."),
+  inscricoes_ate: z.string().optional(),
   valor: z.coerce.number().min(0),
   tournament_mode: z.enum(["team","mix"]),
   payment_mode: z.enum(["free","paid"]),
@@ -60,38 +60,29 @@ const schema = z.object({
   tiebreakers: z.string().trim().min(3),
   pick_ban_enabled: z.boolean(),
   auto_decider: z.boolean(),
-  premiacao: z.string().trim().min(1, "Informe a premiação."),
+  premiacao: z.string().trim().optional(),
   banner: z.string().trim().optional()
 }).refine((data) => new Date(data.inicio) < new Date(data.fim), {
   path: ["fim"],
   message: "O fim deve ser posterior ao inicio."
+}).refine((data) => !data.inscricoes_ate || new Date(data.inscricoes_ate) <= new Date(data.inicio), {
+  path: ["inscricoes_ate"],
+  message: "As inscrições precisam fechar antes do início."
 }).refine((data) => data.payment_mode === "free" || data.valor > 0, { path:["valor"], message:"Informe o valor da inscrição." });
 
 type WizardFormInput = z.input<typeof schema>;
 type WizardForm = z.output<typeof schema>;
 
 const steps = [
-  { title: "Informações", description: "Identidade e jogo" },
-  { title: "Datas", description: "Periodo da competição" },
-  { title: "Inscrições", description: "Vagas, lineup e pagamento" },
-  { title: "Formato", description: "Estrutura e series" },
-  { title: "Regras", description: "Operação da partida" },
-  { title: "Map Pool", description: "Mapas e ordem de veto" },
-  { title: "Premiação", description: "Premios e apresentacao" },
-  { title: "Resumo", description: "Revisão completa" },
-  { title: "Publicação", description: "Criar na plataforma" }
+  { title: "Básico", description: "Nome, jogo, datas e formato" },
+  { title: "Inscrições", description: "Vagas, valor e premiação" },
+  { title: "Partidas", description: "Série, mapas e veto" }
 ];
 
 const stepFields: Array<Array<keyof WizardForm>> = [
-  ["nome", "game", "descricao"],
-  ["inicio", "fim"],
-  ["tournament_mode", "payment_mode", "valor", "max_teams", "titulares", "reservas", "registration_approval"],
-  ["formato", "best_of", "seed_mode"],
-  ["initial_side", "pause_minutes", "walkover_minutes", "tiebreakers"],
-  ["pick_ban_enabled", "auto_decider"],
-  ["premiacao", "banner"],
-  [],
-  []
+  ["nome", "game", "descricao", "inicio", "fim", "inscricoes_ate", "formato", "best_of", "seed_mode"],
+  ["tournament_mode", "payment_mode", "valor", "max_teams", "titulares", "reservas", "registration_approval", "premiacao", "banner"],
+  ["pick_ban_enabled", "auto_decider", "initial_side", "pause_minutes", "walkover_minutes", "tiebreakers"]
 ];
 
 const DRAFT_KEY = "arena-camp:tournament-draft:v2";
@@ -102,6 +93,7 @@ const initialValues: WizardForm = {
   descricao: "",
   inicio: "",
   fim: "",
+  inscricoes_ate: "",
   valor: 0,
   tournament_mode: "team",
   payment_mode: "free",
@@ -227,7 +219,7 @@ export function TournamentWizardPage() {
       toast.warning("Revise está etapa", "Corrija os campos indicados antes de continuar.");
       return;
     }
-    if (step === 5 && values.pick_ban_enabled) {
+    if (step === 2 && values.pick_ban_enabled) {
       if (selectedMapIds.length < requiredMaps) {
         toast.warning("Map pool incompleto", `Uma serie ${values.best_of.toUpperCase()} exige ao menos ${requiredMaps} mapas.`);
         return;
@@ -244,7 +236,7 @@ export function TournamentWizardPage() {
       }
       if (completedOrder.length !== vetoOrder.length) setVetoOrder(completedOrder);
     }
-    if (step === 5 && isMix && selectedMapIds.length < 1) { toast.warning("Map pool vazio", "O Mix precisa de ao menos um mapa para o sorteio automatico."); return; }
+    if (step === 2 && isMix && selectedMapIds.length < 1) { toast.warning("Map pool vazio", "O Mix precisa de ao menos um mapa para o sorteio automatico."); return; }
     const next = Math.min(steps.length - 1, step + 1);
     setPublishError(null);
     setFurthestStep((current) => Math.max(current, next));
@@ -295,11 +287,11 @@ export function TournamentWizardPage() {
       return;
     }
     if (data.pick_ban_enabled && selectedMapIds.length < Number(data.best_of.replace("bo", ""))) {
-      setStep(5);
+      setStep(2);
       toast.warning("Map pool incompleto", "Revise os mapas antes de publicar.");
       return;
     }
-    if(data.tournament_mode === "mix" && selectedMapIds.length < 1){setStep(5);toast.warning("Map pool vazio","Selecione ao menos um mapa para o Mix.");return;}
+    if(data.tournament_mode === "mix" && selectedMapIds.length < 1){setStep(2);toast.warning("Map pool vazio","Selecione ao menos um mapa para o Mix.");return;}
 
     const publishVetoOrder = data.pick_ban_enabled
       ? completeAutomaticVetoOrder(vetoOrder, data.best_of, data.auto_decider)
@@ -308,46 +300,47 @@ export function TournamentWizardPage() {
     setPublishing(true);
     setPublishError(null);
     try {
-      const tournament = await createTournament({
-        nome: data.nome,
-        descricao: data.descricao,
-        game: data.game,
-        valor: data.valor,
-        max_teams: data.max_teams,
-        titulares: data.titulares,
-        reservas: data.reservas,
-        premiacao: data.premiacao,
-        banner: data.banner || null,
-        inicio: toApiDate(data.inicio),
-        fim: toApiDate(data.fim)
+      const tournament = await createAdminTournamentDraft({
+        tournament: {
+          nome: data.nome,
+          descricao: data.descricao,
+          game: data.game,
+          valor: data.valor,
+          max_teams: data.max_teams,
+          titulares: data.titulares,
+          reservas: data.reservas,
+          premiacao: data.premiacao || null,
+          banner: data.banner || null,
+          inicio: toApiDate(data.inicio),
+          fim: toApiDate(data.fim)
+        },
+        competition: {
+          game_id: Number(data.game),
+          format: data.formato,
+          best_of: data.best_of,
+          pick_ban_enabled: data.pick_ban_enabled,
+          veto_order: publishVetoOrder,
+          auto_decider: data.auto_decider,
+          overtime_enabled: data.overtime_enabled,
+          initial_side: data.initial_side,
+          pause_minutes: data.pause_minutes,
+          walkover_minutes: data.walkover_minutes,
+          tiebreakers: data.tiebreakers,
+          seed_mode: data.seed_mode,
+          registration_approval: data.registration_approval,
+          map_ids: selectedMapIds,
+          registration_closes_at: data.inscricoes_ate ? toApiDate(data.inscricoes_ate) : null
+        },
+        mix: data.tournament_mode === "mix" ? { payment_mode:data.payment_mode, price_per_player:data.valor, team_count:data.max_teams, players_per_team:data.titulares } : undefined
       });
-
-      await updateTournamentCompetition(tournament.id, {
-        game_id: Number(data.game),
-        format: data.formato,
-        best_of: data.best_of,
-        pick_ban_enabled: data.pick_ban_enabled,
-        veto_order: publishVetoOrder,
-        auto_decider: data.auto_decider,
-        overtime_enabled: data.overtime_enabled,
-        initial_side: data.initial_side,
-        pause_minutes: data.pause_minutes,
-        walkover_minutes: data.walkover_minutes,
-        tiebreakers: data.tiebreakers,
-        seed_mode: data.seed_mode,
-        registration_approval: data.registration_approval,
-        map_ids: selectedMapIds
-      });
-
-      if (data.tournament_mode === "mix") await configureMixTournament(tournament.id, { payment_mode:data.payment_mode, price_per_player:data.valor, team_count:data.max_teams, players_per_team:data.titulares });
 
       window.localStorage.removeItem(DRAFT_KEY);
-      toast.success("Torneio publicado", `${tournament.nome} foi criado com regulamento e map pool.`);
-      navigate(data.tournament_mode === "mix" ? `/admin/mix/${tournament.id}` : `/admin?module=competitions&game=${data.game}`);
+      toast.success("Rascunho criado", `${data.nome} foi salvo. Confira a lista e publique quando estiver pronto.`);
+      navigate(`/admin/torneios/${tournament.id}`);
     } catch (error) {
       const message = messageOf(error);
       setPublishError(message);
-      toast.error("Falha ao publicar", message);
+      toast.error("Não foi possível criar o rascunho", message);
     } finally {
       setPublishing(false);
     }
@@ -367,7 +360,7 @@ export function TournamentWizardPage() {
 
   return (
     <section className="px-4 pb-12 lg:px-8">
-      <PageHeader eyebrow="Competições" title="Criar torneio" description="Configure cada regra antes da publicação. Nenhum formato ou mapa e fixo no sistema." />
+      <PageHeader title="Novo torneio" description="Três passos. O torneio nasce como rascunho e só aparece no site quando você publicar." />
       <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <Card className="self-start xl:sticky xl:top-20">
           <CardContent className="p-3">
@@ -383,19 +376,13 @@ export function TournamentWizardPage() {
         <Card>
           <CardHeader><p className="text-xs font-semibold uppercase text-cyan-200">Etapa {step + 1} de {steps.length}</p><h2 className="mt-2 font-display text-xl font-semibold">{steps[step].title}</h2><p className="mt-1 text-sm text-arena-muted">{steps[step].description}</p></CardHeader>
           <CardContent className="min-h-[430px] space-y-5">
-            {step === 0 ? <GeneralStep games={games} register={register} errors={errors} /> : null}
-            {step === 1 ? <DatesStep register={register} errors={errors} /> : null}
-            {step === 2 ? <RegistrationStep register={register} errors={errors} values={values} /> : null}
-            {step === 3 ? <FormatStep disabled={isMix} register={register} /> : null}
-            {step === 4 ? <RulesStep register={register} /> : null}
-            {step === 5 ? <MapPoolStep autoDecider={values.auto_decider} bestOf={values.best_of} maps={maps} pickBanEnabled={values.pick_ban_enabled} register={register} selectedMapIds={selectedMapIds} vetoOrder={vetoOrder} onMapsChange={(ids) => { setSelectedMapIds(ids); if (!vetoTouched) setVetoOrder(buildDefaultVetoOrder(values.best_of, ids.length)); }} onVetoChange={(order) => { setVetoTouched(true); setVetoOrder(order); }} onResetVeto={() => { setVetoTouched(false); setVetoOrder(buildDefaultVetoOrder(values.best_of, selectedMapIds.length)); }} /> : null}
-            {step === 6 ? <PrizeStep register={register} errors={errors} banner={values.banner} onBanner={(url)=>setValue("banner", url, { shouldDirty:true })} /> : null}
-            {step === 7 ? <ReviewStep items={previewItems} maps={maps.filter((map) => selectedMapIds.includes(map.id))} values={values} /> : null}
-            {step === 8 ? <PublishStep error={publishError} mapCount={selectedMapIds.length} tournamentName={values.nome} userRole={user?.role ?? null} /> : null}
+            {step === 0 ? <><GeneralStep games={games} register={register} errors={errors} /><DatesStep register={register} errors={errors} /><FormatStep disabled={isMix} register={register} /></> : null}
+            {step === 1 ? <><RegistrationStep register={register} errors={errors} values={values} /><PrizeStep register={register} errors={errors} banner={values.banner} onBanner={(url)=>setValue("banner", url, { shouldDirty:true })} /></> : null}
+            {step === 2 ? <><MapPoolStep autoDecider={values.auto_decider} bestOf={values.best_of} maps={maps} pickBanEnabled={values.pick_ban_enabled} register={register} selectedMapIds={selectedMapIds} vetoOrder={vetoOrder} onMapsChange={(ids) => { setSelectedMapIds(ids); if (!vetoTouched) setVetoOrder(buildDefaultVetoOrder(values.best_of, ids.length)); }} onVetoChange={(order) => { setVetoTouched(true); setVetoOrder(order); }} onResetVeto={() => { setVetoTouched(false); setVetoOrder(buildDefaultVetoOrder(values.best_of, selectedMapIds.length)); }} /><details className="border border-arena-line p-4"><summary className="cursor-pointer font-semibold">Regras avançadas</summary><p className="mt-2 text-sm text-arena-muted">Lado inicial, pausas, W.O. e desempate já vêm com o padrão recomendado.</p><div className="mt-4"><RulesStep register={register} /></div></details>{publishError ? <p className="border border-arena-danger/50 bg-arena-danger/10 p-3 text-sm text-[#ff8a96]">{publishError}</p> : null}</> : null}
           </CardContent>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-arena-line p-5">
             <div className="flex gap-2"><Button disabled={step === 0} icon={<ArrowLeft className="h-4 w-4" />} variant="secondary" onClick={() => { setPublishError(null); setStep((current) => Math.max(0, current - 1)); }}>Voltar</Button><Button icon={<Save className="h-4 w-4" />} variant="ghost" onClick={saveDraft}>Salvar rascunho</Button></div>
-            {step < steps.length - 1 ? <Button icon={<ArrowRight className="h-4 w-4" />} onClick={() => void nextStep()}>Continuar</Button> : <Button loading={publishing} icon={<Rocket className="h-4 w-4" />} onClick={handleSubmit(publishTournament, handleInvalidPublish)}>Publicar torneio</Button>}
+            {step < steps.length - 1 ? <Button icon={<ArrowRight className="h-4 w-4" />} onClick={() => void nextStep()}>Continuar</Button> : <Button loading={publishing} icon={<Rocket className="h-4 w-4" />} onClick={handleSubmit(publishTournament, handleInvalidPublish)}>Criar rascunho</Button>}
           </div>
         </Card>
 
@@ -417,7 +404,7 @@ type Register = UseFormRegister<WizardFormInput>;
 type Errors = FieldErrors<WizardFormInput>;
 
 function GeneralStep({ games, register, errors }: { games: AdminCompetitionGame[]; register: Register; errors: Errors }) { return <div className="grid gap-4 md:grid-cols-2"><Field label="Nome do torneio" error={errors.nome?.message}><Input placeholder="Ex.: Arena Camp Masters" {...register("nome")} /></Field><Field label="Jogo" error={errors.game?.message}><Select {...register("game")}><option value="">Selecione o jogo</option>{games.map((game) => <option key={game.id} value={game.id}>{game.nome} ({game.active_maps_count} mapas)</option>)}</Select></Field><div className="md:col-span-2"><Field label="Descrição" error={errors.descricao?.message}><textarea className="min-h-32 w-full resize-y rounded-arena border border-arena-line bg-black/25 p-3 text-sm text-arena-text focus:border-arena-cyan" placeholder="Apresente a competição, público e objetivo." {...register("descricao")} /></Field></div></div>; }
-function DatesStep({ register, errors }: { register: Register; errors: Errors }) { return <div className="grid gap-4 md:grid-cols-2"><Field label="Início" error={errors.inicio?.message}><Input type="datetime-local" {...register("inicio")} /></Field><Field label="Encerramento" error={errors.fim?.message}><Input type="datetime-local" {...register("fim")} /></Field></div>; }
+function DatesStep({ register, errors }: { register: Register; errors: Errors }) { return <div className="grid gap-4 md:grid-cols-2"><Field label="Início" error={errors.inicio?.message}><Input type="datetime-local" {...register("inicio")} /></Field><Field label="Encerramento" error={errors.fim?.message}><Input type="datetime-local" {...register("fim")} /></Field><Field label="Inscrições até (opcional)" error={errors.inscricoes_ate?.message}><Input type="datetime-local" {...register("inscricoes_ate")} /></Field><p className="self-end text-sm text-arena-muted">Na data escolhida, as inscrições fecham sozinhas e a organização recebe um aviso.</p></div>; }
 function RegistrationStep({ register, errors, values }: { register: Register; errors: Errors; values:WizardForm }) { const mix=values.tournament_mode==="mix";return <div className="grid gap-4 md:grid-cols-2"><Field label="Tipo de torneio"><Select {...register("tournament_mode")}><option value="team">Inscrição por equipes</option><option value="mix">Mix Individual - equipes sorteadas</option></Select></Field><Field label="Modelo de inscrição"><Select {...register("payment_mode")}><option value="free">Gratuita</option><option value="paid">Paga</option></Select></Field>{values.payment_mode==="paid"?<Field label={mix?"Valor por jogador":"Valor por equipe"} error={errors.valor?.message}><Input min="0.01" step="0.01" type="number" {...register("valor")} /></Field>:null}<Field label={mix?"Quantidade de equipes":"Maximo de equipes"} error={errors.max_teams?.message}>{mix?<Select {...register("max_teams")}><option value="2">2 equipes</option><option value="4">4 equipes</option><option value="8">8 equipes</option><option value="16">16 equipes</option></Select>:<Input min="2" type="number" {...register("max_teams")} />}</Field><Field label={mix?"Jogadores por equipe":"Titulares"} error={errors.titulares?.message}><Input min="1" max={mix?10:undefined} type="number" {...register("titulares")} /></Field>{!mix?<Field label="Reservas" error={errors.reservas?.message}><Input min="0" type="number" {...register("reservas")} /></Field>:null}{!mix?<Field label="Aprovacao"><Select {...register("registration_approval")}><option value="manual">Manual pelo administrador</option><option value="automatic">Automatica</option></Select></Field>:<div className="border border-cyan-400/30 bg-cyan-400/10 p-4 text-sm text-cyan-100"><strong>{Number(values.max_teams)*Number(values.titulares)} vagas individuais.</strong><p className="mt-1 text-arena-muted">MD1, eliminacao simples, mapa e equipes sorteados automaticamente.</p></div>}</div>; }
 function FormatStep({ register, disabled=false }: { register: Register; disabled?:boolean }) { return <div className="grid gap-4 md:grid-cols-2"><Field label="Formato"><Select disabled={disabled} {...register("formato")}><option value="mix_single_elimination">Mix Individual</option><option value="single_elimination">Eliminação simples</option><option value="double_elimination">Eliminação dupla</option><option value="swiss">Sistema suíço</option><option value="round_robin">Todos contra todos</option><option value="group_playoffs">Fase de grupos + eliminatorias</option><option value="league">Liga</option><option value="custom">Personalizado</option></Select></Field><Field label="Serie"><Select disabled={disabled} {...register("best_of")}><option value="bo1">MD1</option><option value="bo3">MD3</option><option value="bo5">MD5</option></Select></Field><Field label="Seed"><Select disabled={disabled} {...register("seed_mode")}><option value="automatic">Automatico</option><option value="manual">Manual</option></Select></Field>{disabled?<p className="text-sm text-arena-muted md:col-span-2">No Mix, formato, serie, mapa e seed sao controlados automaticamente.</p>:null}</div>; }
 function RulesStep({ register }: { register: Register }) { return <div className="grid gap-4 md:grid-cols-2"><Field label="Side inicial"><Select {...register("initial_side")}><option value="knife">Knife round</option><option value="random">Sorteio</option><option value="higher_seed">Melhor seed</option><option value="home_team">Equipe A</option></Select></Field><Field label="Tempo de pausa (min)"><Input min="0" type="number" {...register("pause_minutes")} /></Field><Field label="Tempo para W.O. (min)"><Input min="0" type="number" {...register("walkover_minutes")} /></Field><Field label="Criterios oficiais de desempate"><Input readOnly {...register("tiebreakers")} /><p className="mt-1 text-xs text-arena-muted">Protegidos pelo motor; mapas não disputados não contam.</p></Field><label className="flex items-center gap-3 text-sm font-semibold"><input className="h-4 w-4 accent-cyan-400" type="checkbox" {...register("overtime_enabled")} />Overtime permitido</label></div>; }
