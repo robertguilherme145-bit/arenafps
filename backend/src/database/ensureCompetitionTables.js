@@ -262,6 +262,8 @@ export async function ensureCompetitionTables() {
   // Link da transmissao (Twitch, YouTube ou Kick): da partida e o canal principal do torneio.
   await ensureColumn("matches", "stream_url", "VARCHAR(500) NULL");
   await ensureColumn("tournaments", "stream_url", "VARCHAR(500) NULL");
+  // Prazo das inscricoes: o fechamento automatico usa esta data.
+  await ensureColumn("tournament_competition_settings", "registration_closes_at", "DATETIME NULL");
   await pool.query(`CREATE TABLE IF NOT EXISTS tournament_byes (
     tournament_id INT NOT NULL,
     round INT NOT NULL,
