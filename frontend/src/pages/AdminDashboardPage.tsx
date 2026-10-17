@@ -187,7 +187,7 @@ export function AdminDashboardPage() {
       : "dashboard";
   });
   const [activeTournamentId, setActiveTournamentId] = useState<number | null>(
-    null,
+    () => Number(searchParams.get("torneio")) || null,
   );
   const [games, setGames] = useState<AdminCompetitionGame[]>([]);
   const [gameFilter, setGameFilter] = useState(
@@ -1617,6 +1617,14 @@ export function AdminDashboardPage() {
                       </option>
                     ))}
                   </Select>
+                  {activeTournament ? (
+                    <Link
+                      className="text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+                      to={`/admin/torneios/${activeTournament.id}`}
+                    >
+                      Abrir página do torneio
+                    </Link>
+                  ) : null}
                 </div>
               </CardHeader>
               <CardContent className="space-y-5">

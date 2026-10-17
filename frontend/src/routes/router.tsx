@@ -5,6 +5,7 @@ import { RequireRole } from "../components/layout/RequireRole";
 import { LegacyRedirect } from "./LegacyRedirect";
 
 const AdminDashboardPage = lazyPage(() => import("../pages/AdminDashboardPage"), "AdminDashboardPage");
+const AdminTournamentPage = lazyPage(() => import("../pages/AdminTournamentPage"), "AdminTournamentPage");
 const CaptainDashboardPage = lazyPage(() => import("../pages/CaptainDashboardPage"), "CaptainDashboardPage");
 const CommunityDirectoryPage = lazyPage(() => import("../pages/CommunityDirectoryPage"), "CommunityDirectoryPage");
 const GamesPage = lazyPage(() => import("../pages/GamesPage"), "GamesPage");
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
       { path: "/capitao", element: <RequireRole role="capitao"><CaptainDashboardPage /></RequireRole> },
       { path: "/jogador", element: <RequireRole role="jogador"><PlayerDashboardPage /></RequireRole> },
       { path: "/admin/torneios/novo", element: <RequireRole role="admin"><TournamentWizardPage /></RequireRole> },
+      { path: "/admin/torneios/:id", element: <RequireRole role="admin"><AdminTournamentPage /></RequireRole> },
       { path: "/admin/mix/:id", element: <RequireRole role="admin"><AdminMixTournamentPage /></RequireRole> },
       { path: "/equipe/:slug", element: <ProfilePage type="equipe" /> },
       { path: "/team/:slug", element: <LegacyRedirect /> },
