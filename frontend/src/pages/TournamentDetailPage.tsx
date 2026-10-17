@@ -14,9 +14,11 @@ import { useToast } from "../hooks/useToast";
 import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
 import { BracketView } from "../components/broadcast/BracketView";
+import { RegistrationGuide } from "../components/tournament/RegistrationGuide";
+import { registrationGuide } from "../lib/registrationGuide";
 import { StreamPlayer } from "../components/broadcast/StreamPlayer";
 import { buildBracketColumns } from "../lib/bracket";
-import { formatPrize } from "../lib/money";
+import { formatEntryFee, formatPrize } from "../lib/money";
 import type { PublicTournamentCenter } from "../types/api";
 import { TournamentStatusBadge } from "../components/ui/StatusBadge";
 import { tournamentStatusLabel } from "../lib/tournamentStatus";
@@ -126,6 +128,18 @@ export function TournamentDetailPage() {
   const tournament = center.tournament;
   const heroDescription = tournamentHeroSummary(tournament.descricao);
   // Transmissao: a da partida ao vivo; sem ela, o canal do torneio enquanto ele estiver em andamento.
+  // Cartao "Sua inscricao": cruza as equipes da pessoa com as inscricoes e partidas deste torneio.
+  const myTeamIds = new Set((user?.team_contexts ?? []).map((team) => Number(team.team_id)));
+  const nextMatch = center.matches.find((match) => (match.status === "agendada" || match.status === "andamento") && (myTeamIds.has(Number(match.team_a_id)) || myTeamIds.has(Number(match.team_b_id)))) ?? null;
+  const guide = registrationGuide({
+    loggedIn:Boolean(user),
+    tournament:{ status:tournament.status, format:tournament.format ?? null, game_id:tournament.game_id ?? null },
+    teams:(user?.team_contexts ?? []).map((team) => ({ team_id:Number(team.team_id), game_id:Number(team.game_id), role:team.role })),
+    entries:center.participants.map((item) => ({ team_id:Number(item.team_id), status:item.status, payment_status:item.payment_status })),
+    nextMatchId:nextMatch?.id ?? null,
+    paid:false,
+    free:formatEntryFee(tournament) === "Grátis"
+  });
   const liveMatch = center.matches.find((match) => match.status === "andamento") ?? null;
   const liveStream = liveMatch?.stream_url || (liveMatch || tournament.status === "em_andamento" ? tournament.stream_url : null) || null;
   const stats = statsQuery.data ?? [];
@@ -167,14 +181,7 @@ export function TournamentDetailPage() {
               <HeaderFact label="Início" value={date(tournament.inicio)} />
             </dl>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {tournament.status === "aberto" ? (
-              <Link to={user ? (user.roles?.includes("lider") ? "/lider" : "/jogador") : "/criar-conta"}>
-                <Button variant="urgent">Inscrever equipe</Button>
-              </Link>
-            ) : null}
-            <Button variant="secondary" onClick={() => { setTab("rules"); setSearchParams({ tab: "rules" }); }}>Regulamento</Button>
-          </div>
+          <RegistrationGuide guide={guide} />
         </div>
       </header>
       <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-8">
