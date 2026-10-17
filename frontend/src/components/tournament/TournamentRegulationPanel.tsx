@@ -57,7 +57,7 @@ export function TournamentRegulationPanel({ tournament, mapPool = [], compact = 
       <Rule title="Pontuação" text="3 pontos por vitoria de serie. Não existem pontos artificiais por mapas que não foram jogados." />
       <Rule title="Desempate protegido" text="Pontos, confronto direto, aproveitamento e saldo medio por mapa realmente jogado." />
       <Rule title="Serie encerrada" text={`Em ${series}, a serie termina ao atingir a maioria. Um 2 x 0 continua 2 x 0; o mapa restante e cancelado.`} />
-      <Rule title="Pick & Ban" text={tournament.pick_ban_enabled ? "Ativo, seguindo a ordem publicada pela organizacao." : "Desativado para este torneio."} />
+      <Rule title="Veto de mapas" text={tournament.pick_ban_enabled ? "Ativo, seguindo a ordem publicada pela organizacao." : "Desativado para este torneio."} />
       <Rule title="Operação" text={`Pausa: ${tournament.pause_minutes ?? 0} min · W.O.: ${tournament.walkover_minutes ?? 0} min · Prorrogacao: ${tournament.overtime_enabled ? "permitida" : "não permitida"}.`} />
       <Rule title="Inscrições" text={tournament.registration_approval === "automatic" ? "Aprovacao automatica quando os requisitos forem atendidos." : "Confirmação sujeita a validacao da organizacao."} />
     </div>
