@@ -41,20 +41,16 @@ export const footerNavigation = [
   { label: "FAQ", href: "/faq", icon: CircleHelp }
 ];
 
+// Painel da organizacao: 8 secoes (ver lib/adminSections.ts).
 export const adminNavigation = [
-  { label: "Visão geral", href: "/admin?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Torneios e inscrições", href: "/admin?module=competitions", icon: Trophy, module: "competitions" },
-  { label: "Central de partidas", href: "/admin?module=operations", icon: Swords, module: "operations" }
-];
-
-export const adminControlNavigation = [
-  { label: "Equipes e jogadores", href: "/admin?module=community", icon: Users, module: "community" },
-  { label: "Contas e permissões", href: "/admin?module=access", icon: KeyRound, module: "access" },
-  { label: "Conquistas e XP", href: "/admin?module=progression", icon: Medal, module: "progression" },
-  { label: "Conteúdo do portal", href: "/admin?module=content", icon: Newspaper, module: "content" },
-  { label: "Circuito oficial", href: "/admin?module=official", icon: RadioTower, module: "official" },
-  { label: "Financeiro", href: "/admin?module=finance", icon: CreditCard, module: "finance" },
-  { label: "Auditoria", href: "/admin?module=audit", icon: History, module: "audit" }
+  { label: "Hoje", href: "/admin", icon: LayoutDashboard },
+  { label: "Torneios", href: "/admin/torneios", icon: Trophy },
+  { label: "Partidas", href: "/admin/partidas", icon: Swords },
+  { label: "Comunidade", href: "/admin/comunidade", icon: Users },
+  { label: "Conteúdo", href: "/admin/conteudo", icon: Newspaper },
+  { label: "Financeiro", href: "/admin/financeiro", icon: CreditCard },
+  { label: "Acessos", href: "/admin/acessos", icon: KeyRound },
+  { label: "Auditoria", href: "/admin/auditoria", icon: History }
 ];
 
 export const adminActionNavigation = [

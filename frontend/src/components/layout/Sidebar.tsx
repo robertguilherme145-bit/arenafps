@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight, Compass, LayoutDashboard } from "lucide-reac
 import { cn } from "../../utils/cn";
 import {
   adminActionNavigation,
-  adminControlNavigation,
   adminNavigation,
   arenaNavigation,
   footerNavigation,
@@ -146,9 +145,8 @@ function getSections(area: string, isAdmin = false) {
   switch (area) {
     case "admin":
       return [
-        { title: "Competição", items: adminNavigation },
-        { title: "Plataforma", items: adminControlNavigation },
-        { title: "Ações", items: adminActionNavigation }
+        { title: "Painel da organização", items: adminNavigation },
+        { title: "Atalhos", items: [...adminActionNavigation, { label: "Minha Arena", href: "/minha-arena", icon: LayoutDashboard }] }
       ];
     case "arena":
       return [

@@ -1090,3 +1090,23 @@ export async function duplicateAdminTournament(tournamentId: number) {
   const { data } = await api.post<{ id:number }>(`/admin/tournaments/${tournamentId}/duplicate`);
   return data;
 }
+
+export type AdminTodayItem = {
+  key: string;
+  kind: "disputa" | "partida" | "pagamento" | "torneio" | "chamado" | "contato";
+  severity: "alta" | "media" | "baixa";
+  title: string;
+  detail: string;
+  action: string;
+  href: string;
+};
+
+export type AdminToday = {
+  items: AdminTodayItem[];
+  numbers: { matches_today: number; live_matches: number; registrations_today: number; revenue_today: number };
+};
+
+export async function getAdminToday() {
+  const { data } = await api.get<AdminToday>("/admin/today");
+  return data;
+}

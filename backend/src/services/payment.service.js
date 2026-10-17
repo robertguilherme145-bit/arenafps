@@ -307,7 +307,7 @@ async function notifyPaymentApproved(payment) {
     titulo: `Pagamento ${providerName} confirmado`,
     mensagem: message,
     tipo: "payment_approved",
-    link: "/admin?module=finance",
+    link: "/admin/financeiro",
     dedupe_key: `payment-approved:${payment.id}:admin:${adminId}`
   })));
 

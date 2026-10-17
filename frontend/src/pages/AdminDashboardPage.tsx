@@ -1,5 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, NavLink, useParams, useSearchParams } from "react-router-dom";
+import { PageTabs } from "../components/ui/PageTabs";
+import { TodayQueue } from "../features/admin/TodayQueue";
+import { AuditSection } from "../features/admin/sections/AuditSection";
+import { FinanceSection } from "../features/admin/sections/FinanceSection";
+import { ADMIN_SECTIONS, adminModuleFor, adminPathForModule, adminSection } from "../lib/adminSections";
+import { NotFoundPage } from "./NotFoundPage";
+import {
+  blankTournamentForm,
+  toDatetimeLocal,
+  toApiDate,
+  buildTournamentForm,
+  parseIds,
+  formatCurrency,
+  formatDateTime,
+  formatRelativeDate,
+  auditActionLabel,
+  stringifyDetails,
+  paymentTone,
+  playerTone,
+  achievementMetricLabel,
+  publicContentTypeLabel,
+  roleLabel,
+  MetricTile,
+  Field,
+  QueueLine
+} from "../features/admin/adminShared";
 import {
   BadgeDollarSign,
   Ban,
@@ -120,72 +146,23 @@ const statusLabels: Record<Tournament["status"], string> = {
   cancelado: "Cancelado",
 };
 
-const adminModules = [
-  {
-    id: "dashboard",
-    title: "Visão geral",
-    description: "Acompanhe indicadores, pendencias e o ritmo da plataforma.",
-  },
-  {
-    id: "competitions",
-    title: "Torneios e inscrições",
-    description: "Configure torneios, aprove equipes e organize as lineups.",
-  },
-  {
-    id: "operations",
-    title: "Central de partidas",
-    description: "Cadastre jogos e mapas, prepare partidas, veto de mapas e resultados.",
-  },
-  {
-    id: "community",
-    title: "Equipes e jogadores",
-    description: "Gerencie a comunidade, comunicados, penalidades e disputas.",
-  },
-  {
-    id: "progression",
-    title: "Conquistas e XP",
-    description: "Crie metas competitivas e recompensas para os jogadores.",
-  },
-  {
-    id: "content",
-    title: "Conteúdo do portal",
-    description: "Publique noticias, FAQ, parceiros e mensagens institucionais.",
-  },
-  {
-    id: "official",
-    title: "Circuito oficial",
-    description: "Publique campeonatos externos, agenda, transmissao e resultados.",
-  },
-  {
-    id: "access",
-    title: "Contas e permissões",
-    description: "Controle papeis, jogos vinculados e verificacao das contas.",
-  },
-  {
-    id: "finance",
-    title: "Financeiro",
-    description: "Acompanhe pagamentos, confirmacoes e receita dos torneios.",
-  },
-  {
-    id: "audit",
-    title: "Auditoria",
-    description: "Consulte o histórico de alteracoes administrativas.",
-  },
-] as const;
 
+// Painel da organizacao. A secao vem do endereco (/admin/:secao?aba=); links antigos com ?module= sao convertidos.
 export function AdminDashboardPage() {
+  const params = useParams();
+  const [searchParams] = useSearchParams();
+  const section = adminSection(params.secao);
+  if (searchParams.has("module")) return <Navigate replace to={adminPathForModule(searchParams.get("module"), searchParams.toString())} />;
+  if (!section) return <NotFoundPage />;
+  return <AdminWorkspace key={section.key} section={section} />;
+}
+
+function AdminWorkspace({ section }: { section: NonNullable<ReturnType<typeof adminSection>> }) {
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: tournaments = [], refetch: refetchTournaments } =
     useTournaments();
-  const [activeModule, setActiveModule] = useState<
-    (typeof adminModules)[number]["id"]
-  >(() => {
-    const requested = searchParams.get("module");
-    return adminModules.some((module) => module.id === requested)
-      ? (requested as (typeof adminModules)[number]["id"])
-      : "dashboard";
-  });
+  const { module: activeModule, tab: activeTab } = adminModuleFor(section, searchParams.get("aba"));
   const [activeTournamentId, setActiveTournamentId] = useState<number | null>(
     () => Number(searchParams.get("torneio")) || null,
   );
@@ -357,8 +334,6 @@ export function AdminDashboardPage() {
   const newTournamentHref = selectedGame
     ? `/admin/torneios/novo?game=${selectedGame.id}`
     : "/admin/torneios/novo";
-  const activeModuleInfo =
-    adminModules.find((module) => module.id === activeModule) ?? adminModules[0];
   const showsGameFilter = !["content", "official", "audit"].includes(activeModule);
   const showsStatusFilter = ["dashboard", "competitions"].includes(activeModule);
   const showsTournamentAction = ["dashboard", "competitions"].includes(activeModule);
@@ -440,13 +415,6 @@ export function AdminDashboardPage() {
     });
     return months;
   }, [scopedEntries, scopedPayments]);
-  const operationalPriorities = [
-    { label: "Inscrições aguardando analise", value: scopedPendingEntries, module: "competitions" as const },
-    { label: "Pagamentos aguardando confirmação", value: scopedPendingPayments, module: "finance" as const },
-    { label: "Partidas aguardando resultado", value: adminDashboard?.matches_waiting_result ?? 0, module: "operations" as const },
-    { label: "Disputas abertas", value: adminDashboard?.open_disputes ?? 0, module: "community" as const },
-    { label: "Tickets abertos", value: adminDashboard?.open_tickets ?? 0, module: "community" as const },
-  ].filter((item) => item.value > 0);
   const filteredTickets = useMemo(() => {
     const query = ticketSearch.trim().toLowerCase();
     return tickets.filter((ticket) => {
@@ -497,16 +465,6 @@ export function AdminDashboardPage() {
     );
   }, [filteredTournaments]);
 
-  useEffect(() => {
-    const requested = searchParams.get("module");
-    if (
-      requested &&
-      adminModules.some((module) => module.id === requested) &&
-      requested !== activeModule
-    ) {
-      setActiveModule(requested as (typeof adminModules)[number]["id"]);
-    }
-  }, [searchParams, activeModule]);
 
   useEffect(() => {
     const requestedGame = searchParams.get("game") || "all";
@@ -1359,16 +1317,24 @@ export function AdminDashboardPage() {
 
   return (
     <section className="px-4 pb-12 lg:px-8">
+      <nav aria-label="Seções do painel" className="-mx-4 mb-2 flex gap-1 overflow-x-auto border-b border-arena-line px-4 scrollbar-thin lg:hidden">
+        {ADMIN_SECTIONS.map((item) => (
+          <NavLink className={({ isActive }) => `shrink-0 px-3 py-3 text-sm font-semibold ${isActive ? "text-arena-text shadow-[inset_0_-3px_0_#ffb020]" : "text-arena-muted"}`} end key={item.key} to={item.href}>{item.label}</NavLink>
+        ))}
+      </nav>
       <PageHeader
-        eyebrow="Admin"
-        title={activeModuleInfo.title}
-        description={activeModuleInfo.description}
+        title={section.label}
+        description={section.description}
         action={
           showsTournamentAction ? <Link to={newTournamentHref}>
             <Button icon={<Plus className="h-4 w-4" />}>Novo torneio</Button>
           </Link> : undefined
         }
       />
+
+      {section.tabs.length > 1 ? <div className="mb-6"><PageTabs items={section.tabs.map((item) => ({ value:item.key, label:item.label }))} label={`Abas de ${section.label}`} value={activeTab} onChange={(value) => { const next = new URLSearchParams(searchParams); next.set("aba", value); setSearchParams(next); }} /></div> : null}
+
+      {activeModule === "dashboard" ? <div className="mb-8"><TodayQueue /></div> : null}
 
       {showsGameFilter ? <div className={`mb-6 grid gap-4 border-y border-arena-line bg-black/15 py-4 ${showsStatusFilter ? "lg:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_minmax(260px,1.2fr)]" : "lg:grid-cols-[minmax(260px,.8fr)_minmax(300px,1.2fr)]"} lg:items-end`}>
         <Field label="Jogo">
@@ -1529,32 +1495,7 @@ export function AdminDashboardPage() {
             </Card>
           </div>
 
-          <div className="mt-6 grid gap-5 xl:grid-cols-[.9fr_1.1fr]">
-            <Card>
-              <CardHeader>
-                <h2 className="font-display text-xl font-semibold">Prioridades agora</h2>
-                <p className="mt-1 text-sm text-arena-muted">Somente itens que exigem uma decisao ou atualizacao.</p>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {operationalPriorities.length ? operationalPriorities.map((item) => (
-                  <Link
-                    className="flex items-center justify-between border border-arena-line bg-black/20 px-4 py-3 transition hover:border-cyan-400/40 hover:bg-cyan-400/5"
-                    key={item.label}
-                    to={`/admin?module=${item.module}`}
-                  >
-                    <span className="text-sm font-semibold">{item.label}</span>
-                    <span className="flex h-7 min-w-7 items-center justify-center bg-amber-400/10 px-2 text-sm font-bold text-amber-200">{item.value}</span>
-                  </Link>
-                )) : (
-                  <div className="flex min-h-48 flex-col items-center justify-center border border-dashed border-emerald-400/25 bg-emerald-400/5 px-6 text-center">
-                    <CheckCircle2 className="h-8 w-8 text-emerald-300" />
-                    <p className="mt-3 font-semibold">Operação em dia</p>
-                    <p className="mt-1 text-sm text-arena-muted">Não existem pendencias administrativas neste momento.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
+          <div className="mt-6 grid gap-5">
             <Card>
               <CardHeader>
                 <h2 className="font-display text-xl font-semibold">Atividade recente</h2>
@@ -1568,7 +1509,7 @@ export function AdminDashboardPage() {
                   </div>
                 ))}
                 {!auditLogs.length ? <div className="flex min-h-48 items-center justify-center border border-dashed border-arena-line text-sm text-arena-muted">Nenhuma atividade administrativa registrada.</div> : null}
-                {auditLogs.length ? <Link className="mt-3 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100" to="/admin?module=audit">Ver auditoria completa</Link> : null}
+                {auditLogs.length ? <Link className="mt-3 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100" to="/admin/auditoria">Ver auditoria completa</Link> : null}
               </CardContent>
             </Card>
           </div>
@@ -3324,360 +3265,10 @@ export function AdminDashboardPage() {
 
       {activeModule === "official" ? <OfficialTournamentsWorkspace /> : null}
 
-      {activeModule === "finance" ? (
-        <Card className="mt-6">
-          <CardHeader>
-            <h2 className="font-display text-xl font-semibold">
-              Backoffice de pagamentos
-            </h2>
-          </CardHeader>
-          <DataTable
-            data={filteredPayments}
-            empty={
-              <div className="p-6 text-sm text-arena-muted">
-                Nenhum pagamento encontrado.
-              </div>
-            }
-            columns={[
-              { header: "Equipe", cell: (item) => item.team_name },
-              { header: "Torneio", cell: (item) => item.tournament_name },
-              { header: "Valor", cell: (item) => formatCurrency(item.valor) },
-              {
-                header: "Gateway",
-                cell: (item) => (
-                  <Badge tone={paymentTone(item.status)}>{item.status}</Badge>
-                ),
-              },
-              {
-                header: "Inscrição",
-                cell: (item) => (
-                  <Badge
-                    tone={
-                      item.entry_payment_status === "pago"
-                        ? "success"
-                        : "warning"
-                    }
-                  >
-                    {item.entry_payment_status}
-                  </Badge>
-                ),
-              },
-              {
-                header: "Ações",
-                cell: (item) => (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        void handlePaymentStatus(item.id, "aprovado")
-                      }
-                    >
-                      Aprovar
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        void handlePaymentStatus(item.id, "pendente")
-                      }
-                    >
-                      Pendente
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() =>
-                        void handlePaymentStatus(item.id, "cancelado")
-                      }
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Card>
-      ) : null}
+      {activeModule === "finance" ? <FinanceSection payments={filteredPayments} onStatus={(id, status) => void handlePaymentStatus(id, status)} /> : null}
 
-      {activeModule === "audit" ? (
-        <Card className="mt-6">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-display text-xl font-semibold">
-                Auditoria administrativa
-              </h2>
-              <Button
-                variant="secondary"
-                icon={<FileSpreadsheet className="h-4 w-4" />}
-                onClick={() => void loadAdminWorkspace()}
-              >
-                Recarregar logs
-              </Button>
-            </div>
-          </CardHeader>
-          <DataTable
-            data={auditLogs}
-            empty={
-              <div className="p-6 text-sm text-arena-muted">
-                {loadingAdmin
-                  ? "Carregando auditoria..."
-                  : "Nenhum log encontrado."}
-              </div>
-            }
-            columns={[
-              {
-                header: "Quando",
-                cell: (item) => formatDateTime(item.created_at),
-              },
-              {
-                header: "Admin",
-                cell: (item) =>
-                  item.actor_name ?? `Usuário ${item.actor_user_id}`,
-              },
-              { header: "Ação", cell: (item) => item.action },
-              {
-                header: "Entidade",
-                cell: (item) =>
-                  `${item.entity_type}${item.entity_id ? ` #${item.entity_id}` : ""}`,
-              },
-              {
-                header: "Detalhes",
-                cell: (item) => (
-                  <span className="line-clamp-2 text-xs text-arena-muted">
-                    {stringifyDetails(item.details)}
-                  </span>
-                ),
-              },
-            ]}
-          />
-        </Card>
-      ) : null}
+      {activeModule === "audit" ? <AuditSection logs={auditLogs} loading={loadingAdmin} onReload={() => void loadAdminWorkspace()} /> : null}
     </section>
   );
 }
 
-function blankTournamentForm() {
-  return {
-    nome: "",
-    descricao: "",
-    valor: "",
-    max_teams: "",
-    titulares: "",
-    reservas: "",
-    premiacao: "",
-    inicio: "",
-    fim: "",
-  };
-}
-
-function toDatetimeLocal(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-}
-
-function toApiDate(value: string) {
-  return new Date(value).toISOString().slice(0, 19).replace("T", " ");
-}
-
-function buildTournamentForm(tournament: Tournament) {
-  return {
-    nome: tournament.nome,
-    descricao: tournament.descricao ?? "",
-    valor: String(tournament.valor ?? ""),
-    max_teams: String(tournament.max_teams ?? ""),
-    titulares: String(tournament.titulares ?? ""),
-    reservas: String(tournament.reservas ?? ""),
-    premiacao: tournament.premiacao ?? "",
-    inicio: toDatetimeLocal(tournament.inicio),
-    fim: toDatetimeLocal(tournament.fim),
-  };
-}
-
-function parseIds(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item) => Number(item))
-    .filter((item) => !Number.isNaN(item));
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
-
-function formatDateTime(value?: string | null) {
-  return value ? new Date(value).toLocaleString("pt-BR") : "data não informada";
-}
-
-function formatRelativeDate(value: string) {
-  const date = new Date(value);
-  const seconds = Math.round((date.getTime() - Date.now()) / 1000);
-  const formatter = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" });
-  if (Math.abs(seconds) < 60) return formatter.format(seconds, "second");
-  const minutes = Math.round(seconds / 60);
-  if (Math.abs(minutes) < 60) return formatter.format(minutes, "minute");
-  const hours = Math.round(minutes / 60);
-  if (Math.abs(hours) < 24) return formatter.format(hours, "hour");
-  const days = Math.round(hours / 24);
-  if (Math.abs(days) < 30) return formatter.format(days, "day");
-  return date.toLocaleDateString("pt-BR");
-}
-
-function auditActionLabel(action: string) {
-  const labels: Record<string, string> = {
-    "payment.updated": "Pagamento atualizado",
-    "entry.approved": "Inscrição aprovada",
-    "entry.cancelled": "Inscrição cancelada",
-    "player.updated": "Jogador atualizado",
-    "team.updated": "Equipe atualizada",
-    "game.map.created": "Mapa cadastrado",
-    "game.map.updated": "Mapa atualizado",
-    "game.map.deleted": "Mapa excluido",
-    "game.deleted": "Jogo excluido",
-    "account.banned": "Conta banida",
-    "account.unbanned": "Banimento removido",
-    "tournament.updated": "Torneio atualizado",
-  };
-  return labels[action] || action.replaceAll(".", " · ").replaceAll("_", " ");
-}
-
-function stringifyDetails(value: unknown) {
-  if (!value) {
-    return "-";
-  }
-
-  return typeof value === "string" ? value : JSON.stringify(value);
-}
-
-function paymentTone(status: AdminPayment["status"]) {
-  if (status === "aprovado") {
-    return "success";
-  }
-
-  if (status === "cancelado" || status === "rejeitado") {
-    return "danger";
-  }
-
-  return "warning";
-}
-
-function playerTone(status: AdminPlayer["status"]) {
-  if (status === "ativo") {
-    return "success";
-  }
-
-  if (status === "banido") {
-    return "danger";
-  }
-
-  if (status === "reserva") {
-    return "info";
-  }
-
-  return "warning";
-}
-
-function achievementMetricLabel(metric: AchievementDefinition["metric"]) {
-  const labels: Record<AchievementDefinition["metric"], string> = {
-    wins: "Vitórias",
-    kills: "Eliminacoes",
-    assists: "Assistencias",
-    headshots: "Headshots",
-    mvps: "MVPs",
-    matches: "Partidas",
-    win_streak: "Sequencia",
-    global_rank: "Ranking",
-  };
-  return labels[metric];
-}
-
-function publicContentTypeLabel(type: PublicContent["type"]) {
-  return (
-    {
-      noticia: "Noticia",
-      parceiro: "Parceiro",
-      depoimento: "Depoimento",
-      faq: "FAQ",
-    } as Record<PublicContent["type"], string>
-  )[type];
-}
-
-function roleLabel(role: string) {
-  return (
-    (
-      {
-        jogador: "Jogador",
-        lider: "Líder",
-        capitao: "Capitão",
-        admin: "Administrador",
-      } as Record<string, string>
-    )[role] ?? role
-  );
-}
-
-function MetricTile({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-arena border border-arena-line bg-black/20 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[.16em] text-arena-muted">
-          {title}
-        </p>
-        <div className="text-cyan-200">{icon}</div>
-      </div>
-      <p className="mt-3 font-display text-2xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-function QueueLine({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-arena border border-arena-line bg-black/20 px-4 py-3">
-      <div className="flex items-center gap-3">
-        <div className="text-cyan-200">{icon}</div>
-        <span className="text-sm">{label}</span>
-      </div>
-      <span className="text-sm font-semibold text-arena-text">{value}</span>
-    </div>
-  );
-}
