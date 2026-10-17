@@ -32,7 +32,9 @@ export function registrationGuide(input: GuideInput): Guide {
   ];
   const result = (action: GuideAction | null, note: string | null = null): Guide => ({ steps, action, note });
 
-  if (!input.loggedIn) return open ? result({ label:"Criar conta para participar", href:"/criar-conta", tone:"urgent" }) : result(null, CLOSED_NOTE);
+  // Sem inscricao num torneio fechado, os passos nao ajudam: so o aviso.
+  const closedForMe = (): Guide => ({ steps:[], action:null, note:CLOSED_NOTE });
+  if (!input.loggedIn) return open ? result({ label:"Criar conta para participar", href:"/criar-conta", tone:"urgent" }) : closedForMe();
   if (input.tournament.format === "mix_single_elimination") {
     return open ? result({ label:"Inscrever-se no Mix", href:"/jogador?module=mix", tone:"urgent" }) : result({ label:"Ver minha inscrição no Mix", href:"/jogador?module=mix", tone:"secondary" });
   }
@@ -46,7 +48,7 @@ export function registrationGuide(input: GuideInput): Guide {
     return result(null, "Inscrição enviada. Aguardando a aprovação da organização.");
   }
 
-  if (!open) return result(null, CLOSED_NOTE);
+  if (!open) return closedForMe();
   if (!gameTeams.length) return result({ label:"Criar ou entrar numa equipe", href:"/jogador?module=teams", tone:"primary" });
   if (isLeader) return result({ label:"Inscrever equipe", href:"/lider?module=tournaments", tone:"urgent" });
   return result(null, "Peça ao líder da sua equipe para inscrever vocês neste campeonato.");

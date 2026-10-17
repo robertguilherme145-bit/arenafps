@@ -17,6 +17,7 @@ test("torneio que ja comecou nao oferece inscricao", () => {
   const guide = registrationGuide({ ...base, tournament:{ ...open, status:"em_andamento" }, teams:leader });
   assert.equal(guide.action, null);
   assert.match(guide.note!, /inscrições estão encerradas/);
+  assert.deepEqual(guide.steps, []);
 });
 
 test("Mix: inscricao individual", () => {
