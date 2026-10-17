@@ -52,6 +52,7 @@ import {
   tournamentTeams,
   updateMap,
   updateTournamentCompetition,
+  tournamentStream,
   vetoAction
 } from "../controllers/competitionSetup.controller.js";
 import { create as createAchievement, index as achievements, update as updateAchievement } from "../controllers/achievement.controller.js";
@@ -98,6 +99,7 @@ router.delete("/competition/maps/:mapId", deleteMap);
 
 router.get("/competition/tournaments/:tournamentId", tournamentCompetition);
 router.put("/competition/tournaments/:tournamentId", updateTournamentCompetition);
+router.put("/competition/tournaments/:tournamentId/stream", tournamentStream);
 router.post("/competition/tournaments/:tournamentId/structure", generateStructure);
 router.get("/competition/tournaments/:tournamentId/teams", tournamentTeams);
 

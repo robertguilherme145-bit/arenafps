@@ -569,3 +569,12 @@ export async function resetVetoData(matchId) {
     connection.release();
   }
 }
+
+export async function updateMatchStream(matchId, streamUrl) {
+  await pool.query("UPDATE matches SET stream_url = ? WHERE id = ?", [streamUrl, matchId]);
+}
+
+export async function updateTournamentStream(tournamentId, streamUrl) {
+  const [result] = await pool.query("UPDATE tournaments SET stream_url = ? WHERE id = ?", [streamUrl, tournamentId]);
+  return result.affectedRows > 0;
+}
