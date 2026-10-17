@@ -26,6 +26,7 @@ import { ensureModerationAndOfficialTables } from "./database/ensureModerationAn
 import { ensureMediaTables } from "./database/ensureMediaTables.js";
 import { ensureIntegrationTables } from "./database/ensureIntegrationTables.js";
 import { startPaymentReconciliation } from "./services/paymentReconciliation.service.js";
+import { startRegistrationCloser } from "./services/registrationCloser.service.js";
 import { startDiscordBot, stopDiscordBot } from "./services/discordBot.service.js";
 
 const app = express();
@@ -144,6 +145,7 @@ async function start() {
 
    console.log("Servidor iniciado");
    startPaymentReconciliation();
+   startRegistrationCloser();
    startDiscordBot().catch((error) => console.error("Falha ao iniciar Discord:", error));
 
    }
