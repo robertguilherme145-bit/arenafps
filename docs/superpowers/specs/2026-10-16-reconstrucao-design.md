@@ -102,7 +102,7 @@ Layout próprio, sem o menu público, com o botão "Ver site". Menu com 8 itens:
 4. **Barra de etapas:**
    - Rascunho → Inscrições abertas → Inscrições encerradas → Chave gerada → Em andamento → Finalizado (e Cancelado fora da linha).
    - Cada etapa tem uma única ação principal: Publicar e abrir inscrições, Encerrar inscrições, Gerar chave, Iniciar torneio, Finalizar.
-   - Mapeamento para o `tournaments.status` atual: rascunho = `criado`, inscrições abertas = `aberto`, encerradas = `fechado`. "Chave gerada" é derivada de existirem partidas com `status=fechado`. Em andamento = `em_andamento`, finalizado = `finalizado`.
+   - Mapeamento para o `tournaments.status` atual: rascunho = `criado`, inscrições abertas = `aberto`, encerradas = `fechado`. "Chave gerada" significa que o torneio tem ao menos uma partida (ver as decisões após a revisão). Em andamento = `em_andamento`, finalizado = `finalizado`.
 5. **Fechamento automático:** um job no backend, no mesmo estilo da conciliação de pagamentos, a cada 5 minutos, passa para `fechado` os torneios `aberto` com `registration_closes_at` vencido e notifica os admins. Também roda ao iniciar o servidor.
 6. **Duplicar torneio:** cria um rascunho com as mesmas configurações, map pool, veto, regulamento e premiação. O nome ganha "(cópia)", e as datas e as inscrições ficam vazias.
 
