@@ -45,7 +45,7 @@ export function AppLayout() {
   );
 }
 
-const CRUMBS: Record<string, string> = { admin:"Painel da organização", lider:"Líder", capitao:"Capitão", jogador:"Jogador", torneios:"Torneios", novo:"Novo torneio", mix:"Torneio Mix" };
+const CRUMBS: Record<string, string> = { admin:"Painel da organização", "minha-arena":"Minha Arena", partidas:"Partidas", time:"Meu time", carreira:"Carreira", suporte:"Suporte", configuracoes:"Configurações", torneios:"Torneios", novo:"Novo torneio", mix:"Torneio Mix" };
 // Numeros na trilha (ex.: /admin/torneios/7) viram "Torneio".
 const NUMERIC = /^[0-9]+$/;
 function crumbLabel(crumb: string) {

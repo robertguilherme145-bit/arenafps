@@ -1,3 +1,4 @@
+import { LoadFailed } from "./LoadFailed";
 import { Bell, CalendarDays, ExternalLink, Medal, RefreshCw, Shield, Swords } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -14,27 +15,24 @@ import {
   PlayerSupportModule,
   PlayerTeamsModule,
   type PlayerRunner
-} from "../features/player/PlayerWorkspaceModules";
-import { Button } from "../components/ui/Button";
-import { Select } from "../components/ui/Form";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Skeleton } from "../components/ui/Skeleton";
-import { useToast } from "../hooks/useToast";
-import { getPlayerWorkspace } from "../services/api";
-import type { PlayerWorkspace } from "../types/api";
-import { PlayerMixModule } from "../features/player/PlayerMixModule";
+} from "../../features/player/PlayerWorkspaceModules";
+import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Form";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { useToast } from "../../hooks/useToast";
+import { getPlayerWorkspace } from "../../services/api";
+import type { PlayerWorkspace } from "../../types/api";
+import { PlayerMixModule } from "../../features/player/PlayerMixModule";
 
 const modules = ["dashboard", "profile", "teams", "mix", "lineup", "matches", "calendar", "statistics", "career", "messages", "support", "settings"] as const;
-type PlayerModule = typeof modules[number];
+export type PlayerModule = typeof modules[number];
 
-export function PlayerDashboardPage() {
+// Espaco do jogador dentro da Minha Arena.
+export function PlayerArena({ module: activeModule, teamId }: { module: PlayerModule; teamId: number | null }) {
   const toast = useToast();
-  const [searchParams] = useSearchParams();
-  const requested = searchParams.get("module");
-  const normalized = requested === "convites" || requested === "ranking" ? (requested === "convites" ? "teams" : "statistics") : requested;
-  const activeModule: PlayerModule = modules.includes(normalized as PlayerModule) ? normalized as PlayerModule : "dashboard";
   const [workspace, setWorkspace] = useState<PlayerWorkspace | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(teamId);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -44,7 +42,7 @@ export function PlayerDashboardPage() {
       setWorkspace(data);
       setSelectedTeamId(data.current_team?.team_id ?? null);
     } catch (error) {
-      toast.error("Falha ao abrir o painel", messageOf(error));
+      toast.error("Não foi possível carregar seus dados", messageOf(error));
     } finally {
       setLoading(false);
     }
@@ -60,14 +58,15 @@ export function PlayerDashboardPage() {
       if (refresh) await load();
       return true;
     } catch (error) {
-      toast.error("Operação não concluida", messageOf(error));
+      toast.error("Operação não concluída", messageOf(error));
       return false;
     } finally {
       setBusy(null);
     }
   };
 
-  if (loading || !workspace) return <PlayerLoading />;
+  if (loading) return <PlayerLoading />;
+  if (!workspace) return <LoadFailed onRetry={() => { setLoading(true); void load(); }} />;
 
   const moduleProps = { data: workspace, busy, run };
   const content = {
@@ -85,26 +84,15 @@ export function PlayerDashboardPage() {
     settings: <PlayerSettingsModule {...moduleProps} />
   }[activeModule];
 
-  const team = workspace.current_team;
-  return <section className="px-4 pb-12 lg:px-8">
-    <PageHeader
-      eyebrow="Jogador"
-      title={workspace.profile.nickname || workspace.profile.nome}
-      description={team ? `${team.team_name} · ${team.game_name} · carreira competitiva` : "Construa seu perfil competitivo e encontre uma equipe"}
-      action={<div className="flex flex-wrap gap-2">
-        {workspace.teams.length > 1 ? <Select className="min-w-56" value={team?.team_id ?? ""} onChange={(event) => { const id = Number(event.target.value); setSelectedTeamId(id); void load(id); }}>{workspace.teams.map((item) => <option key={item.team_id} value={item.team_id}>{item.team_name} · {item.game_name}</option>)}</Select> : null}
-        <Link to={`/jogador/${publicSlug(workspace.profile.nickname || String(workspace.profile.id))}`}><Button icon={<ExternalLink className="h-4 w-4" />} variant="secondary">Meu perfil público</Button></Link>
-        {team ? <Link to={`/equipe/${team.team_slug}`}><Button icon={<Shield className="h-4 w-4" />} variant="secondary">Perfil da equipe</Button></Link> : null}
-      </div>}
-    />
-    <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  return <div className="space-y-6">
+    {activeModule === "dashboard" ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <ContextItem icon={<Swords className="h-4 w-4" />} label="Próxima partida" value={nextMatchLabel(workspace)} />
       <ContextItem icon={<Medal className="h-4 w-4" />} label="Ranking geral" value={workspace.career.totals.global_rank ? `#${workspace.career.totals.global_rank}` : "Ainda sem posição"} />
       <ContextItem icon={<CalendarDays className="h-4 w-4" />} label="Agenda" value={`${workspace.matches.filter((item) => item.status !== "finalizada").length + workspace.events.length} compromissos`} />
       <ContextItem icon={<Bell className="h-4 w-4" />} label="Notificações" value={`${workspace.notifications.filter((item) => !item.lida).length} nao lidas`} action={<button aria-label="Atualizar painel" className="text-arena-muted hover:text-cyan-200" title="Atualizar painel" onClick={() => void run("reload", load, "Painel atualizado", false)}><RefreshCw className={`h-4 w-4 ${busy === "reload" ? "animate-spin" : ""}`} /></button>} />
-    </div>
+    </div> : null}
     {content}
-  </section>;
+  </div>;
 }
 
 function ContextItem({ icon, label, value, action }: { icon: React.ReactNode; label: string; value: string; action?: React.ReactNode }) {

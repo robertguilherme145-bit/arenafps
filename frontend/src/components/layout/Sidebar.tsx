@@ -5,14 +5,8 @@ import {
   adminActionNavigation,
   adminControlNavigation,
   adminNavigation,
-  captainControlNavigation,
-  captainNavigation,
-  captainTeamNavigation,
+  arenaNavigation,
   footerNavigation,
-  leaderCompetitionNavigation,
-  leaderControlNavigation,
-  leaderNavigation,
-  playerNavigation,
   publicNavigation
 } from "../../constants/navigation";
 import { useAuth } from "../../contexts/AuthContext";
@@ -26,7 +20,7 @@ export function Sidebar() {
   const { user } = useAuth();
 
   const area = getArea(location.pathname, user?.role ?? null);
-  const sections = getSections(area);
+  const sections = getSections(area, Boolean(user?.roles.includes("admin")));
 
   return (
     <aside
@@ -36,16 +30,9 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-full flex-col gap-6">
-        {!collapsed ? (
+        {!collapsed && area === "public" ? (
           <div className="rounded-arena border border-arena-line bg-white/[.03] p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-cyan-200">
-              {area === "public" ? "Plataforma" : "Painel"}
-            </p>
-            <p className="mt-2 text-sm text-arena-muted">
-              {area === "public"
-                ? "Explore torneios, rankings e calendarios da Arena Camp."
-                : "Area privada com ferramentas focadas no seu papel dentro da competição."}
-            </p>
+            <p className="text-sm text-arena-muted">Explore torneios, rankings e calendários da Arena Camp.</p>
           </div>
         ) : null}
 
@@ -70,12 +57,12 @@ export function Sidebar() {
             </NavLink>
           ) : user ? (
             <NavLink
-              to={user.role === "admin" ? "/admin" : user.role === "lider" ? "/lider" : user.role === "capitao" ? "/capitao" : "/jogador"}
+              to="/minha-arena"
               className="flex items-center gap-3 rounded-arena border border-cyan-400/25 bg-cyan-400/10 px-3 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
-              title={collapsed ? "Abrir workspace" : undefined}
+              title={collapsed ? "Minha Arena" : undefined}
             >
               <LayoutDashboard className="h-4 w-4 shrink-0" />
-              {!collapsed ? "Abrir workspace" : null}
+              {!collapsed ? "Minha Arena" : null}
             </NavLink>
           ) : null}
 
@@ -131,7 +118,7 @@ function NavGroup({
           <NavLink
             key={`${item.href}-${item.label}`}
             to={item.href}
-            end={item.href === "/" || item.href === "/admin" || item.href === "/lider" || item.href === "/capitao" || item.href === "/jogador"}
+            end={item.href === "/" || item.href === "/admin" || item.href === "/minha-arena"}
             className={({ isActive }) => linkClass(isActive)}
             title={collapsed ? item.label : undefined}
           >
@@ -148,23 +135,14 @@ function getArea(pathname: string, role: string | null) {
     return "admin";
   }
 
-  if (pathname.startsWith("/lider")) {
-    return "leader";
+  if (pathname.startsWith("/minha-arena")) {
+    return "arena";
   }
-
-  if (pathname.startsWith("/capitao")) {
-    return "captain";
-  }
-
-  if (/^\/jogador\/?$/.test(pathname)) {
-    return "player";
-  }
-
 
   return "public";
 }
 
-function getSections(area: string) {
+function getSections(area: string, isAdmin = false) {
   switch (area) {
     case "admin":
       return [
@@ -172,21 +150,10 @@ function getSections(area: string) {
         { title: "Plataforma", items: adminControlNavigation },
         { title: "Ações", items: adminActionNavigation }
       ];
-    case "leader":
+    case "arena":
       return [
-        { title: "Gestao", items: leaderNavigation },
-        { title: "Competição", items: leaderCompetitionNavigation },
-        { title: "Controle", items: leaderControlNavigation }
-      ];
-    case "captain":
-      return [
-        { title: "Operação", items: captainNavigation },
-        { title: "Equipe", items: captainTeamNavigation },
-        { title: "Desempenho", items: captainControlNavigation }
-      ];
-    case "player":
-      return [
-        { title: "Meu jogo", items: playerNavigation }
+        { title: "Minha Arena", items: arenaNavigation },
+        ...(isAdmin ? [{ title: "Organização", items: [{ label: "Painel da organização", href: "/admin", icon: LayoutDashboard }] }] : [])
       ];
     default:
       return [

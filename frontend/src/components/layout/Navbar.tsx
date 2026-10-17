@@ -18,17 +18,8 @@ export const PUBLIC_MENU = [
   { label:"Notícias", href:"/noticias" }
 ] as const;
 
-const ROLE_LABELS: Record<string, string> = { jogador:"Jogador", lider:"Líder", capitao:"Capitão", admin:"Organização" };
-
-function roleHref(role?: string | null) {
-  if (role === "admin") return "/admin";
-  if (role === "lider") return "/lider";
-  if (role === "capitao") return "/capitao";
-  return "/jogador";
-}
-
 export function isWorkspacePath(pathname: string) {
-  return pathname.startsWith("/admin") || pathname.startsWith("/lider") || pathname.startsWith("/capitao") || /^\/jogador\/?$/.test(pathname);
+  return pathname.startsWith("/admin") || pathname.startsWith("/minha-arena");
 }
 
 export function Navbar() {
@@ -37,7 +28,7 @@ export function Navbar() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
   const setNotificationsOpen = useSessionStore((state) => state.setNotificationsOpen);
-  const { user, notifications, logout, switchContext } = useAuth();
+  const { user, notifications, logout } = useAuth();
   const { error, success } = useToast();
   const [switching, setSwitching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,22 +36,7 @@ export function Navbar() {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   const unreadCount = notifications.filter((item) => item.lida === 0).length;
-  const availableTeams = user?.team_contexts.filter((team) => user.active_role === "jogador" || team.role === user.active_role) ?? [];
   const inWorkspace = isWorkspacePath(location.pathname);
-
-  async function changeContext(input: { role?: string; game_id?: number; team_id?: number }) {
-    if (!user) return;
-    setSwitching(true);
-    try {
-      const role = input.role ?? user.active_role;
-      await switchContext({ role, game_id:input.game_id, team_id:input.team_id });
-      if (input.role) navigate(roleHref(role));
-    } catch (reason) {
-      error("Não foi possível trocar o perfil", reason instanceof Error ? reason.message : "Tente novamente.");
-    } finally {
-      setSwitching(false);
-    }
-  }
 
   async function resendVerification() {
     setSwitching(true);
@@ -75,7 +51,6 @@ export function Navbar() {
     }
   }
 
-  const selectClass = "h-10 rounded-arena border border-arena-line bg-arena-panel px-3 text-sm font-semibold text-arena-text outline-none focus:border-arena-blue";
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-arena-line bg-arena-bg/95 backdrop-blur">
@@ -124,26 +99,10 @@ export function Navbar() {
                   Confirmar email
                 </Button>
               ) : null}
-              {inWorkspace ? (
-                <div className="hidden items-center gap-2 lg:flex">
-                  <select aria-label="Perfil atual" className={cn(selectClass, "min-w-36")} disabled={switching} value={user.active_role} onChange={(event) => void changeContext({ role:event.target.value })}>
-                    {user.roles.map((role) => <option key={role} value={role}>{ROLE_LABELS[role] ?? role}</option>)}
-                  </select>
-                  {user.games.length > 1 ? (
-                    <select aria-label="Jogo atual" className={cn(selectClass, "max-w-40")} disabled={switching} value={user.active_game_id ?? ""} onChange={(event) => void changeContext({ game_id:Number(event.target.value) })}>
-                      {user.games.map((game) => <option key={game.id} value={game.id}>{game.nome_curto}</option>)}
-                    </select>
-                  ) : null}
-                  {availableTeams.length > 1 ? (
-                    <select aria-label="Equipe atual" className={cn(selectClass, "max-w-44")} disabled={switching} value={user.active_team_id ?? ""} onChange={(event) => void changeContext({ team_id:Number(event.target.value) })}>
-                      {availableTeams.map((team) => <option key={team.team_id} value={team.team_id}>{team.team_name}</option>)}
-                    </select>
-                  ) : null}
-                </div>
-              ) : null}
-              <Button className="hidden sm:inline-flex" variant="secondary" icon={switching ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />} onClick={() => navigate(inWorkspace ? "/" : roleHref(user.active_role))}>
-                {inWorkspace ? "Ver site" : "Meu painel"}
+              <Button className="hidden sm:inline-flex" variant="secondary" icon={switching ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />} onClick={() => navigate(inWorkspace ? "/" : "/minha-arena")}>
+                {inWorkspace ? "Ver site" : "Minha Arena"}
               </Button>
+              {user.roles.includes("admin") && !inWorkspace ? <Link className="hidden md:block" to="/admin"><Button variant="ghost">Painel da organização</Button></Link> : null}
               <Button aria-label="Sair" variant="ghost" className="h-10 w-10 px-0" icon={<LogOut className="h-4 w-4" />} onClick={logout} />
             </>
           ) : (
@@ -165,7 +124,10 @@ export function Navbar() {
             <NavLink className={({ isActive }) => cn("block py-2.5 font-semibold", isActive ? "text-arena-text" : "text-arena-muted")} key={item.href} to={item.href}>{item.label}</NavLink>
           ))}
           {user ? (
-            <Link className="block py-2.5 font-semibold text-cyan-200" to={roleHref(user.active_role)}>Meu painel</Link>
+            <>
+              <Link className="block py-2.5 font-semibold text-cyan-200" to="/minha-arena">Minha Arena</Link>
+              {user.roles.includes("admin") ? <Link className="block py-2.5 font-semibold text-cyan-200" to="/admin">Painel da organização</Link> : null}
+            </>
           ) : (
             <Link className="block py-2.5 font-semibold text-cyan-200" to="/entrar">Entrar</Link>
           )}

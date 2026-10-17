@@ -2,17 +2,15 @@ import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../layouts/AppLayout";
 import { RequireRole } from "../components/layout/RequireRole";
-import { LegacyRedirect } from "./LegacyRedirect";
+import { LegacyPanelRedirect, LegacyRedirect } from "./LegacyRedirect";
 
 const AdminDashboardPage = lazyPage(() => import("../pages/AdminDashboardPage"), "AdminDashboardPage");
 const AdminTournamentPage = lazyPage(() => import("../pages/AdminTournamentPage"), "AdminTournamentPage");
-const CaptainDashboardPage = lazyPage(() => import("../pages/CaptainDashboardPage"), "CaptainDashboardPage");
 const CommunityDirectoryPage = lazyPage(() => import("../pages/CommunityDirectoryPage"), "CommunityDirectoryPage");
 const GamesPage = lazyPage(() => import("../pages/GamesPage"), "GamesPage");
 const HomePage = lazyPage(() => import("../pages/HomePage"), "HomePage");
-const LeaderDashboardPage = lazyPage(() => import("../pages/LeaderDashboardPage"), "LeaderDashboardPage");
+const MinhaArenaPage = lazyPage(() => import("../pages/MinhaArenaPage"), "MinhaArenaPage");
 const NotFoundPage = lazyPage(() => import("../pages/NotFoundPage"), "NotFoundPage");
-const PlayerDashboardPage = lazyPage(() => import("../pages/PlayerDashboardPage"), "PlayerDashboardPage");
 const ProfilePage = lazyPage(() => import("../pages/ProfilePage"), "ProfilePage");
 const RankingPage = lazyPage(() => import("../pages/RankingPage"), "RankingPage");
 const StaticPage = lazyPage(() => import("../pages/StaticPage"), "StaticPage");
@@ -51,9 +49,10 @@ export const router = createBrowserRouter([
       { path: "/oauth/callback", element: <OAuthCallbackPage /> },
       { path: "/onboarding", element: <OnboardingPage /> },
       { path: "/admin", element: <RequireRole role="admin"><AdminDashboardPage /></RequireRole> },
-      { path: "/lider", element: <RequireRole role="lider"><LeaderDashboardPage /></RequireRole> },
-      { path: "/capitao", element: <RequireRole role="capitao"><CaptainDashboardPage /></RequireRole> },
-      { path: "/jogador", element: <RequireRole role="jogador"><PlayerDashboardPage /></RequireRole> },
+      { path: "/minha-arena/:secao?", element: <MinhaArenaPage /> },
+      { path: "/lider", element: <LegacyPanelRedirect panel="lider" /> },
+      { path: "/capitao", element: <LegacyPanelRedirect panel="capitao" /> },
+      { path: "/jogador", element: <LegacyPanelRedirect panel="jogador" /> },
       { path: "/admin/torneios/novo", element: <RequireRole role="admin"><TournamentWizardPage /></RequireRole> },
       { path: "/admin/torneios/:id", element: <RequireRole role="admin"><AdminTournamentPage /></RequireRole> },
       { path: "/admin/mix/:id", element: <RequireRole role="admin"><AdminMixTournamentPage /></RequireRole> },

@@ -45,7 +45,7 @@ export function NextMatchBanner({ match, teamName }: { match: WorkspaceMatch | u
         </> : <span className="font-display text-xl font-semibold">Horário a definir</span>}
       </div>
       <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-        <Link to="/jogador?module=matches"><Button variant="urgent" icon={<ChevronRight className="h-4 w-4" />}>Abrir sala da partida</Button></Link>
+        <Link to="/minha-arena/partidas"><Button variant="urgent" icon={<ChevronRight className="h-4 w-4" />}>Abrir sala da partida</Button></Link>
         <span className="text-sm text-arena-muted">Presença: <strong className="text-arena-text">{ATTENDANCE_LABELS[match.attendance_status ?? ""] ?? "Pendente"}</strong></span>
         <span className="text-sm text-arena-muted">Escalação: <strong className="text-arena-text">{match.in_official_lineup ? "Titular" : "Acompanhando"}</strong></span>
       </div>

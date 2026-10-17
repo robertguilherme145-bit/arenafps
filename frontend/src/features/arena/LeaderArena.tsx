@@ -1,3 +1,4 @@
+import { LoadFailed } from "./LoadFailed";
 import {
   BarChart3,
   Archive,
@@ -30,23 +31,24 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Badge } from "../components/ui/Badge";
-import { AttendanceResponse } from "../components/attendance/AttendanceResponse";
-import { Button } from "../components/ui/Button";
-import { Card, CardContent, CardHeader } from "../components/ui/Card";
-import { DataTable } from "../components/ui/DataTable";
-import { EmptyState } from "../components/ui/EmptyState";
-import { Input, Label, Select } from "../components/ui/Form";
-import { Modal } from "../components/ui/Modal";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Skeleton } from "../components/ui/Skeleton";
-import { StatCard } from "../components/ui/StatCard";
-import { TeamPlayerRankingPanel } from "../components/team/TeamPlayerRankingPanel";
-import { TournamentRegulationPanel } from "../components/tournament/TournamentRegulationPanel";
-import { ImageUploadField } from "../components/ui/ImageUploadField";
-import { useAuth } from "../contexts/AuthContext";
-import { useToast } from "../hooks/useToast";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { arenaPathForModule } from "../../lib/minhaArena";
+import { Badge } from "../../components/ui/Badge";
+import { AttendanceResponse } from "../../components/attendance/AttendanceResponse";
+import { Button } from "../../components/ui/Button";
+import { Card, CardContent, CardHeader } from "../../components/ui/Card";
+import { DataTable } from "../../components/ui/DataTable";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { Input, Label, Select } from "../../components/ui/Form";
+import { Modal } from "../../components/ui/Modal";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { StatCard } from "../../components/ui/StatCard";
+import { TeamPlayerRankingPanel } from "../../components/team/TeamPlayerRankingPanel";
+import { TournamentRegulationPanel } from "../../components/tournament/TournamentRegulationPanel";
+import { ImageUploadField } from "../../components/ui/ImageUploadField";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../hooks/useToast";
 import {
   archiveLeaderTeam,
   captureLeaderPaypalPayment,
@@ -78,7 +80,7 @@ import {
   updateLeaderEventAttendance,
   updateLeaderPreferences,
   updateLeaderTeam,
-} from "../services/api";
+} from "../../services/api";
 import type {
   LeaderLineup,
   LeaderMatch,
@@ -88,8 +90,8 @@ import type {
   LeaderTournamentCenter,
   LeaderWorkspace,
   MatchOperations,
-} from "../types/api";
-import { safeHref } from "../utils/safeHref";
+} from "../../types/api";
+import { safeHref } from "../../utils/safeHref";
 
 const modules = [
   "dashboard",
@@ -105,7 +107,7 @@ const modules = [
   "history",
   "settings",
 ] as const;
-type LeaderModule = (typeof modules)[number];
+export type LeaderModule = (typeof modules)[number];
 type Runner = (
   key: string,
   action: () => Promise<unknown>,
@@ -113,13 +115,12 @@ type Runner = (
   refresh?: boolean,
 ) => Promise<boolean>;
 
-export function LeaderDashboardPage() {
+// Espaco do lider dentro da Minha Arena: a secao escolhe o modulo; aqui so entra o conteudo.
+export function LeaderArena({ module: activeModule }: { module: LeaderModule }) {
   const { refreshSession } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const requested = searchParams.get("module") as LeaderModule | null;
-  const activeModule: LeaderModule =
-    requested && modules.includes(requested) ? requested : "dashboard";
   const [workspace, setWorkspace] = useState<LeaderWorkspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -128,7 +129,7 @@ export function LeaderDashboardPage() {
     try {
       setWorkspace(await getLeaderWorkspace());
     } catch (error) {
-      toast.error("Falha ao carregar o workspace", messageOf(error));
+      toast.error("Não foi possível carregar seus dados", messageOf(error));
     } finally {
       setLoading(false);
     }
@@ -227,7 +228,7 @@ export function LeaderDashboardPage() {
       if (refresh) await load();
       return true;
     } catch (error) {
-      toast.error("Operação não concluida", messageOf(error));
+      toast.error("Operação não concluída", messageOf(error));
       return false;
     } finally {
       setBusy(null);
@@ -235,12 +236,11 @@ export function LeaderDashboardPage() {
   };
 
   function openModule(module: LeaderModule) {
-    const next = new URLSearchParams(searchParams);
-    next.set("module", module);
-    setSearchParams(next);
+    if (modules.includes(module)) navigate(arenaPathForModule("lider", module));
   }
 
-  if (loading || !workspace) return <LeaderLoading />;
+  if (loading) return <LeaderLoading />;
+  if (!workspace) return <LoadFailed onRetry={() => { setLoading(true); void load(); }} />;
   if (!workspace.team)
     return (
       <TeamOnboarding
@@ -279,29 +279,16 @@ export function LeaderDashboardPage() {
   }[activeModule];
 
   return (
-    <section className="px-4 pb-12 lg:px-8">
-      <PageHeader
-        eyebrow="Líder da equipe"
-        title={workspace.team.nome}
-        description={`${workspace.team.game_name} · ${workspace.team.tag || "Sem tag"} · Gestao competitiva da equipe`}
-        action={
-          <Link to={`/equipe/${workspace.team.slug}`}>
-            <Button
-              icon={<ExternalLink className="h-4 w-4" />}
-              variant="secondary"
-            >
-              Pagina pública
-            </Button>
-          </Link>
-        }
-      />
-      <TeamContext
-        data={workspace}
-        busy={busy}
-        onReload={() => void run("reload", load, "Painel atualizado", false)}
-      />
-      <div className="mt-6">{content}</div>
-    </section>
+    <div className="space-y-6">
+      {activeModule === "dashboard" ? (
+        <TeamContext
+          data={workspace}
+          busy={busy}
+          onReload={() => void run("reload", load, "Painel atualizado", false)}
+        />
+      ) : null}
+      {content}
+    </div>
   );
 }
 

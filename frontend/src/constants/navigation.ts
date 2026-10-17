@@ -61,57 +61,13 @@ export const adminActionNavigation = [
   { label: "Novo torneio", href: "/admin/torneios/novo", icon: Wand2 }
 ];
 
-export const leaderNavigation = [
-  { label: "Visão geral", href: "/lider?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Minha equipe", href: "/lider?module=team", icon: Shield, module: "team" },
-  { label: "Elenco", href: "/lider?module=roster", icon: Users, module: "roster" },
-  { label: "Escalações", href: "/lider?module=lineups", icon: ClipboardList, module: "lineups" },
-  { label: "Ranking da equipe", href: "/lider?module=ranking", icon: Medal, module: "ranking" }
-];
-
-export const leaderCompetitionNavigation = [
-  { label: "Torneios", href: "/lider?module=tournaments", icon: Trophy, module: "tournaments" },
-  { label: "Partidas", href: "/lider?module=matches", icon: Swords, module: "matches" },
-  { label: "Calendário", href: "/lider?module=calendar", icon: CalendarDays, module: "calendar" }
-];
-
-export const leaderControlNavigation = [
-  { label: "Financeiro", href: "/lider?module=finance", icon: CreditCard, module: "finance" },
-  { label: "Comunicação", href: "/lider?module=communication", icon: MessageSquare, module: "communication" },
-  { label: "Histórico", href: "/lider?module=history", icon: History, module: "history" },
-  { label: "Configurações", href: "/lider?module=settings", icon: Settings2, module: "settings" }
-];
-
-export const captainNavigation = [
-  { label: "Visão geral", href: "/capitao?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Partidas", href: "/capitao?module=matches", icon: Swords, module: "matches" },
-  { label: "Veto de mapas", href: "/capitao?module=veto", icon: Crosshair, module: "veto" }
-];
-
-export const captainTeamNavigation = [
-  { label: "Escalação oficial", href: "/capitao?module=lineup", icon: ClipboardList, module: "lineup" },
-  { label: "Ranking da equipe", href: "/capitao?module=ranking", icon: Medal, module: "ranking" },
-  { label: "Calendário", href: "/capitao?module=calendar", icon: CalendarDays, module: "calendar" },
-  { label: "Comunicação", href: "/capitao?module=communication", icon: MessageSquare, module: "communication" }
-];
-
-export const captainControlNavigation = [
-  { label: "Estatísticas", href: "/capitao?module=statistics", icon: BarChart3, module: "statistics" },
-  { label: "Histórico", href: "/capitao?module=history", icon: History, module: "history" },
-  { label: "Configurações", href: "/capitao?module=settings", icon: Settings2, module: "settings" }
-];
-
-export const playerNavigation = [
-  { label: "Visão geral", href: "/jogador?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { label: "Meu perfil", href: "/jogador?module=profile", icon: UserRound, module: "profile" },
-  { label: "Equipes e convites", href: "/jogador?module=teams", icon: Users, module: "teams" },
-  { label: "Torneios Mix", href: "/jogador?module=mix", icon: Shuffle, module: "mix" },
-  { label: "Escalação", href: "/jogador?module=lineup", icon: ClipboardList, module: "lineup" },
-  { label: "Partidas", href: "/jogador?module=matches", icon: Swords, module: "matches" },
-  { label: "Calendário", href: "/jogador?module=calendar", icon: CalendarDays, module: "calendar" },
-  { label: "Estatísticas", href: "/jogador?module=statistics", icon: BarChart3, module: "statistics" },
-  { label: "Carreira", href: "/jogador?module=career", icon: Medal, module: "career" },
-  { label: "Mensagens", href: "/jogador?module=messages", icon: MessageSquare, module: "messages" },
-  { label: "Suporte", href: "/jogador?module=support", icon: CircleHelp, module: "support" },
-  { label: "Configurações", href: "/jogador?module=settings", icon: Settings2, module: "settings" }
+// Menu da Minha Arena (as abas de cada secao mudam conforme o cargo no time).
+export const arenaNavigation = [
+  { label: "Início", href: "/minha-arena", icon: LayoutDashboard },
+  { label: "Partidas", href: "/minha-arena/partidas", icon: Swords },
+  { label: "Torneios", href: "/minha-arena/torneios", icon: Trophy },
+  { label: "Meu time", href: "/minha-arena/time", icon: Shield },
+  { label: "Carreira", href: "/minha-arena/carreira", icon: Medal },
+  { label: "Suporte", href: "/minha-arena/suporte", icon: CircleHelp },
+  { label: "Configurações", href: "/minha-arena/configuracoes", icon: Settings2 }
 ];
