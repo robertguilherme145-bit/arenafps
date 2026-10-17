@@ -2,9 +2,9 @@ import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../layouts/AppLayout";
 import { RequireRole } from "../components/layout/RequireRole";
+import { LegacyRedirect } from "./LegacyRedirect";
 
 const AdminDashboardPage = lazyPage(() => import("../pages/AdminDashboardPage"), "AdminDashboardPage");
-const CalendarPage = lazyPage(() => import("../pages/CalendarPage"), "CalendarPage");
 const CaptainDashboardPage = lazyPage(() => import("../pages/CaptainDashboardPage"), "CaptainDashboardPage");
 const CommunityDirectoryPage = lazyPage(() => import("../pages/CommunityDirectoryPage"), "CommunityDirectoryPage");
 const GamesPage = lazyPage(() => import("../pages/GamesPage"), "GamesPage");
@@ -14,7 +14,6 @@ const NotFoundPage = lazyPage(() => import("../pages/NotFoundPage"), "NotFoundPa
 const PlayerDashboardPage = lazyPage(() => import("../pages/PlayerDashboardPage"), "PlayerDashboardPage");
 const ProfilePage = lazyPage(() => import("../pages/ProfilePage"), "ProfilePage");
 const RankingPage = lazyPage(() => import("../pages/RankingPage"), "RankingPage");
-const ResultsPage = lazyPage(() => import("../pages/ResultsPage"), "ResultsPage");
 const StaticPage = lazyPage(() => import("../pages/StaticPage"), "StaticPage");
 const TournamentDetailPage = lazyPage(() => import("../pages/TournamentDetailPage"), "TournamentDetailPage");
 const TournamentsPage = lazyPage(() => import("../pages/TournamentsPage"), "TournamentsPage");
@@ -36,12 +35,14 @@ export const router = createBrowserRouter([
       { path: "/torneios", element: <TournamentsPage /> },
       { path: "/torneios/:id", element: <TournamentDetailPage /> },
       { path: "/ranking", element: <RankingPage /> },
-      { path: "/calendario", element: <CalendarPage /> },
-      { path: "/resultados", element: <ResultsPage /> },
-      { path: "/circuito-oficial", element: <OfficialTournamentsPage /> },
+      { path: "/calendario", element: <LegacyRedirect /> },
+      { path: "/resultados", element: <LegacyRedirect /> },
+      { path: "/circuito", element: <OfficialTournamentsPage /> },
+      { path: "/circuito-oficial", element: <LegacyRedirect /> },
       { path: "/jogos", element: <GamesPage /> },
-      { path: "/equipes", element: <CommunityDirectoryPage type="teams" /> },
-      { path: "/jogadores", element: <CommunityDirectoryPage type="players" /> },
+      { path: "/comunidade", element: <CommunityDirectoryPage /> },
+      { path: "/equipes", element: <LegacyRedirect /> },
+      { path: "/jogadores", element: <LegacyRedirect /> },
       { path: "/entrar", element: <LoginPage /> },
       { path: "/criar-conta", element: <RegisterPage /> },
       { path: "/recuperar-senha", element: <PasswordRecoveryPage /> },
@@ -55,9 +56,9 @@ export const router = createBrowserRouter([
       { path: "/admin/torneios/novo", element: <RequireRole role="admin"><TournamentWizardPage /></RequireRole> },
       { path: "/admin/mix/:id", element: <RequireRole role="admin"><AdminMixTournamentPage /></RequireRole> },
       { path: "/equipe/:slug", element: <ProfilePage type="equipe" /> },
-      { path: "/team/:slug", element: <ProfilePage type="equipe" /> },
+      { path: "/team/:slug", element: <LegacyRedirect /> },
       { path: "/jogador/:slug", element: <ProfilePage type="jogador" /> },
-      { path: "/player/:slug", element: <ProfilePage type="jogador" /> },
+      { path: "/player/:slug", element: <LegacyRedirect /> },
       { path: "/sobre", element: <StaticPage page="sobre" /> },
       { path: "/contato", element: <StaticPage page="contato" /> },
       { path: "/faq", element: <StaticPage page="faq" /> },

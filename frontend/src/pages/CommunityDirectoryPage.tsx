@@ -1,21 +1,106 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Trophy, UserRound, Users } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Badge } from "../components/ui/Badge";
+import { Search, UserRound, Users } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { EmptyState } from "../components/ui/EmptyState";
 import { Input, Select } from "../components/ui/Form";
 import { PageHeader } from "../components/ui/PageHeader";
+import { PageTabs } from "../components/ui/PageTabs";
 import { Skeleton } from "../components/ui/Skeleton";
 import { useToast } from "../hooks/useToast";
 import { getPublicPortal } from "../services/api";
 import type { PublicPortalData } from "../types/api";
 
-export function CommunityDirectoryPage({ type }: { type:"teams"|"players" }) {
+type CommunityTab = "equipes" | "jogadores";
+
+export function CommunityDirectoryPage() {
   const { error } = useToast();
+  const [params, setParams] = useSearchParams();
+  const tab: CommunityTab = params.get("aba") === "jogadores" ? "jogadores" : "equipes";
+  const query = params.get("q") ?? "";
   const [portal, setPortal] = useState<PublicPortalData | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
-  const [query, setQuery] = useState("");
-  useEffect(() => { void getPublicPortal(gameId).then(setPortal).catch((reason) => error("Falha ao carregar comunidade", reason instanceof Error ? reason.message : "Tente novamente.")); }, [gameId]);
-  const items = useMemo(() => type === "teams" ? (portal?.teams ?? []).filter((item) => `${item.nome} ${item.tag}`.toLowerCase().includes(query.toLowerCase())) : (portal?.players ?? []).filter((item) => `${item.nickname} ${item.nick} ${item.team_name}`.toLowerCase().includes(query.toLowerCase())), [portal,query,type]);
-  return <section className="mx-auto max-w-[1500px] px-4 py-10 lg:px-8"><PageHeader eyebrow="Comunidade" title={type === "teams" ? "Equipes" : "Jogadores"} description={type === "teams" ? "Organizações competitivas, elencos e histórico oficial por jogo." : "Carreiras competitivas, rankings e estatísticas oficiais por jogo."} /><div className="mb-7 grid gap-3 border-y border-arena-line py-4 md:grid-cols-[1fr_280px]"><div className="relative"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-arena-muted" /><Input className="pl-9" placeholder={type === "teams" ? "Buscar equipe ou tag" : "Buscar jogador ou equipe"} value={query} onChange={(event) => setQuery(event.target.value)} /></div><Select value={gameId ?? ""} onChange={(event) => setGameId(event.target.value ? Number(event.target.value) : null)}><option value="">Todos os jogos</option>{portal?.games.map((game) => <option key={game.id} value={game.id}>{game.nome}</option>)}</Select></div>{!portal ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"><Skeleton className="h-52" /><Skeleton className="h-52" /><Skeleton className="h-52" /></div> : type === "teams" ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{(items as PublicPortalData["teams"]).map((team,index) => <Link className="border border-arena-line bg-arena-panel p-5 transition hover:border-cyan-400/50" to={`/equipe/${team.slug}`} key={team.id}><div className="flex items-start justify-between gap-4">{team.logo ? <img className="h-16 w-16 object-contain" src={team.logo} alt="" /> : <span className="flex h-16 w-16 items-center justify-center border border-arena-line"><Users className="h-7 w-7" /></span>}<Badge tone="info">#{index+1}</Badge></div><h2 className="mt-5 font-display text-xl font-bold">{team.nome}</h2><p className="mt-1 text-sm text-arena-muted">{team.game_short_name} · {team.members} membros</p><div className="mt-5 grid grid-cols-3 gap-3 border-t border-arena-line pt-4"><Metric label="Vitórias" value={team.wins} /><Metric label="Derrotas" value={team.losses} /><Metric label="Win rate" value={`${team.win_rate}%`} /></div></Link>)}</div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{(items as PublicPortalData["players"]).map((player,index) => <Link className="border border-arena-line bg-arena-panel p-5 transition hover:border-cyan-400/50" to={`/jogador/${player.nickname || player.id}`} key={`${player.id}-${player.player_id}`}><div className="flex items-start justify-between gap-4">{player.avatar || player.foto ? <img className="h-16 w-16 object-cover" src={player.avatar || player.foto || ""} alt="" /> : <span className="flex h-16 w-16 items-center justify-center border border-arena-line"><UserRound className="h-7 w-7" /></span>}<Badge tone="info">#{index+1}</Badge></div><h2 className="mt-5 font-display text-xl font-bold">{player.nickname || player.nick}</h2><p className="mt-1 text-sm text-arena-muted">{player.team_name} · {player.game_short_name}</p><div className="mt-5 grid grid-cols-3 gap-3 border-t border-arena-line pt-4"><Metric label="K/D" value={player.kd} /><Metric label="HS" value={`${player.hs_percent}%`} /><Metric label="MVPs" value={player.mvps} /></div></Link>)}</div>}{portal && !items.length ? <div className="border border-dashed border-arena-line p-10 text-center"><Trophy className="mx-auto h-8 w-8 text-arena-muted" /><p className="mt-3 text-sm text-arena-muted">Nenhum resultado no filtro atual.</p></div> : null}</section>;
+
+  useEffect(() => {
+    void getPublicPortal(gameId).then(setPortal).catch((reason) => error("Não foi possível carregar a comunidade", reason instanceof Error ? reason.message : "Tente novamente."));
+  }, [gameId]);
+
+  function update(next: { aba?: CommunityTab; q?: string }) {
+    const merged = new URLSearchParams(params);
+    if (next.aba) merged.set("aba", next.aba);
+    if (next.q !== undefined) next.q ? merged.set("q", next.q) : merged.delete("q");
+    setParams(merged, { replace:true });
+  }
+
+  const term = query.toLowerCase();
+  const teams = useMemo(() => (portal?.teams ?? []).filter((item) => `${item.nome} ${item.tag ?? ""}`.toLowerCase().includes(term)), [portal, term]);
+  const players = useMemo(() => (portal?.players ?? []).filter((item) => `${item.nickname ?? ""} ${item.nick} ${item.team_name}`.toLowerCase().includes(term)), [portal, term]);
+  const empty = portal && (tab === "equipes" ? !teams.length : !players.length);
+
+  return (
+    <section className="mx-auto max-w-[1500px] px-4 pb-12 lg:px-8">
+      <PageHeader title="Comunidade" description="Equipes e jogadores que disputam os campeonatos da Arena Camp." />
+      <PageTabs
+        items={[{ value:"equipes", label:"Equipes", count:portal?.teams.length }, { value:"jogadores", label:"Jogadores", count:portal?.players.length }]}
+        label="Comunidade"
+        onChange={(aba) => update({ aba })}
+        value={tab}
+      />
+      <div className="my-6 grid gap-3 md:grid-cols-[1fr_260px]">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-arena-muted" />
+          <Input className="pl-9" placeholder={tab === "equipes" ? "Buscar equipe ou tag" : "Buscar jogador ou equipe"} value={query} onChange={(event) => update({ q:event.target.value })} />
+        </div>
+        <Select aria-label="Jogo" value={gameId ?? ""} onChange={(event) => setGameId(event.target.value ? Number(event.target.value) : null)}>
+          <option value="">Todos os jogos</option>
+          {portal?.games.map((game) => <option key={game.id} value={game.id}>{game.nome}</option>)}
+        </Select>
+      </div>
+
+      {!portal ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"><Skeleton className="h-40" /><Skeleton className="h-40" /><Skeleton className="h-40" /></div>
+      ) : empty ? (
+        query
+          ? <EmptyState title="Nada encontrado" description={`Nenhum resultado para "${query}". Tente outro nome ou limpe a busca.`} />
+          : <EmptyState title={tab === "equipes" ? "Nenhuma equipe ativa ainda" : "Nenhum jogador ranqueado ainda"} description="Crie sua conta e monte sua equipe para aparecer aqui." />
+      ) : tab === "equipes" ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {teams.map((team) => (
+            <Link className="border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" key={team.id} to={`/equipe/${team.slug}`}>
+              <div className="flex items-center gap-4">
+                {team.logo ? <img alt="" className="h-14 w-14 object-contain" src={team.logo} /> : <span className="flex h-14 w-14 items-center justify-center border border-arena-line"><Users className="h-6 w-6 text-arena-muted" /></span>}
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-xl font-bold">{team.nome}</h2>
+                  <p className="text-sm text-arena-muted">{team.game_short_name} · {team.members} membros</p>
+                </div>
+              </div>
+              <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-arena-line pt-4">
+                <Metric label="Vitórias" value={team.wins} /><Metric label="Derrotas" value={team.losses} /><Metric label="Aproveitamento" value={`${team.win_rate}%`} />
+              </dl>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {players.map((player) => (
+            <Link className="border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" key={`${player.id}-${player.player_id}`} to={`/jogador/${player.nickname || player.id}`}>
+              <div className="flex items-center gap-4">
+                {player.avatar || player.foto ? <img alt="" className="h-14 w-14 object-cover" src={player.avatar || player.foto || ""} /> : <span className="flex h-14 w-14 items-center justify-center border border-arena-line"><UserRound className="h-6 w-6 text-arena-muted" /></span>}
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-xl font-bold">{player.nickname || player.nick}</h2>
+                  <p className="truncate text-sm text-arena-muted">{player.team_name} · {player.game_short_name}</p>
+                </div>
+              </div>
+              <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-arena-line pt-4">
+                <Metric label="K/D" value={player.kd} /><Metric label="HS" value={`${player.hs_percent}%`} /><Metric label="MVPs" value={player.mvps} />
+              </dl>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
-function Metric({label,value}:{label:string;value:string|number}){return <div><p className="text-[11px] uppercase text-arena-muted">{label}</p><p className="mt-1 font-semibold">{value}</p></div>;}
+
+function Metric({ label, value }: { label: string; value: string | number }) {
+  return <div><dt className="text-xs text-arena-muted">{label}</dt><dd className="mt-1 font-display font-semibold">{value}</dd></div>;
+}
