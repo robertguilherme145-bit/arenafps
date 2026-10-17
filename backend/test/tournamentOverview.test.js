@@ -51,7 +51,7 @@ test("Mix: sorteio no lugar da chave", () => {
 test("formato manual: criar partidas", () => {
   const custom = build({ settings:{ ...settings, format:"custom" }, tournament:{ ...tournament, status:"fechado" } });
   assert.equal(custom.kind, "custom");
-  assert.deepEqual(custom.nextAction, { key:"manual", label:"Criar partidas", href:"/admin?module=operations" });
+  assert.deepEqual(custom.nextAction, { key:"manual", label:"Criar partidas", href:"/admin/partidas" });
 });
 
 test("torneio antigo sem configuracoes mostra o que falta", () => {

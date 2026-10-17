@@ -55,6 +55,7 @@ export const router = createBrowserRouter([
       { path: "/jogador", element: <LegacyPanelRedirect panel="jogador" /> },
       { path: "/admin/torneios/novo", element: <RequireRole role="admin"><TournamentWizardPage /></RequireRole> },
       { path: "/admin/torneios/:id", element: <RequireRole role="admin"><AdminTournamentPage /></RequireRole> },
+      { path: "/admin/:secao", element: <RequireRole role="admin"><AdminDashboardPage /></RequireRole> },
       { path: "/admin/mix/:id", element: <RequireRole role="admin"><AdminMixTournamentPage /></RequireRole> },
       { path: "/equipe/:slug", element: <ProfilePage type="equipe" /> },
       { path: "/team/:slug", element: <LegacyRedirect /> },

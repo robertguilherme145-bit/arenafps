@@ -50,7 +50,7 @@ export function AdminTournamentPage() {
     }
   }
 
-  if (failed) return <section className="mx-auto max-w-[1200px] px-4 py-10 lg:px-8"><EmptyState title="Torneio não encontrado" description={failed} action={<Link to="/admin?module=competitions"><Button variant="secondary">Voltar para Torneios</Button></Link>} /></section>;
+  if (failed) return <section className="mx-auto max-w-[1200px] px-4 py-10 lg:px-8"><EmptyState title="Torneio não encontrado" description={failed} action={<Link to="/admin/torneios"><Button variant="secondary">Voltar para Torneios</Button></Link>} /></section>;
   if (!overview) return <section className="mx-auto max-w-[1200px] space-y-4 px-4 py-10 lg:px-8"><Skeleton className="h-16" /><Skeleton className="h-28" /><Skeleton className="h-64" /></section>;
 
   const { tournament, nextAction } = overview;
@@ -111,7 +111,7 @@ export function AdminTournamentPage() {
                 </li>
               ))}
             </ul>
-            <Link className="mt-2 inline-block text-sm font-semibold text-cyan-200 hover:text-cyan-100" to={`/admin?module=competitions&torneio=${id}`}>Editar configurações do torneio</Link>
+            <Link className="mt-2 inline-block text-sm font-semibold text-cyan-200 hover:text-cyan-100" to={`/admin/torneios?torneio=${id}`}>Editar configurações do torneio</Link>
           </section>
 
           <TournamentStreamField initialUrl={tournament.stream_url} tournamentId={id} />
@@ -130,8 +130,8 @@ export function AdminTournamentPage() {
             </dl>
           </section>
           <nav aria-label="Atalhos" className="border border-arena-line bg-arena-panel p-2">
-            <Shortcut href={`/admin?module=competitions&torneio=${id}`} icon={<Users className="h-4 w-4" />} label="Inscrições e pagamentos" />
-            <Shortcut href="/admin?module=operations" icon={<Swords className="h-4 w-4" />} label="Partidas, salas e veto" />
+            <Shortcut href={`/admin/torneios?torneio=${id}`} icon={<Users className="h-4 w-4" />} label="Inscrições e pagamentos" />
+            <Shortcut href="/admin/partidas" icon={<Swords className="h-4 w-4" />} label="Partidas, salas e veto" />
           </nav>
           {tournament.status !== "cancelado" && tournament.status !== "finalizado" && tournament.status !== "em_andamento" ? (
             <Button className="w-full" icon={<XCircle className="h-4 w-4" />} loading={busy === "cancel"} onClick={() => { if (window.confirm(`Cancelar "${tournament.nome}"? Esta ação não pode ser desfeita.`)) void run("cancel", () => updateTournamentStatus(id, "cancelado"), "Torneio cancelado"); }} variant="ghost">Cancelar torneio</Button>

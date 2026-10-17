@@ -43,7 +43,7 @@ function nextStep(kind, status, matchCount, entries) {
     return { nextAction:{ key:"close", label:"Encerrar inscrições", status:"fechado" }, note:pending ? `${pending} inscrição(ões) ainda sem pagamento.` : null };
   }
   if (matchCount > 0) return { nextAction:{ key:"start", label:"Iniciar torneio", status:"em_andamento" }, note:null };
-  if (kind === "custom") return { nextAction:{ key:"manual", label:"Criar partidas", href:"/admin?module=operations" }, note:"Este formato usa confrontos criados à mão." };
+  if (kind === "custom") return { nextAction:{ key:"manual", label:"Criar partidas", href:"/admin/partidas" }, note:"Este formato usa confrontos criados à mão." };
   return { nextAction:{ key:"structure", label:"Gerar chave" }, note:null };
 }
 

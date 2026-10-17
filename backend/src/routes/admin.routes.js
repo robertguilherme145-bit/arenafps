@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createDraft, duplicate as duplicateTournamentRoute, overview as tournamentOverview } from "../controllers/adminTournament.controller.js";
+import { createDraft, duplicate as duplicateTournamentRoute, overview as tournamentOverview, today as adminToday } from "../controllers/adminTournament.controller.js";
 import {
   approveEntry,
   auditLogs,
@@ -71,6 +71,7 @@ router.post("/media/images", uploadImage, uploadMedia);
 router.get("/dashboard", dashboard);
 router.post("/tournaments", createDraft);
 router.get("/tournaments/:id/overview", tournamentOverview);
+router.get("/today", adminToday);
 router.post("/tournaments/:id/duplicate", duplicateTournamentRoute);
 router.get("/achievements", achievements);
 router.post("/achievements", createAchievement);
