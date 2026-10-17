@@ -386,7 +386,7 @@ export async function getMatchOperations(matchId: number) {
   return data;
 }
 
-export async function updateMatchRoomSettings(matchId: number, input: { server_address: string | null; server_password: string | null; responsible_admin_id?: number | null; captain_confirmation_enabled: boolean; veto_action_seconds: number }) {
+export async function updateMatchRoomSettings(matchId: number, input: { server_address: string | null; server_password: string | null; stream_url?: string | null; responsible_admin_id?: number | null; captain_confirmation_enabled: boolean; veto_action_seconds: number }) {
   const { data } = await api.put<MatchOperations>(`/admin/competition/matches/${matchId}/room`, input);
   return data;
 }
@@ -1055,3 +1055,8 @@ export async function getMixTournament(tournamentId:number) { const {data}=await
 export async function registerMixTournament(tournamentId:number) { const {data}=await api.post<{id:number;status:string;payment_status:string;payment_required:boolean}>(`/mix/${tournamentId}/register`);return data; }
 export async function cancelMixTournamentRegistration(tournamentId:number) { const {data}=await api.delete(`/mix/${tournamentId}/register`);return data; }
 export async function createMixTournamentPayment(tournamentId:number) { const {data}=await api.post(`/mix/${tournamentId}/payment`);return data; }
+
+export async function updateTournamentStream(tournamentId: number, streamUrl: string | null) {
+  const { data } = await api.put<{ tournament_id: number; stream_url: string | null }>(`/admin/competition/tournaments/${tournamentId}/stream`, { stream_url: streamUrl });
+  return data;
+}

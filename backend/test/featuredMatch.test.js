@@ -75,3 +75,9 @@ test("placar nulo vira zero", () => {
 test("lista vazia devolve null", () => {
   assert.equal(pickFeaturedMatch([], now), null);
 });
+
+test("transmissao: link da partida vale mais que o do torneio", () => {
+  assert.equal(pickFeaturedMatch([row({ status:"andamento", stream_url:"https://kick.com/partida", tournament_stream_url:"https://twitch.tv/torneio" })], now).stream_url, "https://kick.com/partida");
+  assert.equal(pickFeaturedMatch([row({ status:"andamento", stream_url:null, tournament_stream_url:"https://twitch.tv/torneio" })], now).stream_url, "https://twitch.tv/torneio");
+  assert.equal(pickFeaturedMatch([row({ status:"andamento" })], now).stream_url, null);
+});

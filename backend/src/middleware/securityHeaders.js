@@ -12,6 +12,7 @@ const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-src https://player.twitch.tv https://www.youtube-nocookie.com https://player.kick.com",
   "frame-ancestors 'none'"
 ];
 

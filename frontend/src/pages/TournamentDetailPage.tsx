@@ -14,8 +14,11 @@ import { useToast } from "../hooks/useToast";
 import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
 import { BracketView } from "../components/broadcast/BracketView";
+import { RegistrationGuide } from "../components/tournament/RegistrationGuide";
+import { registrationGuide } from "../lib/registrationGuide";
+import { StreamPlayer } from "../components/broadcast/StreamPlayer";
 import { buildBracketColumns } from "../lib/bracket";
-import { formatPrize } from "../lib/money";
+import { formatEntryFee, formatPrize } from "../lib/money";
 import type { PublicTournamentCenter } from "../types/api";
 import { TournamentStatusBadge } from "../components/ui/StatusBadge";
 import { tournamentStatusLabel } from "../lib/tournamentStatus";
@@ -124,6 +127,21 @@ export function TournamentDetailPage() {
     );
   const tournament = center.tournament;
   const heroDescription = tournamentHeroSummary(tournament.descricao);
+  // Transmissao: a da partida ao vivo; sem ela, o canal do torneio enquanto ele estiver em andamento.
+  // Cartao "Sua inscricao": cruza as equipes da pessoa com as inscricoes e partidas deste torneio.
+  const myTeamIds = new Set((user?.team_contexts ?? []).map((team) => Number(team.team_id)));
+  const nextMatch = center.matches.find((match) => (match.status === "agendada" || match.status === "andamento") && (myTeamIds.has(Number(match.team_a_id)) || myTeamIds.has(Number(match.team_b_id)))) ?? null;
+  const guide = registrationGuide({
+    loggedIn:Boolean(user),
+    tournament:{ status:tournament.status, format:tournament.format ?? null, game_id:tournament.game_id ?? null },
+    teams:(user?.team_contexts ?? []).map((team) => ({ team_id:Number(team.team_id), game_id:Number(team.game_id), role:team.role })),
+    entries:center.participants.map((item) => ({ team_id:Number(item.team_id), status:item.status, payment_status:item.payment_status })),
+    nextMatchId:nextMatch?.id ?? null,
+    paid:false,
+    free:formatEntryFee(tournament) === "Grátis"
+  });
+  const liveMatch = center.matches.find((match) => match.status === "andamento") ?? null;
+  const liveStream = liveMatch?.stream_url || (liveMatch || tournament.status === "em_andamento" ? tournament.stream_url : null) || null;
   const stats = statsQuery.data ?? [];
   const selectedMaps = selectedMatch
     ? center.match_maps.filter((map) => map.match_id === selectedMatch.id)
@@ -163,17 +181,23 @@ export function TournamentDetailPage() {
               <HeaderFact label="Início" value={date(tournament.inicio)} />
             </dl>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {tournament.status === "aberto" ? (
-              <Link to={user ? (user.roles?.includes("lider") ? "/lider" : "/jogador") : "/criar-conta"}>
-                <Button variant="urgent">Inscrever equipe</Button>
-              </Link>
-            ) : null}
-            <Button variant="secondary" onClick={() => { setTab("rules"); setSearchParams({ tab: "rules" }); }}>Regulamento</Button>
-          </div>
+          <RegistrationGuide guide={guide} />
         </div>
       </header>
       <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-8">
+        {liveStream ? (
+          <section aria-label="Transmissão ao vivo" className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <StreamPlayer title={liveMatch ? `${liveMatch.team_a} contra ${liveMatch.team_b}` : tournament.nome} url={liveStream} />
+            <div className="border border-arena-line bg-arena-panel p-4">
+              <Badge tone="live">Ao vivo</Badge>
+              {liveMatch ? <>
+                <p className="mt-3 font-display text-xl font-bold leading-tight">{liveMatch.team_a} <span className="text-arena-muted">contra</span> {liveMatch.team_b}</p>
+                <p className="mt-2 font-display text-3xl font-bold tabular-nums">{liveMatch.score_team_a ?? 0} : {liveMatch.score_team_b ?? 0}</p>
+                {liveMatch.current_map_name ? <p className="mt-1 text-sm text-arena-muted">Mapa atual: {liveMatch.current_map_name}</p> : null}
+              </> : <p className="mt-3 text-sm text-arena-muted">Transmissão oficial do campeonato.</p>}
+            </div>
+          </section>
+        ) : null}
         {center.result ? (
           <div className="mb-6 grid items-center gap-5 border border-amber-300/40 bg-amber-300/[.07] p-5 md:grid-cols-[auto_1fr_auto]">
             <div className="flex h-16 w-16 items-center justify-center border border-amber-300/40 bg-amber-300/10 text-amber-200">

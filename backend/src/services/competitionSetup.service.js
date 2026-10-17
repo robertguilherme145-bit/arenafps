@@ -1,3 +1,4 @@
+import { normalizeStreamUrl } from "../utils/streamEmbed.js";
 import { createAuditLog } from "../models/auditLog.model.js";
 import {
   createGameMap,
@@ -29,6 +30,8 @@ import {
   saveTournamentCompetitionRecord,
   updateGameMap,
   updateMatchRoomSettings,
+  updateMatchStream,
+  updateTournamentStream,
   updateVetoProgress,
   upsertGameSettings,
   upsertMatchCompetitionSettings
@@ -314,8 +317,17 @@ export async function saveMatchRoomSettings(adminUser, matchId, payload) {
     captain_confirmation_enabled: payload.captain_confirmation_enabled !== false,
     veto_action_seconds: Number.isFinite(seconds) ? Math.round(seconds) : 30
   });
-  await audit(adminUser, "match.room.updated", "match", match.id, { server_address: optionalText(payload.server_address, 255), veto_action_seconds: seconds });
+  if (payload.stream_url !== undefined) await updateMatchStream(match.id, normalizeStreamUrl(payload.stream_url));
+  await audit(adminUser, "match.room.updated", "match", match.id, { server_address: optionalText(payload.server_address, 255), veto_action_seconds: seconds, stream_url: payload.stream_url ?? undefined });
   return await getMatchOperations(match.id);
+}
+
+// Canal principal da transmissao do torneio (Twitch, YouTube ou Kick). Vazio remove.
+export async function saveTournamentStream(adminUser, tournamentId, payload) {
+  const streamUrl = normalizeStreamUrl(payload?.stream_url);
+  if (!await updateTournamentStream(Number(tournamentId), streamUrl)) throw new Error("Torneio nao encontrado.");
+  await audit(adminUser, "tournament.stream.updated", "tournament", Number(tournamentId), { stream_url: streamUrl });
+  return { tournament_id: Number(tournamentId), stream_url: streamUrl };
 }
 
 export async function openMatchVeto(adminUser, matchId) {

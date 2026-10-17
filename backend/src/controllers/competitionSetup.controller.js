@@ -15,6 +15,7 @@ import {
   recordMatchMapResult,
   resetMatchVeto,
   saveMatchRoomSettings,
+  saveTournamentStream,
   saveGameCompetitionSettings,
   saveMatchMapPlayerStatistics,
   saveMatchPlayerStatistics,
@@ -192,6 +193,14 @@ export async function matchMapPlayerStatistics(req, res) {
       Number(req.params.matchMapId),
       req.body
     ));
+  } catch (error) {
+    return res.status(400).json({ erro: error.message });
+  }
+}
+
+export async function tournamentStream(req, res) {
+  try {
+    return res.json(await saveTournamentStream(req.user, Number(req.params.tournamentId), req.body));
   } catch (error) {
     return res.status(400).json({ erro: error.message });
   }

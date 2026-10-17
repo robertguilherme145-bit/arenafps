@@ -259,6 +259,9 @@ export async function ensureCompetitionTables() {
   await ensureColumn("matches", "stage", "VARCHAR(30) NOT NULL DEFAULT 'main'");
   await ensureColumn("matches", "group_code", "VARCHAR(20) NULL");
   await ensureColumn("matches", "leg", "TINYINT NOT NULL DEFAULT 1");
+  // Link da transmissao (Twitch, YouTube ou Kick): da partida e o canal principal do torneio.
+  await ensureColumn("matches", "stream_url", "VARCHAR(500) NULL");
+  await ensureColumn("tournaments", "stream_url", "VARCHAR(500) NULL");
   await pool.query(`CREATE TABLE IF NOT EXISTS tournament_byes (
     tournament_id INT NOT NULL,
     round INT NOT NULL,

@@ -22,7 +22,7 @@ test("bloqueia iframe de outros sites e adivinhacao de tipo", async () => {
 
 test("CSP so permite scripts do proprio site", async () => {
   const csp = (await headersFor({ production:false })).get("content-security-policy");
-  for (const directive of ["default-src 'self'", "script-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "base-uri 'self'", "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data: blob: https:"]) {
+  for (const directive of ["default-src 'self'", "script-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "base-uri 'self'", "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data: blob: https:", "frame-src https://player.twitch.tv https://www.youtube-nocookie.com https://player.kick.com"]) {
     assert.ok(csp.includes(directive), directive);
   }
   assert.ok(!/script-src[^;]*unsafe/.test(csp));
