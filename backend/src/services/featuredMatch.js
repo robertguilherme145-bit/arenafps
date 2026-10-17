@@ -32,6 +32,7 @@ function toFeatured(item, status) {
     map_name:item.current_map_name ?? null,
     map_number:item.current_map_number == null ? null : Number(item.current_map_number),
     best_of:item.best_of ?? null,
-    scheduled_at:item.scheduled_at ? new Date(item.scheduled_at).toISOString() : null
+    scheduled_at:item.scheduled_at ? new Date(item.scheduled_at).toISOString() : null,
+    stream_url:item.stream_url || item.tournament_stream_url || null
   };
 }
