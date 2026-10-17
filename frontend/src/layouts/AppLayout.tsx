@@ -2,7 +2,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { AuthDialog } from "../components/layout/AuthDialog";
 import { CommandPalette } from "../components/layout/CommandPalette";
-import { Navbar } from "../components/layout/Navbar";
+import { isWorkspacePath, Navbar } from "../components/layout/Navbar";
+import { SiteFooter } from "../components/layout/SiteFooter";
 import { NotificationsDrawer } from "../components/layout/NotificationsDrawer";
 import { DiscordLinkGate } from "../components/layout/DiscordLinkGate";
 import { Sidebar } from "../components/layout/Sidebar";
@@ -14,7 +15,7 @@ export function AppLayout() {
   const collapsed = useUiStore((state) => state.sidebarCollapsed);
   const location = useLocation();
   const crumbs = location.pathname.split("/").filter(Boolean);
-  const workspace = location.pathname.startsWith("/admin") || location.pathname.startsWith("/lider") || location.pathname.startsWith("/capitao") || /^\/jogador\/?$/.test(location.pathname) || location.pathname.startsWith("/design-system");
+  const workspace = isWorkspacePath(location.pathname);
 
   return (
     <div className="min-h-screen">
@@ -25,15 +26,16 @@ export function AppLayout() {
           <div className="flex items-center gap-2 text-sm text-arena-muted">
             <span>Arena Camp</span>
             {crumbs.map((crumb) => (
-              <span className="flex items-center gap-2 capitalize" key={crumb}>
+              <span className="flex items-center gap-2 " key={crumb}>
                 <ChevronRight className="h-3 w-3" />
-                {crumb.replaceAll("-", " ")}
+                {crumbLabel(crumb)}
               </span>
             ))}
           </div>
         </div> : null}
         <Outlet />
       </main>
+      {workspace ? null : <SiteFooter />}
       <CommandPalette />
       <AuthDialog />
       <NotificationsDrawer />
@@ -41,4 +43,9 @@ export function AppLayout() {
       <ToastViewport />
     </div>
   );
+}
+
+const CRUMBS: Record<string, string> = { admin:"Painel da organização", lider:"Líder", capitao:"Capitão", jogador:"Jogador", torneios:"Torneios", novo:"Novo torneio", mix:"Torneio Mix" };
+function crumbLabel(crumb: string) {
+  return CRUMBS[crumb] ?? decodeURIComponent(crumb).replaceAll("-", " ");
 }

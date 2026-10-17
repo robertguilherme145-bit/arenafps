@@ -160,9 +160,6 @@ function getArea(pathname: string, role: string | null) {
     return "player";
   }
 
-  if (pathname.startsWith("/design-system") && role === "admin") {
-    return "admin";
-  }
 
   return "public";
 }

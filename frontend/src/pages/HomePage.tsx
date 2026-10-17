@@ -163,15 +163,6 @@ export function HomePage() {
       </section> : null}
     </main>
 
-    <footer className="border-t border-arena-line bg-arena-panel2 px-4 py-10 lg:px-8">
-      <div className="mx-auto grid max-w-[1500px] gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
-        <div><p className="font-display text-xl font-bold">Arena Camp</p><p className="mt-3 max-w-sm text-sm leading-6 text-arena-muted">Campeonatos de FPS para equipes e jogadores, do cadastro ao pódio.</p></div>
-        <FooterGroup links={[["Campeonatos", "/torneios"], ["Calendário", "/calendario"], ["Resultados", "/resultados"], ["Ranking", "/ranking"]]} title="Competição" />
-        <FooterGroup links={[["Equipes", "/equipes"], ["Jogadores", "/jogadores"], ["Notícias", "/noticias"], ["Jogos", "/jogos"]]} title="Comunidade" />
-        <FooterGroup links={[["Sobre", "/sobre"], ["Dúvidas frequentes", "/faq"], ["Contato", "/contato"], ["Privacidade", "/privacidade"], ["Termos", "/termos"]]} title="Arena Camp" />
-      </div>
-      <p className="mx-auto mt-8 max-w-[1500px] border-t border-arena-line pt-5 text-xs text-arena-muted">© {new Date().getFullYear()} Arena Camp</p>
-    </footer>
   </div>;
 }
 
@@ -205,9 +196,6 @@ function GameChip({ active, label, icon, onClick }: { active: boolean; label: st
 }
 function SectionHeading({ title, action, href }: { title: string; action?: string; href?: string }) {
   return <div className="mb-6 flex items-end justify-between gap-4"><h2 className="font-display text-3xl font-bold">{title}</h2>{action && href ? <Link className="hidden items-center gap-2 text-sm font-semibold text-cyan-200 sm:flex" to={href}>{action}<ArrowRight className="h-4 w-4" /></Link> : null}</div>;
-}
-function FooterGroup({ title, links }: { title: string; links: string[][] }) {
-  return <div><p className="font-semibold">{title}</p><div className="mt-4 space-y-2">{links.map(([label, href]) => <Link className="block text-sm text-arena-muted hover:text-arena-text" key={href} to={href}>{label}</Link>)}</div></div>;
 }
 function EmptyLine({ children }: { children: ReactNode }) {
   return <div className="border border-dashed border-arena-line p-8 text-center text-arena-muted">{children}</div>;
