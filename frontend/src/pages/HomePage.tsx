@@ -58,7 +58,7 @@ export function HomePage() {
             <Link to="/torneios"><Button variant="secondary">Ver campeonatos</Button></Link>
           </> : <>
             {isLeader && openTournament ? <Link to={`/torneios/${openTournament.id}`}><Button variant="urgent">Inscrever minha equipe</Button></Link> : null}
-            <Link to={roleHref(user.active_role)}><Button variant={isLeader && openTournament ? "secondary" : "primary"}>Abrir meu painel</Button></Link>
+            <Link to={roleHref(user.active_role)}><Button variant={isLeader && openTournament ? "secondary" : "primary"}>{user.active_role === "admin" ? "Painel da organização" : "Minha Arena"}</Button></Link>
             {!isLeader || !openTournament ? <Link to="/torneios"><Button variant="secondary">Ver campeonatos</Button></Link> : null}
           </>}
         </div>
@@ -208,4 +208,4 @@ function EmptyLine({ children }: { children: ReactNode }) {
 function format(value: string | null) { return ({ mix_single_elimination:"Mix individual", single_elimination:"Eliminação simples", double_elimination:"Eliminação dupla", swiss:"Sistema suíço", round_robin:"Pontos corridos", group_playoffs:"Grupos e playoffs", league:"Liga", custom:"Personalizado" } as Record<string, string>)[value ?? ""] ?? "A definir"; }
 function entryFee(tournament: { valor?: string | number | null; format?: string | null }) { const amount = Number(String(tournament.valor ?? 0).replace(/[^\d,.-]/g, "").replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) return "Grátis"; const scope = tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe"; return `${new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(amount)} ${scope}`; }
 function date(value: string | null | undefined) { return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir"; }
-function roleHref(role?: string | null) { return role === "admin" ? "/admin" : role === "lider" ? "/lider" : role === "capitao" ? "/capitao" : "/jogador"; }
+function roleHref(role?: string | null) { return role === "admin" ? "/admin" : "/minha-arena"; }

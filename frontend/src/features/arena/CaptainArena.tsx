@@ -1,3 +1,4 @@
+import { LoadFailed } from "./LoadFailed";
 import {
   AlertTriangle,
   BarChart3,
@@ -25,21 +26,22 @@ import {
   Users
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode, type TextareaHTMLAttributes } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Badge } from "../components/ui/Badge";
-import { AttendanceResponse } from "../components/attendance/AttendanceResponse";
-import { Button } from "../components/ui/Button";
-import { Card, CardContent, CardHeader } from "../components/ui/Card";
-import { DataTable } from "../components/ui/DataTable";
-import { EmptyState } from "../components/ui/EmptyState";
-import { Input, Label, Select } from "../components/ui/Form";
-import { Modal } from "../components/ui/Modal";
-import { PageHeader } from "../components/ui/PageHeader";
-import { Skeleton } from "../components/ui/Skeleton";
-import { StatCard } from "../components/ui/StatCard";
-import { TeamPlayerRankingPanel } from "../components/team/TeamPlayerRankingPanel";
-import { TournamentRegulationPanel } from "../components/tournament/TournamentRegulationPanel";
-import { useToast } from "../hooks/useToast";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { arenaPathForModule } from "../../lib/minhaArena";
+import { Badge } from "../../components/ui/Badge";
+import { AttendanceResponse } from "../../components/attendance/AttendanceResponse";
+import { Button } from "../../components/ui/Button";
+import { Card, CardContent, CardHeader } from "../../components/ui/Card";
+import { DataTable } from "../../components/ui/DataTable";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { Input, Label, Select } from "../../components/ui/Form";
+import { Modal } from "../../components/ui/Modal";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { StatCard } from "../../components/ui/StatCard";
+import { TeamPlayerRankingPanel } from "../../components/team/TeamPlayerRankingPanel";
+import { TournamentRegulationPanel } from "../../components/tournament/TournamentRegulationPanel";
+import { useToast } from "../../hooks/useToast";
 import {
   confirmCaptainMatchResult,
   createCaptainDispute,
@@ -55,33 +57,32 @@ import {
   updateCaptainEventAttendance,
   updateCaptainMatchAttendance,
   updateCaptainPreferences
-} from "../services/api";
+} from "../../services/api";
 import type {
   CaptainMatch,
   CaptainMatchRoom,
   CaptainWorkspace,
   LeaderMessage,
   LeaderTournamentCenter
-} from "../types/api";
-import { safeHref } from "../utils/safeHref";
+} from "../../types/api";
+import { safeHref } from "../../utils/safeHref";
 
 const modules = ["dashboard", "matches", "veto", "lineup", "ranking", "calendar", "communication", "statistics", "history", "settings"] as const;
-type CaptainModule = typeof modules[number];
+export type CaptainModule = typeof modules[number];
 type Runner = (key: string, action: () => Promise<unknown>, success: string, refresh?: boolean) => Promise<boolean>;
 type ModuleProps = { data: CaptainWorkspace; busy: string | null; run: Runner };
 
-export function CaptainDashboardPage() {
+// Espaco do capitao dentro da Minha Arena.
+export function CaptainArena({ module: activeModule }: { module: CaptainModule }) {
   const toast = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const requested = searchParams.get("module") as CaptainModule | null;
-  const activeModule: CaptainModule = requested && modules.includes(requested) ? requested : "dashboard";
+  const navigate = useNavigate();
   const [workspace, setWorkspace] = useState<CaptainWorkspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try { setWorkspace(await getCaptainWorkspace()); }
-    catch (error) { toast.error("Falha ao abrir o workspace", messageOf(error)); }
+    catch (error) { toast.error("Não foi possível carregar seus dados", messageOf(error)); }
     finally { setLoading(false); }
   }, []);
 
@@ -95,18 +96,17 @@ export function CaptainDashboardPage() {
       if (refresh) await load();
       return true;
     } catch (error) {
-      toast.error("Operação não concluida", messageOf(error));
+      toast.error("Operação não concluída", messageOf(error));
       return false;
     } finally { setBusy(null); }
   };
 
   function openModule(module: CaptainModule) {
-    const next = new URLSearchParams(searchParams);
-    next.set("module", module);
-    setSearchParams(next);
+    navigate(arenaPathForModule("capitao", module));
   }
 
-  if (loading || !workspace) return <CaptainLoading />;
+  if (loading) return <CaptainLoading />;
+  if (!workspace) return <LoadFailed onRetry={() => { setLoading(true); void load(); }} />;
 
   const content = {
     dashboard: <DashboardModule data={workspace} openModule={openModule} />,
@@ -121,11 +121,10 @@ export function CaptainDashboardPage() {
     settings: <div className="space-y-5"><SettingsModule data={workspace} busy={busy} run={run} /><LeaveTeamCard data={workspace} busy={busy} run={run} /></div>
   }[activeModule];
 
-  return <section className="px-4 pb-12 lg:px-8">
-    <PageHeader eyebrow="Capitão da equipe" title={workspace.captain.nick || "Capitão"} description={`${workspace.captain.team_name} · ${workspace.captain.game_name} · Operacao competitiva`} action={<Link to={`/equipe/${workspace.captain.team_slug}`}><Button icon={<ExternalLink className="h-4 w-4" />} variant="secondary">Equipe pública</Button></Link>} />
-    <CaptainContext data={workspace} busy={busy} onReload={() => void run("reload", load, "Painel atualizado", false)} />
-    <div className="mt-6">{content}</div>
-  </section>;
+  return <div className="space-y-6">
+    {activeModule === "dashboard" ? <CaptainContext data={workspace} busy={busy} onReload={() => void run("reload", load, "Painel atualizado", false)} /> : null}
+    {content}
+  </div>;
 }
 
 function CaptainContext({ data, busy, onReload }: { data: CaptainWorkspace; busy: string | null; onReload: () => void }) {

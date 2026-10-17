@@ -3,11 +3,7 @@ import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   adminNavigation,
-  captainControlNavigation,
-  captainNavigation,
-  captainTeamNavigation,
-  leaderNavigation,
-  playerNavigation,
+  arenaNavigation,
   publicNavigation
 } from "../../constants/navigation";
 import { useAuth } from "../../contexts/AuthContext";
@@ -47,16 +43,7 @@ export function CommandPalette() {
   }, [open, query, user?.active_game_id]);
 
   const commands = useMemo(() => {
-    const workspace =
-      user?.active_role === "admin"
-        ? adminNavigation
-        : user?.active_role === "lider"
-          ? leaderNavigation
-          : user?.active_role === "capitao"
-            ? [...captainNavigation, ...captainTeamNavigation, ...captainControlNavigation]
-          : user
-            ? playerNavigation
-            : [];
+    const workspace = user ? [...arenaNavigation, ...(user.roles.includes("admin") ? adminNavigation : [])] : [];
 
     return [...publicNavigation, ...workspace];
   }, [user]);

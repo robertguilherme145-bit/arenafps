@@ -12,7 +12,7 @@ export function NotFoundPage() {
           <p className="mt-6 text-xs font-semibold uppercase tracking-[.2em] text-cyan-200">404</p>
           <h1 className="mt-3 font-display text-4xl font-bold">Rota não encontrada</h1>
           <p className="mt-4 max-w-lg text-sm leading-6 text-arena-muted">
-            A pagina que você tentou abrir não existe na navegacao atual da Arena Camp.
+            A página que você tentou abrir não existe ou mudou de endereço.
           </p>
           <Link className="mt-8" to="/">
             <Button>Voltar para a home</Button>
