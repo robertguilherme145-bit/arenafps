@@ -53,7 +53,7 @@ export async function findTodayData() {
       `SELECT
          (SELECT COUNT(*) FROM matches WHERE DATE(scheduled_at) = CURDATE()) matches_today,
          (SELECT COUNT(*) FROM matches WHERE status = 'andamento') live_matches,
-         (SELECT COUNT(*) FROM entries WHERE DATE(rules_accepted_at) = CURDATE()) registrations_today,
+         (SELECT COUNT(*) FROM entries WHERE DATE(created_at) = CURDATE()) registrations_today,
          (SELECT COALESCE(SUM(valor), 0) FROM payments WHERE status = 'aprovado' AND DATE(paid_at) = CURDATE()) revenue_today`
     )
   ]);
