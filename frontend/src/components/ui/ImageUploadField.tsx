@@ -8,8 +8,8 @@ export function ImageUploadField({ value, onChange, label = "Enviar imagem" }: {
   const { error } = useToast();
   async function select(file?:File) {
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      error("Arquivo muito grande", "Envie uma imagem ou GIF com no máximo 8 MB.");
+    if (file.size > 3 * 1024 * 1024) {
+      error("Arquivo muito grande", "Envie uma imagem ou GIF com no máximo 3 MB. Imagens menores deixam o site mais rápido.");
       return;
     }
     setBusy(true);

@@ -1,6 +1,7 @@
 import multer from "multer";
 
-export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+// 3 MB: imagens maiores deixam as paginas lentas (ex.: banner GIF de 11 MB).
+export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const INVALID_TYPE = "Envie uma imagem JPG, PNG, WebP ou GIF.";
 
 const receiveImage = multer({

@@ -52,6 +52,8 @@ export function GamesPage() {
                   <img
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                     src={game.banner}
+                    loading="lazy"
+                    decoding="async"
                     alt={`Capa de ${game.nome}`}
                   />
                 ) : (
@@ -106,7 +108,7 @@ export function GamesPage() {
               <>
                 <div className="relative min-h-56 overflow-hidden bg-arena-panel2">
                   {selected.banner ? (
-                    <img className="absolute inset-0 h-full w-full object-cover opacity-55" src={selected.banner} alt="" />
+                    <img className="absolute inset-0 h-full w-full object-cover opacity-55" decoding="async" src={selected.banner} alt="" />
                   ) : null}
                   <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent" />
                   <button
