@@ -1,3 +1,4 @@
+import { setRegistrationClosesAt } from "../models/adminTournament.model.js";
 import { normalizeStreamUrl } from "../utils/streamEmbed.js";
 import { createAuditLog } from "../models/auditLog.model.js";
 import {
@@ -243,6 +244,11 @@ export async function saveTournamentCompetition(adminUser, tournamentId, payload
   };
 
   await saveTournamentCompetitionRecord(Number(tournamentId), data, mapIds);
+  if (payload.registration_closes_at !== undefined) {
+    const closesAt = payload.registration_closes_at ? new Date(payload.registration_closes_at) : null;
+    if (closesAt && Number.isNaN(closesAt.getTime())) throw new Error("Informe uma data válida em \"Inscrições até\".");
+    await setRegistrationClosesAt(Number(tournamentId), closesAt);
+  }
   await audit(adminUser, "tournament.competition.updated", "tournament", tournamentId, {
     ...data,
     map_ids: mapIds
