@@ -7,7 +7,6 @@ const AdminDashboardPage = lazyPage(() => import("../pages/AdminDashboardPage"),
 const CalendarPage = lazyPage(() => import("../pages/CalendarPage"), "CalendarPage");
 const CaptainDashboardPage = lazyPage(() => import("../pages/CaptainDashboardPage"), "CaptainDashboardPage");
 const CommunityDirectoryPage = lazyPage(() => import("../pages/CommunityDirectoryPage"), "CommunityDirectoryPage");
-const DesignSystemPage = lazyPage(() => import("../pages/DesignSystemPage"), "DesignSystemPage");
 const GamesPage = lazyPage(() => import("../pages/GamesPage"), "GamesPage");
 const HomePage = lazyPage(() => import("../pages/HomePage"), "HomePage");
 const LeaderDashboardPage = lazyPage(() => import("../pages/LeaderDashboardPage"), "LeaderDashboardPage");
@@ -65,7 +64,6 @@ export const router = createBrowserRouter([
       { path: "/privacidade", element: <StaticPage page="privacidade" /> },
       { path: "/termos", element: <StaticPage page="termos" /> },
       { path: "/noticias", element: <StaticPage page="noticias" /> },
-      { path: "/design-system", element: <DesignSystemPage /> },
       { path: "*", element: <NotFoundPage /> }
     ]
   }

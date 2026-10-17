@@ -47,7 +47,6 @@ import { TournamentRegulationPanel } from "../components/tournament/TournamentRe
 import { ImageUploadField } from "../components/ui/ImageUploadField";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
-import { setArenaTheme } from "../utils/theme";
 import {
   archiveLeaderTeam,
   captureLeaderPaypalPayment,
@@ -3393,7 +3392,6 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
 
 function SettingsModule({ data, busy, run }: ModuleProps) {
   const [preferences, setPreferences] = useState({ ...data.preferences });
-  useEffect(() => setArenaTheme(preferences.theme), [preferences.theme]);
   const [document, setDocument] = useState({
     name: "",
     type: "outro",
@@ -3406,33 +3404,6 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
           <h2 className="font-display text-xl font-semibold">Preferências</h2>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field label="Idioma">
-            <Select
-              value={preferences.language}
-              onChange={(e) =>
-                setPreferences((s) => ({ ...s, language: e.target.value }))
-              }
-            >
-              <option value="pt-BR">Português</option>
-              <option value="en-US">English</option>
-              <option value="es-ES">Español</option>
-            </Select>
-          </Field>
-          <Field label="Tema">
-            <Select
-              value={preferences.theme}
-              onChange={(e) =>
-                setPreferences((s) => ({
-                  ...s,
-                  theme: e.target.value as typeof preferences.theme,
-                }))
-              }
-            >
-              <option value="dark">Escuro</option>
-              <option value="light">Claro</option>
-              <option value="system">Sistema</option>
-            </Select>
-          </Field>
           {[
             ["email_notifications", "Notificações por email"],
             ["discord_notifications", "Notificações pelo Discord"],
