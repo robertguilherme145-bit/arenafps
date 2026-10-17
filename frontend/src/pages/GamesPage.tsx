@@ -3,13 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Gamepad2, ImageOff, Map, X } from "lucide-react";
 import { Badge } from "../components/ui/Badge";
 import { PageHeader } from "../components/ui/PageHeader";
-import { useI18n } from "../i18n/I18nProvider";
 import { getGame, getGames } from "../services/api";
 
 export function GamesPage() {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const { t, format } = useI18n();
-  const { data: games = [], isLoading, isError } = useQuery({
+  const [selectedId, setSelectedId] = useState<number | null>(null);  const { data: games = [], isLoading, isError } = useQuery({
     queryKey: ["games"],
     queryFn: getGames
   });
@@ -22,24 +19,24 @@ export function GamesPage() {
   return (
     <section className="px-4 pb-16 lg:px-8">
       <PageHeader
-        eyebrow={t("games.eyebrow")}
-        title={t("games.title")}
-        description={t("games.description")}
+        eyebrow="Jogos"
+        title={"Jogos disponíveis"}
+        description={"Explore os jogos competitivos da Arena Camp e conheça os mapas habilitados em cada modalidade."}
       />
 
       {isLoading ? (
-        <EmptyState title={t("games.loadingTitle")} description={t("games.loadingDescription")} />
+        <EmptyState title={"Carregando jogos"} description={"Consultando o catálogo oficial da plataforma."} />
       ) : null}
 
       {isError ? (
         <EmptyState
-          title={t("games.errorTitle")}
-          description={`${t("games.errorDescription")} ${t("common.tryAgain")}`}
+          title={"Catálogo indisponível"}
+          description={`${"Não foi possível consultar os jogos neste momento."} ${"Tente novamente."}`}
         />
       ) : null}
 
       {!isLoading && !isError && games.length === 0 ? (
-        <EmptyState title={t("games.emptyTitle")} description={t("games.emptyDescription")} />
+        <EmptyState title={"Nenhum jogo publicado"} description={"Os jogos cadastrados pela administração aparecerão aqui."} />
       ) : null}
 
       {games.length > 0 ? (
@@ -55,7 +52,7 @@ export function GamesPage() {
                   <img
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                     src={game.banner}
-                    alt={format("games.bannerAlt", { name: game.nome }, `Capa de ${game.nome}`)}
+                    alt={`Capa de ${game.nome}`}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -82,10 +79,10 @@ export function GamesPage() {
                 </div>
 
                 <p className="mt-4 line-clamp-2 min-h-10 text-sm text-arena-muted">
-                  {game.descricao || t("games.cardDescription")}
+                  {game.descricao || "Mapas, torneios, rankings e temporadas desta modalidade."}
                 </p>
                 <p className="mt-4 border-t border-arena-line pt-3 text-xs font-semibold uppercase text-cyan-200">
-                  {t("games.viewMaps")}
+                  {"Visualizar mapas"}
                 </p>
               </div>
             </button>
@@ -103,7 +100,7 @@ export function GamesPage() {
           <div className="mx-auto my-4 max-w-6xl overflow-hidden border border-arena-line bg-arena-panel2 shadow-2xl">
             {loadingGame || !selected ? (
               <div className="flex min-h-96 items-center justify-center text-sm text-arena-muted">
-                {t("games.loadingMaps")}
+                {"Carregando mapas..."}
               </div>
             ) : (
               <>
@@ -115,17 +112,17 @@ export function GamesPage() {
                   <button
                     className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center border border-white/15 bg-black/50 text-white hover:bg-black/80"
                     onClick={() => setSelectedId(null)}
-                    aria-label={t("common.close")}
+                    aria-label={"Fechar"}
                   >
                     <X className="h-5 w-5" />
                   </button>
                   <div className="relative flex min-h-56 max-w-3xl items-end gap-4 p-6 sm:p-8">
                     {selected.logo ? <img className="h-20 w-20 object-contain" src={selected.logo} alt="" /> : null}
                     <div>
-                      <p className="text-xs font-semibold uppercase text-cyan-200">{t("games.modalEyebrow")}</p>
+                      <p className="text-xs font-semibold uppercase text-cyan-200">{"Catálogo de mapas"}</p>
                       <h2 className="mt-2 font-display text-3xl font-bold">{selected.nome}</h2>
                       <p className="mt-2 text-sm leading-6 text-slate-300">
-                        {selected.descricao || t("games.modalDescription")}
+                        {selected.descricao || "Mapas atualmente disponíveis para competições na Arena Camp."}
                       </p>
                     </div>
                   </div>
@@ -134,10 +131,10 @@ export function GamesPage() {
                 <div className="p-5 sm:p-8">
                   <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                      <h3 className="font-display text-xl font-semibold">{t("games.mapsAvailable")}</h3>
-                      <p className="mt-1 text-sm text-arena-muted">{t("games.mapsHelp")}</p>
+                      <h3 className="font-display text-xl font-semibold">{"Mapas disponíveis"}</h3>
+                      <p className="mt-1 text-sm text-arena-muted">{"A seleção pode variar conforme as regras de cada torneio."}</p>
                     </div>
-                    <Badge tone="info">{format("games.mapsCount", { count: selected.maps?.length || 0 })}</Badge>
+                    <Badge tone="info">{`${selected.maps?.length || 0} mapas`}</Badge>
                   </div>
 
                   {selected.maps?.length ? (
@@ -159,7 +156,7 @@ export function GamesPage() {
                       ))}
                     </div>
                   ) : (
-                    <EmptyState title={t("games.noMapsTitle")} description={t("games.noMapsDescription")} />
+                    <EmptyState title={"Nenhum mapa publicado"} description={"Os mapas ativos deste jogo aparecerão aqui quando forem cadastrados."} />
                   )}
                 </div>
               </>
@@ -183,21 +180,19 @@ function EmptyState({ title, description }: { title: string; description: string
 
 function MapArtwork({ src, name }: { src: string | null; name: string }) {
   const [failed, setFailed] = useState(false);
-  const { t, format } = useI18n();
-
   return (
     <div className="aspect-video overflow-hidden bg-arena-panel2">
       {src && !failed ? (
         <img
           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
           src={src}
-          alt={format("games.mapAlt", { name })}
+          alt={`Mapa ${name}`}
           onError={() => setFailed(true)}
         />
       ) : (
         <div className="flex h-full flex-col items-center justify-center px-4 text-center text-arena-muted">
           <ImageOff className="h-7 w-7" />
-          <span className="mt-2 text-xs">{t("games.imageUnavailable")}</span>
+          <span className="mt-2 text-xs">{"Imagem indisponível. Reenvie pelo painel administrativo."}</span>
         </div>
       )}
     </div>

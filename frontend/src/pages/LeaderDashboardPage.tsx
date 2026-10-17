@@ -47,7 +47,6 @@ import { TournamentRegulationPanel } from "../components/tournament/TournamentRe
 import { ImageUploadField } from "../components/ui/ImageUploadField";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
-import { setArenaTheme } from "../utils/theme";
 import {
   archiveLeaderTeam,
   captureLeaderPaypalPayment,
@@ -299,7 +298,7 @@ export function LeaderDashboardPage() {
       <TeamContext
         data={workspace}
         busy={busy}
-        onReload={() => void run("reload", load, "Workspace atualizado", false)}
+        onReload={() => void run("reload", load, "Painel atualizado", false)}
       />
       <div className="mt-6">{content}</div>
     </section>
@@ -474,7 +473,7 @@ function TeamOnboarding({
               "Convidar jogadores",
               "Criar lineup",
               "Inscrever em torneios",
-              "Operar Pick & Ban",
+              "Operar o veto de mapas",
             ].map((item, index) => (
               <div
                 className="flex items-center gap-3 border-b border-arena-line pb-3"
@@ -579,7 +578,7 @@ function DashboardModule({
       module: "roster" as const,
     },
     {
-      label: "Lineup ativa",
+      label: "Escalação ativa",
       done: data.lineups.some((lineup) =>
         ["ativa", "congelada"].includes(lineup.status),
       ),
@@ -613,7 +612,7 @@ function DashboardModule({
               onClick={() => openModule("roster")}
             />
             <QuickMetric
-              label="Pick & Ban"
+              label="Veto de mapas"
               value={
                 data.matches.filter((match) => match.veto_status === "liberado")
                   .length
@@ -1327,7 +1326,7 @@ function LineupsModule({ data, busy, run }: ModuleProps) {
     const ok = await run(
       "lineup-save",
       () => saveLeaderLineup(selected?.id ?? null, form),
-      "Lineup salva",
+      "Escalação salva",
     );
     if (ok && !selected) setSelectedId(null);
   }
@@ -1336,7 +1335,7 @@ function LineupsModule({ data, busy, run }: ModuleProps) {
       <Card>
         <CardHeader className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold">Lineups</h2>
+            <h2 className="font-display text-xl font-semibold">Escalações</h2>
             <p className="mt-1 text-sm text-arena-muted">
               {data.lineups.length} configuradas
             </p>
@@ -1393,7 +1392,7 @@ function LineupsModule({ data, busy, run }: ModuleProps) {
                     void run(
                       `duplicate-${selected.id}`,
                       () => duplicateLeaderLineup(selected.id),
-                      "Lineup duplicada",
+                      "Escalação duplicada",
                     )
                   }
                 >
@@ -1408,7 +1407,7 @@ function LineupsModule({ data, busy, run }: ModuleProps) {
                     void run(
                       `freeze-${selected.id}`,
                       () => freezeLeaderLineup(selected.id),
-                      "Lineup congelada",
+                      "Escalação congelada",
                     )
                   }
                 >
@@ -1604,7 +1603,7 @@ function TournamentsModule({
         onClose={() => setTarget(null)}
       >
         <div className="space-y-4">
-          <Field label="Lineup">
+          <Field label="Escalação">
             <Select
               value={lineupId}
               onChange={(e) => setLineupId(e.target.value)}
@@ -1881,8 +1880,8 @@ function TournamentCenterPanel({
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <Metric
-                label="Lineup enviada"
-                value={ownEntry?.lineup_name || "Lineup legada"}
+                label="Escalação enviada"
+                value={ownEntry?.lineup_name || "Escalação legada"}
               />
               <Metric label="Jogadores" value={String(center.lineup.length)} />
               <Metric
@@ -2133,7 +2132,7 @@ function MatchesModule({ data, busy, run }: ModuleProps) {
                 </div>
               ))}
               {!operations.maps.length ? (
-                <InlineEmpty text="Os mapas serao formados pelo Pick & Ban." />
+                <InlineEmpty text="Os mapas serao formados pelo veto de mapas." />
               ) : null}
             </CardContent>
           </Card>
@@ -2402,7 +2401,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
                 <div>
                   <p className="font-semibold">{entry.tournament_name}</p>
                   <p className="text-xs text-arena-muted">
-                    {entry.lineup_name || "Lineup legada"}
+                    {entry.lineup_name || "Escalação legada"}
                   </p>
                 </div>
               ),
@@ -3353,7 +3352,7 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
           columns={[
             { header: "Torneio", cell: (entry) => entry.tournament_name },
             {
-              header: "Lineup",
+              header: "Escalação",
               cell: (entry) => entry.lineup_name || "Legada",
             },
             {
@@ -3393,7 +3392,6 @@ function HistoryModule({ data }: { data: LeaderWorkspace }) {
 
 function SettingsModule({ data, busy, run }: ModuleProps) {
   const [preferences, setPreferences] = useState({ ...data.preferences });
-  useEffect(() => setArenaTheme(preferences.theme), [preferences.theme]);
   const [document, setDocument] = useState({
     name: "",
     type: "outro",
@@ -3406,33 +3404,6 @@ function SettingsModule({ data, busy, run }: ModuleProps) {
           <h2 className="font-display text-xl font-semibold">Preferências</h2>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field label="Idioma">
-            <Select
-              value={preferences.language}
-              onChange={(e) =>
-                setPreferences((s) => ({ ...s, language: e.target.value }))
-              }
-            >
-              <option value="pt-BR">Português</option>
-              <option value="en-US">English</option>
-              <option value="es-ES">Español</option>
-            </Select>
-          </Field>
-          <Field label="Tema">
-            <Select
-              value={preferences.theme}
-              onChange={(e) =>
-                setPreferences((s) => ({
-                  ...s,
-                  theme: e.target.value as typeof preferences.theme,
-                }))
-              }
-            >
-              <option value="dark">Escuro</option>
-              <option value="light">Claro</option>
-              <option value="system">Sistema</option>
-            </Select>
-          </Field>
           {[
             ["email_notifications", "Notificações por email"],
             ["discord_notifications", "Notificações pelo Discord"],

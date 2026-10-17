@@ -1,115 +1,118 @@
 import { Search, Trophy } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Badge } from "../components/ui/Badge";
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { TournamentCalendar } from "../components/tournament/TournamentCalendar";
 import { Button } from "../components/ui/Button";
-import { Card, CardContent } from "../components/ui/Card";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Input, Select } from "../components/ui/Form";
 import { PageHeader } from "../components/ui/PageHeader";
+import { PageTabs } from "../components/ui/PageTabs";
 import { Skeleton } from "../components/ui/Skeleton";
-import { useTournaments } from "../hooks/useArenaData";
+import { TournamentStatusBadge } from "../components/ui/StatusBadge";
 import { useAuth } from "../contexts/AuthContext";
+import { useTournaments } from "../hooks/useArenaData";
+import { formatEntryFee, formatPrize } from "../lib/money";
+import { isPublicTournament, tournamentTab, type TournamentTab } from "../lib/tournamentStatus";
+import type { Tournament } from "../types/api";
+
+type Tab = TournamentTab | "calendario";
+const TABS: Array<{ value:Tab; label:string }> = [
+  { value:"abertos", label:"Abertos" },
+  { value:"andamento", label:"Em andamento" },
+  { value:"encerrados", label:"Encerrados" },
+  { value:"calendario", label:"Calendário" }
+];
+const EMPTY: Record<TournamentTab, { title:string; description:string }> = {
+  abertos:{ title:"Nenhuma inscrição aberta agora", description:"Veja os campeonatos em andamento ou volte em breve. As próximas inscrições aparecem aqui." },
+  andamento:{ title:"Nenhum campeonato em andamento", description:"Quando as inscrições encerrarem e as partidas começarem, o campeonato aparece aqui." },
+  encerrados:{ title:"Nenhum campeonato encerrado ainda", description:"Os resultados e campeões ficam guardados aqui depois da final." }
+};
 
 export function TournamentsPage() {
   const { data = [], isLoading } = useTournaments();
   const { user } = useAuth();
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [game, setGame] = useState("");
+  const [params, setParams] = useSearchParams();
+  const requested = params.get("aba") as Tab | null;
+  const tab: Tab = TABS.some((item) => item.value === requested) ? requested! : "abertos";
+  const search = params.get("q") ?? "";
+  const game = params.get("jogo") ?? "";
 
-  const filtered = useMemo(
-    () =>
-      data.filter((tournament) => {
-        const matchesSearch =
-          !search ||
-          tournament.nome.toLowerCase().includes(search.toLowerCase()) ||
-          (tournament.descricao ?? "").toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = !status || tournament.status === status;
-        const matchesGame = !game || String(tournament.game_id ?? tournament.game) === game;
+  function update(changes: Record<string, string>) {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([key, value]) => (value ? next.set(key, value) : next.delete(key)));
+    setParams(next, { replace:true });
+  }
 
-        return matchesSearch && matchesStatus && matchesGame;
-      }),
-    [data, game, search, status]
-  );
+  const visible = useMemo(() => data.filter((tournament) => {
+    if (!isPublicTournament(tournament.status)) return false;
+    const text = `${tournament.nome} ${tournament.descricao ?? ""}`.toLowerCase();
+    return (!search || text.includes(search.toLowerCase())) && (!game || String(tournament.game_id ?? tournament.game) === game);
+  }), [data, search, game]);
+  const counts = useMemo(() => {
+    const result: Record<TournamentTab, number> = { abertos:0, andamento:0, encerrados:0 };
+    visible.forEach((tournament) => { result[tournamentTab(tournament.status)] += 1; });
+    return result;
+  }, [visible]);
+  const list = tab === "calendario" ? [] : visible.filter((tournament) => tournamentTab(tournament.status) === tab);
+  const games = [...new Map(data.filter((item) => item.game_id).map((item) => [String(item.game_id), item.game_name || item.game_short_name || item.game])).entries()];
 
   return (
-    <section className="px-4 pb-12 lg:px-8">
+    <section className="mx-auto max-w-[1500px] px-4 pb-12 lg:px-8">
       <PageHeader
-        eyebrow="Competições"
+        action={user?.roles.includes("admin") ? <Link to="/admin/torneios/novo"><Button icon={<Trophy className="h-4 w-4" />}>Criar torneio</Button></Link> : undefined}
+        description="Inscrições abertas, campeonatos em andamento e resultados."
         title="Torneios"
-        description="Lista pública de campeonatos com status, datas, premiação e capacidade de equipes."
-        action={user?.roles.includes("admin") ?
-          <Link to="/admin/torneios/novo">
-            <Button icon={<Trophy className="h-4 w-4" />}>Criar torneio</Button>
-          </Link>
-        : undefined}
       />
-      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_180px_180px]">
+      <PageTabs
+        items={TABS.map((item) => ({ ...item, count:item.value === "calendario" ? undefined : counts[item.value] }))}
+        label="Situação dos torneios"
+        onChange={(aba) => update({ aba })}
+        value={tab}
+      />
+      <div className="my-6 grid gap-3 md:grid-cols-[1fr_240px]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-arena-muted" />
-          <Input className="pl-9" placeholder="Pesquisar torneio" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <Input className="pl-9" placeholder="Buscar torneio" value={search} onChange={(event) => update({ q:event.target.value })} />
         </div>
-        <Select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os status</option><option value="criado">Em preparação</option><option value="aberto">Inscrições abertas</option><option value="fechado">Inscrições encerradas</option><option value="em_andamento">Ao vivo</option><option value="finalizado">Finalizado</option></Select>
-        <Select aria-label="Jogo" value={game} onChange={(event) => setGame(event.target.value)}><option value="">Todos os jogos</option>{[...new Map(data.filter((item) => item.game_id).map((item) => [String(item.game_id), item.game_name || item.game_short_name || item.game])).entries()].map(([id,name]) => <option key={id} value={id}>{name}</option>)}</Select>
+        <Select aria-label="Jogo" value={game} onChange={(event) => update({ jogo:event.target.value })}>
+          <option value="">Todos os jogos</option>
+          {games.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </Select>
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <Skeleton className="h-52" key={index} />)}</div>
-      ) : filtered.length ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((tournament) => (
-            <Link to={`/torneios/${tournament.id}`} key={tournament.id}>
-              <Card className="h-full transition hover:border-cyan-400/45 hover:bg-white/[.035]">
-                <CardContent>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="font-display text-xl font-semibold">{tournament.nome}</h2>
-                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-arena-muted">{tournament.descricao}</p>
-                    </div>
-                    <Badge tone={tournament.status === "aberto" ? "success" : tournament.status === "em_andamento" ? "info" : "neutral"}>{statusLabel(tournament.status)}</Badge>
-                  </div>
-                  <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-                    <Metric label="Equipes" value={String(tournament.max_teams)} />
-                    <Metric label="Titulares" value={String(tournament.titulares)} />
-                    <Metric label="Inscrição" value={entryFee(tournament)} />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{Array.from({ length:3 }).map((_, index) => <Skeleton className="h-48" key={index} />)}</div>
+      ) : tab === "calendario" ? (
+        <TournamentCalendar tournaments={visible} />
+      ) : list.length ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{list.map((tournament) => <TournamentCard key={tournament.id} tournament={tournament} />)}</div>
+      ) : search || game ? (
+        <EmptyState description="Nenhum torneio com esses filtros nesta aba. Limpe a busca ou escolha outro jogo." title="Nada encontrado" />
       ) : (
-        <EmptyState title="Nenhum torneio encontrado" description="Ajuste a pesquisa ou os filtros para localizar outra competição." />
+        <EmptyState description={EMPTY[tab].description} title={EMPTY[tab].title} />
       )}
     </section>
   );
 }
 
-function statusLabel(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Encerrado", em_andamento:"Ao vivo", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string,string>)[value] ?? value; }
-
-function entryFee(tournament: { valor?: string | number | null; format?: string | null }) {
-  const amount = Number(
-    String(tournament.valor ?? 0)
-      .replace(/[^\d,.-]/g, "")
-      .replace(",", ".")
-  );
-
-  if (!Number.isFinite(amount) || amount <= 0) return "Grátis";
-
-  const scope =
-    tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe";
-
-  return `${new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(amount)} ${scope}`;
-}
-function Metric({ label, value }: { label: string; value: string }) {
+function TournamentCard({ tournament }: { tournament: Tournament }) {
   return (
-    <div className="rounded-arena border border-arena-line bg-black/20 p-3">
-      <p className="text-xs text-arena-muted">{label}</p>
-      <p className="mt-1 font-semibold">{value}</p>
-    </div>
+    <Link className="flex h-full flex-col border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" to={`/torneios/${tournament.id}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <TournamentStatusBadge status={tournament.status} />
+        {tournament.game_short_name ? <span className="text-sm text-arena-muted">{tournament.game_short_name}</span> : null}
+      </div>
+      <h2 className="mt-3 font-display text-xl font-bold leading-tight">{tournament.nome}</h2>
+      {tournament.descricao ? <p className="mt-2 line-clamp-2 text-sm text-arena-muted">{tournament.descricao}</p> : null}
+      <dl className="mt-auto grid grid-cols-3 gap-3 border-t border-arena-line pt-4 text-sm">
+        <Fact label="Prêmio" value={formatPrize(tournament.premiacao)} />
+        <Fact label="Inscrição" value={formatEntryFee(tournament)} />
+        <Fact label="Início" value={tournament.inicio ? new Date(tournament.inicio).toLocaleDateString("pt-BR") : "A definir"} />
+      </dl>
+    </Link>
   );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return <div className="min-w-0"><dt className="text-xs text-arena-muted">{label}</dt><dd className="mt-1 font-semibold leading-snug">{value}</dd></div>;
 }

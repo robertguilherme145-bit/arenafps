@@ -133,7 +133,7 @@ const adminModules = [
   {
     id: "operations",
     title: "Central de partidas",
-    description: "Cadastre jogos e mapas, prepare partidas, Pick & Ban e resultados.",
+    description: "Cadastre jogos e mapas, prepare partidas, veto de mapas e resultados.",
   },
   {
     id: "community",
@@ -1146,7 +1146,7 @@ export function AdminDashboardPage() {
       const titulares = parseIds(lineupForm.titulares);
       const reservas = parseIds(lineupForm.reservas);
       await saveAdminEntryLineup(activeEntry.id, { titulares, reservas });
-      toast.success("Lineup salva", "Titulares e reservas foram atualizados.");
+      toast.success("Escalação salva", "Titulares e reservas foram atualizados.");
       await loadLineup(activeEntry.id);
       await loadAdminWorkspace();
     } catch (err) {
@@ -1633,7 +1633,7 @@ export function AdminDashboardPage() {
                         icon={<Users className="h-4 w-4" />}
                       />
                       <MetricTile
-                        title="Lineups"
+                        title="Escalações"
                         value={String(
                           filteredEntries.filter((item) => item.lineup_size > 0)
                             .length,
@@ -1922,7 +1922,7 @@ export function AdminDashboardPage() {
                   ),
                 },
                 {
-                  header: "Lineup",
+                  header: "Escalação",
                   cell: (item) => `${item.starters_count}/${item.lineup_size}`,
                 },
                 {

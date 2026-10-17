@@ -5,13 +5,10 @@ import { RouterProvider } from "react-router-dom";
 
 import { AuthProvider } from "../contexts/AuthContext";
 import { AppErrorBoundary } from "../components/ui/AppErrorBoundary";
-import { I18nProvider } from "../i18n/I18nProvider";
 import { router } from "../routes/router";
 import "../styles/globals.css";
-import { initializeArenaTheme } from "../utils/theme";
 import { BootScreen } from "../components/brand/BootScreen";
 
-initializeArenaTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,11 +25,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <I18nProvider>
             <Suspense fallback={<BootScreen />}>
               <RouterProvider router={router} />
             </Suspense>
-          </I18nProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppErrorBoundary>

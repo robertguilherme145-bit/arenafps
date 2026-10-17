@@ -65,7 +65,7 @@ export const leaderNavigation = [
   { label: "Visão geral", href: "/lider?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Minha equipe", href: "/lider?module=team", icon: Shield, module: "team" },
   { label: "Elenco", href: "/lider?module=roster", icon: Users, module: "roster" },
-  { label: "Lineups", href: "/lider?module=lineups", icon: ClipboardList, module: "lineups" },
+  { label: "Escalações", href: "/lider?module=lineups", icon: ClipboardList, module: "lineups" },
   { label: "Ranking da equipe", href: "/lider?module=ranking", icon: Medal, module: "ranking" }
 ];
 
@@ -85,11 +85,11 @@ export const leaderControlNavigation = [
 export const captainNavigation = [
   { label: "Visão geral", href: "/capitao?module=dashboard", icon: LayoutDashboard, module: "dashboard" },
   { label: "Partidas", href: "/capitao?module=matches", icon: Swords, module: "matches" },
-  { label: "Pick & Ban", href: "/capitao?module=veto", icon: Crosshair, module: "veto" }
+  { label: "Veto de mapas", href: "/capitao?module=veto", icon: Crosshair, module: "veto" }
 ];
 
 export const captainTeamNavigation = [
-  { label: "Lineup oficial", href: "/capitao?module=lineup", icon: ClipboardList, module: "lineup" },
+  { label: "Escalação oficial", href: "/capitao?module=lineup", icon: ClipboardList, module: "lineup" },
   { label: "Ranking da equipe", href: "/capitao?module=ranking", icon: Medal, module: "ranking" },
   { label: "Calendário", href: "/capitao?module=calendar", icon: CalendarDays, module: "calendar" },
   { label: "Comunicação", href: "/capitao?module=communication", icon: MessageSquare, module: "communication" }
@@ -106,7 +106,7 @@ export const playerNavigation = [
   { label: "Meu perfil", href: "/jogador?module=profile", icon: UserRound, module: "profile" },
   { label: "Equipes e convites", href: "/jogador?module=teams", icon: Users, module: "teams" },
   { label: "Torneios Mix", href: "/jogador?module=mix", icon: Shuffle, module: "mix" },
-  { label: "Lineup", href: "/jogador?module=lineup", icon: ClipboardList, module: "lineup" },
+  { label: "Escalação", href: "/jogador?module=lineup", icon: ClipboardList, module: "lineup" },
   { label: "Partidas", href: "/jogador?module=matches", icon: Swords, module: "matches" },
   { label: "Calendário", href: "/jogador?module=calendar", icon: CalendarDays, module: "calendar" },
   { label: "Estatísticas", href: "/jogador?module=statistics", icon: BarChart3, module: "statistics" },

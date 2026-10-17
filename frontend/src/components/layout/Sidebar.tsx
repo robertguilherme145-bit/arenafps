@@ -39,7 +39,7 @@ export function Sidebar() {
         {!collapsed ? (
           <div className="rounded-arena border border-arena-line bg-white/[.03] p-3">
             <p className="text-[11px] font-semibold uppercase tracking-[.18em] text-cyan-200">
-              {area === "public" ? "Plataforma" : "Workspace"}
+              {area === "public" ? "Plataforma" : "Painel"}
             </p>
             <p className="mt-2 text-sm text-arena-muted">
               {area === "public"
@@ -160,9 +160,6 @@ function getArea(pathname: string, role: string | null) {
     return "player";
   }
 
-  if (pathname.startsWith("/design-system") && role === "admin") {
-    return "admin";
-  }
 
   return "public";
 }

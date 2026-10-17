@@ -13,6 +13,7 @@ import { buildActivityFeed } from "../lib/activityFeed";
 import { formatPrize } from "../lib/money";
 import { getPublicPortal } from "../services/api";
 import type { PublicPortalData } from "../types/api";
+import { TournamentStatusBadge } from "../components/ui/StatusBadge";
 
 type PortalTournament = PublicPortalData["tournaments"][number];
 
@@ -90,7 +91,7 @@ export function HomePage() {
               { header:"Prêmio", cell:(item) => formatPrize(item.premiacao) },
               { header:"Inscrição", cell:(item) => entryFee(item) },
               { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` },
-              { header:"Situação", cell:(item) => <Badge tone={item.status === "aberto" ? "warning" : "neutral"}>{status(item.status)}</Badge> }
+              { header:"Situação", cell:(item) => <TournamentStatusBadge status={item.status} /> }
             ]} />
           </div> : heroShowsSpotlight ? <EmptyLine>Novos campeonatos aparecem aqui assim que forem publicados.</EmptyLine> : null}
         </div> : <EmptyLine>Nenhum campeonato publicado ainda. <Link className="font-semibold text-cyan-200" to="/contato">Fale com a organização</Link> para trazer o seu.</EmptyLine>}
@@ -162,15 +163,6 @@ export function HomePage() {
       </section> : null}
     </main>
 
-    <footer className="border-t border-arena-line bg-arena-panel2 px-4 py-10 lg:px-8">
-      <div className="mx-auto grid max-w-[1500px] gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
-        <div><p className="font-display text-xl font-bold">Arena Camp</p><p className="mt-3 max-w-sm text-sm leading-6 text-arena-muted">Campeonatos de FPS para equipes e jogadores, do cadastro ao pódio.</p></div>
-        <FooterGroup links={[["Campeonatos", "/torneios"], ["Calendário", "/calendario"], ["Resultados", "/resultados"], ["Ranking", "/ranking"]]} title="Competição" />
-        <FooterGroup links={[["Equipes", "/equipes"], ["Jogadores", "/jogadores"], ["Notícias", "/noticias"], ["Jogos", "/jogos"]]} title="Comunidade" />
-        <FooterGroup links={[["Sobre", "/sobre"], ["Dúvidas frequentes", "/faq"], ["Contato", "/contato"], ["Privacidade", "/privacidade"], ["Termos", "/termos"]]} title="Arena Camp" />
-      </div>
-      <p className="mx-auto mt-8 max-w-[1500px] border-t border-arena-line pt-5 text-xs text-arena-muted">© {new Date().getFullYear()} Arena Camp</p>
-    </footer>
   </div>;
 }
 
@@ -178,7 +170,7 @@ function TournamentSpotlight({ tournament, compact = false }: { tournament: Port
   const filled = tournament.max_teams ? Math.min(100, Math.round((tournament.entry_count / tournament.max_teams) * 100)) : 0;
   return <Link className="chamfer block border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" to={`/torneios/${tournament.id}`}>
     <div className="flex flex-wrap items-center gap-2">
-      <Badge tone={tournament.status === "aberto" ? "warning" : tournament.status === "em_andamento" ? "live" : "neutral"}>{status(tournament.status)}</Badge>
+      <TournamentStatusBadge status={tournament.status} />
       <span className="text-sm text-arena-muted">{tournament.game_short_name}</span>
     </div>
     <h3 className={`mt-3 font-display font-bold leading-tight ${compact ? "text-2xl" : "text-3xl"}`}>{tournament.nome}</h3>
@@ -205,13 +197,9 @@ function GameChip({ active, label, icon, onClick }: { active: boolean; label: st
 function SectionHeading({ title, action, href }: { title: string; action?: string; href?: string }) {
   return <div className="mb-6 flex items-end justify-between gap-4"><h2 className="font-display text-3xl font-bold">{title}</h2>{action && href ? <Link className="hidden items-center gap-2 text-sm font-semibold text-cyan-200 sm:flex" to={href}>{action}<ArrowRight className="h-4 w-4" /></Link> : null}</div>;
 }
-function FooterGroup({ title, links }: { title: string; links: string[][] }) {
-  return <div><p className="font-semibold">{title}</p><div className="mt-4 space-y-2">{links.map(([label, href]) => <Link className="block text-sm text-arena-muted hover:text-arena-text" key={href} to={href}>{label}</Link>)}</div></div>;
-}
 function EmptyLine({ children }: { children: ReactNode }) {
   return <div className="border border-dashed border-arena-line p-8 text-center text-arena-muted">{children}</div>;
 }
-function status(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Inscrições encerradas", em_andamento:"Em andamento", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string, string>)[value] ?? value; }
 function format(value: string | null) { return ({ mix_single_elimination:"Mix individual", single_elimination:"Eliminação simples", double_elimination:"Eliminação dupla", swiss:"Sistema suíço", round_robin:"Pontos corridos", group_playoffs:"Grupos e playoffs", league:"Liga", custom:"Personalizado" } as Record<string, string>)[value ?? ""] ?? "A definir"; }
 function entryFee(tournament: { valor?: string | number | null; format?: string | null }) { const amount = Number(String(tournament.valor ?? 0).replace(/[^\d,.-]/g, "").replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) return "Grátis"; const scope = tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe"; return `${new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(amount)} ${scope}`; }
 function date(value: string | null | undefined) { return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir"; }

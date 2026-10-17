@@ -635,7 +635,7 @@ export function PlayerTeamsModule({ data, busy, run }: PlayerModuleProps) {
                   value={roleLabel(data.current_team.cargo)}
                 />
                 <Metric
-                  label="Lineup"
+                  label="Escalação"
                   value={data.current_team.lineup_status}
                 />
               </div>
