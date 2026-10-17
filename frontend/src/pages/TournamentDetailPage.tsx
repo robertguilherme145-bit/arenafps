@@ -17,6 +17,8 @@ import { BracketView } from "../components/broadcast/BracketView";
 import { buildBracketColumns } from "../lib/bracket";
 import { formatPrize } from "../lib/money";
 import type { PublicTournamentCenter } from "../types/api";
+import { TournamentStatusBadge } from "../components/ui/StatusBadge";
+import { tournamentStatusLabel } from "../lib/tournamentStatus";
 
 function safeFileName(value: string) {
   return value
@@ -148,7 +150,7 @@ export function TournamentDetailPage() {
         <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-8 lg:grid-cols-[1fr_auto] lg:items-end lg:px-8">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={statusTone(tournament.status)}>{status(tournament.status)}</Badge>
+              <TournamentStatusBadge status={tournament.status} />
               <span className="text-sm text-arena-muted">{tournament.game_short_name}</span>
             </div>
             <h1 className="mt-3 font-display text-3xl font-bold leading-tight md:text-5xl">{tournament.nome}</h1>
@@ -811,22 +813,8 @@ function HeaderFact({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function statusTone(value: string) {
-  return value === "em_andamento" ? "live" : value === "aberto" ? "warning" : value === "finalizado" ? "success" : "neutral";
-}
 function status(value: string) {
-  return (
-    (
-      {
-        criado: "Em preparação",
-        aberto: "Inscrições abertas",
-        fechado: "Inscrições encerradas",
-        em_andamento: "Ao vivo",
-        finalizado: "Finalizado",
-        cancelado: "Cancelado",
-      } as Record<string, string>
-    )[value] ?? value
-  );
+  return tournamentStatusLabel(value).label;
 }
 function format(value: string) {
   return (

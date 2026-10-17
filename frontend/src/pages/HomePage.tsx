@@ -13,6 +13,7 @@ import { buildActivityFeed } from "../lib/activityFeed";
 import { formatPrize } from "../lib/money";
 import { getPublicPortal } from "../services/api";
 import type { PublicPortalData } from "../types/api";
+import { TournamentStatusBadge } from "../components/ui/StatusBadge";
 
 type PortalTournament = PublicPortalData["tournaments"][number];
 
@@ -90,7 +91,7 @@ export function HomePage() {
               { header:"Prêmio", cell:(item) => formatPrize(item.premiacao) },
               { header:"Inscrição", cell:(item) => entryFee(item) },
               { header:"Vagas", cell:(item) => `${item.entry_count}/${item.max_teams}` },
-              { header:"Situação", cell:(item) => <Badge tone={item.status === "aberto" ? "warning" : "neutral"}>{status(item.status)}</Badge> }
+              { header:"Situação", cell:(item) => <TournamentStatusBadge status={item.status} /> }
             ]} />
           </div> : heroShowsSpotlight ? <EmptyLine>Novos campeonatos aparecem aqui assim que forem publicados.</EmptyLine> : null}
         </div> : <EmptyLine>Nenhum campeonato publicado ainda. <Link className="font-semibold text-cyan-200" to="/contato">Fale com a organização</Link> para trazer o seu.</EmptyLine>}
@@ -178,7 +179,7 @@ function TournamentSpotlight({ tournament, compact = false }: { tournament: Port
   const filled = tournament.max_teams ? Math.min(100, Math.round((tournament.entry_count / tournament.max_teams) * 100)) : 0;
   return <Link className="chamfer block border border-arena-line bg-arena-panel p-5 transition hover:border-arena-muted" to={`/torneios/${tournament.id}`}>
     <div className="flex flex-wrap items-center gap-2">
-      <Badge tone={tournament.status === "aberto" ? "warning" : tournament.status === "em_andamento" ? "live" : "neutral"}>{status(tournament.status)}</Badge>
+      <TournamentStatusBadge status={tournament.status} />
       <span className="text-sm text-arena-muted">{tournament.game_short_name}</span>
     </div>
     <h3 className={`mt-3 font-display font-bold leading-tight ${compact ? "text-2xl" : "text-3xl"}`}>{tournament.nome}</h3>
@@ -211,7 +212,6 @@ function FooterGroup({ title, links }: { title: string; links: string[][] }) {
 function EmptyLine({ children }: { children: ReactNode }) {
   return <div className="border border-dashed border-arena-line p-8 text-center text-arena-muted">{children}</div>;
 }
-function status(value: string) { return ({ criado:"Em preparação", aberto:"Inscrições abertas", fechado:"Inscrições encerradas", em_andamento:"Em andamento", finalizado:"Finalizado", cancelado:"Cancelado" } as Record<string, string>)[value] ?? value; }
 function format(value: string | null) { return ({ mix_single_elimination:"Mix individual", single_elimination:"Eliminação simples", double_elimination:"Eliminação dupla", swiss:"Sistema suíço", round_robin:"Pontos corridos", group_playoffs:"Grupos e playoffs", league:"Liga", custom:"Personalizado" } as Record<string, string>)[value ?? ""] ?? "A definir"; }
 function entryFee(tournament: { valor?: string | number | null; format?: string | null }) { const amount = Number(String(tournament.valor ?? 0).replace(/[^\d,.-]/g, "").replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) return "Grátis"; const scope = tournament.format === "mix_single_elimination" ? "por jogador" : "por equipe"; return `${new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(amount)} ${scope}`; }
 function date(value: string | null | undefined) { return value ? new Date(value).toLocaleDateString("pt-BR") : "A definir"; }
