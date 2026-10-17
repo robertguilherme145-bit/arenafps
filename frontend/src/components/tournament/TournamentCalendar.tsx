@@ -11,7 +11,8 @@ export function TournamentCalendar({ tournaments }: { tournaments: Array<{ id:nu
   const today = new Date();
   const [cursor, setCursor] = useState({ year:today.getFullYear(), month:today.getMonth() });
   const grid = useMemo(() => buildMonthGrid(cursor.year, cursor.month, tournaments), [cursor, tournaments]);
-  const title = new Intl.DateTimeFormat("pt-BR", { month:"long", year:"numeric" }).format(new Date(cursor.year, cursor.month, 1));
+  const formatted = new Intl.DateTimeFormat("pt-BR", { month:"long", year:"numeric" }).format(new Date(cursor.year, cursor.month, 1));
+  const title = formatted.charAt(0).toUpperCase() + formatted.slice(1);
   const move = (delta: number) => setCursor(({ year, month }) => {
     const next = new Date(year, month + delta, 1);
     return { year:next.getFullYear(), month:next.getMonth() };
@@ -22,7 +23,7 @@ export function TournamentCalendar({ tournaments }: { tournaments: Array<{ id:nu
     <div className="border border-arena-line bg-arena-panel">
       <div className="flex items-center justify-between gap-3 border-b border-arena-line px-4 py-3">
         <Button aria-label="Mês anterior" className="h-9 w-9 px-0" icon={<ChevronLeft className="h-4 w-4" />} onClick={() => move(-1)} variant="ghost" />
-        <h2 className="font-display text-lg font-semibold capitalize">{title}</h2>
+        <h2 className="font-display text-lg font-semibold">{title}</h2>
         <Button aria-label="Próximo mês" className="h-9 w-9 px-0" icon={<ChevronRight className="h-4 w-4" />} onClick={() => move(1)} variant="ghost" />
       </div>
       <div className="grid grid-cols-7 border-b border-arena-line text-center text-xs font-semibold text-arena-muted">
