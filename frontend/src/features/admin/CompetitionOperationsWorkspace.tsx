@@ -116,7 +116,7 @@ export function CompetitionOperationsWorkspace({
   const [mapScores, setMapScores] = useState<Record<number, { a: string; b: string }>>({});
   const [mapPlayerStats, setMapPlayerStats] = useState<MapPlayerStatDraft>({});
   const [selectedStatsMapId, setSelectedStatsMapId] = useState<number | null>(null);
-  const [roomForm, setRoomForm] = useState({ server_address: "", server_password: "", captain_confirmation_enabled: true, veto_action_seconds: "30" });
+  const [roomForm, setRoomForm] = useState({ server_address: "", server_password: "", stream_url: "", captain_confirmation_enabled: true, veto_action_seconds: "30" });
   const [matchNotice, setMatchNotice] = useState({ message: "", attachment_url: "" });
 
   const selectedGame = games.find((game) => game.id === selectedGameId) ?? games[0] ?? null;
@@ -196,10 +196,11 @@ export function CompetitionOperationsWorkspace({
     setRoomForm({
       server_address: operations.match.server_address ?? "",
       server_password: operations.match.server_password ?? "",
+      stream_url: operations.match.stream_url ?? "",
       captain_confirmation_enabled: operations.match.captain_confirmation_enabled,
       veto_action_seconds: String(operations.match.veto_action_seconds || 30)
     });
-  }, [operations?.match.id, operations?.match.server_address, operations?.match.server_password, operations?.match.captain_confirmation_enabled, operations?.match.veto_action_seconds]);
+  }, [operations?.match.id, operations?.match.server_address, operations?.match.server_password, operations?.match.stream_url, operations?.match.captain_confirmation_enabled, operations?.match.veto_action_seconds]);
 
   useEffect(() => {
     if (!operations?.maps.length) {
@@ -532,6 +533,7 @@ export function CompetitionOperationsWorkspace({
       const data = await updateMatchRoomSettings(operations.match.id, {
         server_address: roomForm.server_address.trim() || null,
         server_password: roomForm.server_password.trim() || null,
+        stream_url: roomForm.stream_url.trim() || null,
         captain_confirmation_enabled: roomForm.captain_confirmation_enabled,
         veto_action_seconds: Number(roomForm.veto_action_seconds)
       });
@@ -1018,7 +1020,7 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
   busy: string | null;
   mapScores: Record<number, { a: string; b: string }>;
   playerStats: PlayerStatDraft;
-  roomForm: { server_address: string; server_password: string; captain_confirmation_enabled: boolean; veto_action_seconds: string };
+  roomForm: { server_address: string; server_password: string; stream_url: string; captain_confirmation_enabled: boolean; veto_action_seconds: string };
   matchNotice: { message: string; attachment_url: string };
   onSelectMatch: (id: number) => void;
   onSelectStatsMap: (id: number) => void;
@@ -1057,7 +1059,7 @@ function VetoWorkspace({ matches, selectedMatchId, selectedStatsMapId, operation
   return <div className="space-y-5">
     <Card><CardContent className="flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-4"><div className="flex h-11 w-11 items-center justify-center border border-cyan-400/30 bg-cyan-400/10"><Swords className="h-5 w-5 text-cyan-200" /></div><div><p className="text-xs uppercase text-arena-muted">Central da partida</p><h2 className="font-display text-xl font-semibold">{operations.match.team_a} vs {operations.match.team_b}</h2><p className="mt-1 text-sm text-arena-muted">Partida #{operations.match.id} · Rodada {operations.match.round} · {operations.match.best_of.toUpperCase()}</p></div></div><Select className="w-full md:w-72" value={selectedMatchId ?? ""} onChange={(event) => onSelectMatch(Number(event.target.value))}>{matches.map((match) => <option key={match.id} value={match.id}>#{match.id} · {match.team_a} vs {match.team_b}</option>)}</Select></CardContent></Card>
     <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-      <Card><CardHeader><h3 className="font-display text-lg font-semibold">Sala e regras do capitão</h3><p className="mt-1 text-sm text-arena-muted">Dados privados que aparecem apenas para as equipes desta partida.</p></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><Field label="IP ou endereco do servidor"><Input placeholder="play.arenacamp.gg:27015" value={roomForm.server_address} onChange={(event) => onRoomFormChange({ ...roomForm, server_address: event.target.value })} /></Field><Field label="Senha da sala"><Input placeholder="Senha privada" value={roomForm.server_password} onChange={(event) => onRoomFormChange({ ...roomForm, server_password: event.target.value })} /></Field><Field label="Tempo por ação do veto de mapas"><div className="flex items-center gap-2"><Input max="120" min="10" type="number" value={roomForm.veto_action_seconds} onChange={(event) => onRoomFormChange({ ...roomForm, veto_action_seconds: event.target.value })} /><span className="text-sm text-arena-muted">segundos</span></div></Field><div className="flex items-end"><CheckControl checked={roomForm.captain_confirmation_enabled} label="Permitir confirmação do resultado pelo capitão" onChange={(checked) => onRoomFormChange({ ...roomForm, captain_confirmation_enabled: checked })} /></div></div><Button loading={busy === "save-room"} icon={<Save className="h-4 w-4" />} onClick={onSaveRoom}>Salvar dados da sala</Button></CardContent></Card>
+      <Card><CardHeader><h3 className="font-display text-lg font-semibold">Sala e regras do capitão</h3><p className="mt-1 text-sm text-arena-muted">Dados privados que aparecem apenas para as equipes desta partida.</p></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><Field label="IP ou endereco do servidor"><Input placeholder="play.arenacamp.gg:27015" value={roomForm.server_address} onChange={(event) => onRoomFormChange({ ...roomForm, server_address: event.target.value })} /></Field><Field label="Senha da sala"><Input placeholder="Senha privada" value={roomForm.server_password} onChange={(event) => onRoomFormChange({ ...roomForm, server_password: event.target.value })} /></Field><Field label="Link da transmissão (opcional)"><Input placeholder="twitch.tv/canal, youtube.com/watch?v=... ou kick.com/canal" value={roomForm.stream_url} onChange={(event) => onRoomFormChange({ ...roomForm, stream_url: event.target.value })} /></Field><Field label="Tempo por ação do veto de mapas"><div className="flex items-center gap-2"><Input max="120" min="10" type="number" value={roomForm.veto_action_seconds} onChange={(event) => onRoomFormChange({ ...roomForm, veto_action_seconds: event.target.value })} /><span className="text-sm text-arena-muted">segundos</span></div></Field><div className="flex items-end"><CheckControl checked={roomForm.captain_confirmation_enabled} label="Permitir confirmação do resultado pelo capitão" onChange={(checked) => onRoomFormChange({ ...roomForm, captain_confirmation_enabled: checked })} /></div></div><Button loading={busy === "save-room"} icon={<Save className="h-4 w-4" />} onClick={onSaveRoom}>Salvar dados da sala</Button></CardContent></Card>
       <Card><CardHeader><h3 className="font-display text-lg font-semibold">Aviso da organizacao</h3><p className="mt-1 text-sm text-arena-muted">Publicado no chat exclusivo da partida.</p></CardHeader><CardContent className="space-y-3"><Input placeholder="Mensagem para os capitaes" value={matchNotice.message} onChange={(event) => onMatchNoticeChange({ ...matchNotice, message: event.target.value })} /><Input placeholder="URL de anexo (opcional)" value={matchNotice.attachment_url} onChange={(event) => onMatchNoticeChange({ ...matchNotice, attachment_url: event.target.value })} /><Button disabled={!matchNotice.message.trim()} loading={busy === "match-notice"} icon={<Send className="h-4 w-4" />} onClick={onSendMatchNotice}>Enviar aviso</Button></CardContent></Card>
     </div>
     <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">

@@ -100,6 +100,7 @@ import type {
   SupportTicket,
   Tournament,
 } from "../types/api";
+import { TournamentStreamField } from "../features/admin/TournamentStreamField";
 
 const statusActions = {
   criado: ["aberto", "cancelado"],
@@ -1668,6 +1669,8 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
 
+                    <TournamentStreamField initialUrl={activeTournament.stream_url} tournamentId={activeTournament.id} />
+
                     <div className="grid gap-4 md:grid-cols-2">
                       <Field label="Nome do torneio">
                         <Input
@@ -1680,7 +1683,7 @@ export function AdminDashboardPage() {
                           }
                         />
                       </Field>
-                      <Field label="Entry fee">
+                      <Field label="Valor da inscrição">
                         <Input
                           type="number"
                           value={tournamentForm.valor}

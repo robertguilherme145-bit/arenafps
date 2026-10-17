@@ -1,4 +1,5 @@
 export type Tournament = {
+  stream_url?: string | null;
   id: number;
   nome: string;
   descricao: string | null;
@@ -34,6 +35,7 @@ export type Game = {
 };
 
 export type Match = {
+  stream_url?: string | null;
   id: number;
   tournament_id: number;
   round: number;
@@ -225,6 +227,7 @@ export type MatchOperations = {
     auto_decider: boolean;
     server_address: string | null;
     server_password: string | null;
+    stream_url?: string | null;
     responsible_admin_id: number | null;
     responsible_admin_name: string | null;
     captain_confirmation_enabled: boolean;
@@ -356,7 +359,7 @@ export type OAuthProfileCompletion = {
 export type FeaturedMatch = {
   id:number; tournament_id:number; tournament_name:string; status:"ao_vivo" | "agendada";
   team_a:{ name:string; tag:string | null; logo:string | null }; team_b:{ name:string; tag:string | null; logo:string | null };
-  score_a:number; score_b:number; map_name:string | null; map_number:number | null; best_of:string | null; scheduled_at:string | null;
+  score_a:number; score_b:number; map_name:string | null; map_number:number | null; best_of:string | null; scheduled_at:string | null; stream_url:string | null;
 };
 
 export type PublicPortalData = {

@@ -14,6 +14,7 @@ import { useToast } from "../hooks/useToast";
 import { useTournamentInsights } from "../hooks/useArenaData";
 import { getPublicTournamentCenter } from "../services/api";
 import { BracketView } from "../components/broadcast/BracketView";
+import { StreamPlayer } from "../components/broadcast/StreamPlayer";
 import { buildBracketColumns } from "../lib/bracket";
 import { formatPrize } from "../lib/money";
 import type { PublicTournamentCenter } from "../types/api";
@@ -124,6 +125,9 @@ export function TournamentDetailPage() {
     );
   const tournament = center.tournament;
   const heroDescription = tournamentHeroSummary(tournament.descricao);
+  // Transmissao: a da partida ao vivo; sem ela, o canal do torneio enquanto ele estiver em andamento.
+  const liveMatch = center.matches.find((match) => match.status === "andamento") ?? null;
+  const liveStream = liveMatch?.stream_url || (liveMatch || tournament.status === "em_andamento" ? tournament.stream_url : null) || null;
   const stats = statsQuery.data ?? [];
   const selectedMaps = selectedMatch
     ? center.match_maps.filter((map) => map.match_id === selectedMatch.id)
@@ -174,6 +178,19 @@ export function TournamentDetailPage() {
         </div>
       </header>
       <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-8">
+        {liveStream ? (
+          <section aria-label="Transmissão ao vivo" className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <StreamPlayer title={liveMatch ? `${liveMatch.team_a} contra ${liveMatch.team_b}` : tournament.nome} url={liveStream} />
+            <div className="border border-arena-line bg-arena-panel p-4">
+              <Badge tone="live">Ao vivo</Badge>
+              {liveMatch ? <>
+                <p className="mt-3 font-display text-xl font-bold leading-tight">{liveMatch.team_a} <span className="text-arena-muted">contra</span> {liveMatch.team_b}</p>
+                <p className="mt-2 font-display text-3xl font-bold tabular-nums">{liveMatch.score_team_a ?? 0} : {liveMatch.score_team_b ?? 0}</p>
+                {liveMatch.current_map_name ? <p className="mt-1 text-sm text-arena-muted">Mapa atual: {liveMatch.current_map_name}</p> : null}
+              </> : <p className="mt-3 text-sm text-arena-muted">Transmissão oficial do campeonato.</p>}
+            </div>
+          </section>
+        ) : null}
         {center.result ? (
           <div className="mb-6 grid items-center gap-5 border border-amber-300/40 bg-amber-300/[.07] p-5 md:grid-cols-[auto_1fr_auto]">
             <div className="flex h-16 w-16 items-center justify-center border border-amber-300/40 bg-amber-300/10 text-amber-200">

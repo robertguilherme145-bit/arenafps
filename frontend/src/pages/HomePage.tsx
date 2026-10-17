@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, ChevronRight, Gamepad2, Trophy } from "lucide-react";
+import { ArrowRight, ChevronRight, Gamepad2, Trophy, Tv } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ActivityFeed } from "../components/broadcast/ActivityFeed";
 import { Scoreboard } from "../components/broadcast/Scoreboard";
+import { StreamPlayer } from "../components/broadcast/StreamPlayer";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { DataTable } from "../components/ui/DataTable";
@@ -24,6 +25,7 @@ export function HomePage() {
   const { error } = useToast();
   const [portal, setPortal] = useState<PublicPortalData | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
+  const [watching, setWatching] = useState(false);
   const [rankingTab, setRankingTab] = useState<"players" | "teams">("players");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -64,6 +66,9 @@ export function HomePage() {
           {loading ? <Skeleton className="h-28 w-full" /> : portal?.featured_match ? (
             <div className="arena-fade-in">
               <Scoreboard match={portal.featured_match} />
+              {portal.featured_match.stream_url ? (watching
+                ? <StreamPlayer className="mt-3" title={`${portal.featured_match.team_a.name} contra ${portal.featured_match.team_b.name}`} url={portal.featured_match.stream_url} />
+                : <Button className="mt-3" icon={<Tv className="h-4 w-4" />} onClick={() => setWatching(true)} variant="secondary">Assistir {portal.featured_match.status === "ao_vivo" ? "ao vivo" : "transmissão"}</Button>) : null}
             </div>
           ) : spotlight ? <TournamentSpotlight compact tournament={spotlight} /> : null}
         </div>
