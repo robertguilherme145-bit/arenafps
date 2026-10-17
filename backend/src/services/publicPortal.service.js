@@ -25,7 +25,7 @@ async function buildPortal(gameId) {
 }
 export async function globalSearch(query, gameId) { if (String(query || "").trim().length < 2) return []; return await searchPortal(query, gameId || null); }
 export async function getPublicTournament(tournamentId) { return publicCache.get(`tournament:${Number(tournamentId)}`, () => buildPublicTournament(tournamentId)); }
-async function buildPublicTournament(tournamentId) { const center=await findPublicTournamentCenter(tournamentId); if(!center.tournament){const error=new Error("Torneio nao encontrado.");error.status=404;throw error;} return { ...center, standings:await getTournamentTeamRanking(tournamentId) }; }
+async function buildPublicTournament(tournamentId) { const center=await findPublicTournamentCenter(tournamentId); if(!center.tournament||center.tournament.status==="criado"){const error=new Error("Torneio nao encontrado.");error.status=404;throw error;} return { ...center, standings:await getTournamentTeamRanking(tournamentId) }; }
 export async function getPublicTeam(slug) { const profile=await findPublicTeamProfile(String(slug||"").trim()); if(!profile){const error=new Error("Equipe nao encontrada.");error.status=404;throw error;} return profile; }
 export async function adminContent() { return await listPublicContentAdmin(); }
 export async function saveAdminContent(user,id,payload) { const input=validateContent(payload); const savedId=await savePublicContentAdmin(id,user.id,input); publicCache.clear(); return (await listPublicContentAdmin()).find((item)=>Number(item.id)===savedId); }
