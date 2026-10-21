@@ -2342,7 +2342,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
             },
             {
               header: "Pagamento",
-              cell: (entry) => <StatusBadge value={entry.payment_status} />,
+              cell: (entry) => Number(entry.valor) > 0 ? <StatusBadge value={entry.payment_status} /> : <Badge tone="success">Gratuito</Badge>,
             },
             {
               header: "Ação",

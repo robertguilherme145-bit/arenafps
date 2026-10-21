@@ -1,4 +1,4 @@
-import { Bell, LoaderCircle, LogOut, MailWarning, Menu, Search, Shield, UserRound, X } from "lucide-react";
+import { Bell, LayoutDashboard, LoaderCircle, LogOut, MailWarning, Menu, Search, Shield, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -77,14 +77,14 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <button
-            className="hidden h-10 min-w-56 items-center justify-between gap-3 rounded-arena border border-arena-line bg-arena-panel2 px-3 text-sm text-arena-muted transition hover:border-arena-muted xl:flex"
+            className="hidden h-10 min-w-56 items-center justify-between gap-3 rounded-arena border border-arena-line bg-arena-panel2 px-3 text-sm text-arena-muted transition hover:border-arena-muted 2xl:flex"
             onClick={() => setCommandOpen(true)}
             type="button"
           >
             <span className="flex items-center gap-2"><Search className="h-4 w-4" /> Buscar torneios, equipes, jogadores</span>
             <kbd className="rounded border border-arena-line px-1.5 py-0.5 text-[11px]">Ctrl K</kbd>
           </button>
-          <Button aria-label="Buscar" className="h-10 w-10 px-0 xl:hidden" variant="ghost" icon={<Search className="h-5 w-5" />} onClick={() => setCommandOpen(true)} />
+          <Button aria-label="Buscar" className="h-10 w-10 px-0 2xl:hidden" variant="ghost" icon={<Search className="h-5 w-5" />} onClick={() => setCommandOpen(true)} />
 
           {user ? (
             <>
@@ -102,7 +102,7 @@ export function Navbar() {
               <Button className="hidden sm:inline-flex" variant="secondary" icon={switching ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />} onClick={() => navigate(inWorkspace ? "/" : "/minha-arena")}>
                 {inWorkspace ? "Ver site" : "Minha Arena"}
               </Button>
-              {user.roles.includes("admin") && !inWorkspace ? <Link className="hidden md:block" to="/admin"><Button variant="ghost">Painel da organização</Button></Link> : null}
+              {user.roles.includes("admin") && !inWorkspace ? <Link aria-label="Painel da organização" className="hidden md:block" title="Painel da organização" to="/admin"><Button className="h-10 w-10 px-0" icon={<LayoutDashboard className="h-5 w-5" />} variant="ghost" /></Link> : null}
               <Button aria-label="Sair" variant="ghost" className="h-10 w-10 px-0" icon={<LogOut className="h-4 w-4" />} onClick={logout} />
             </>
           ) : (
