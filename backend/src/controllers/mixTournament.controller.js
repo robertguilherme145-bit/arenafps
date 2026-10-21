@@ -12,5 +12,5 @@ export async function payment(req,res){return handle(res,()=>createMixPix(Number
 export async function adminRegistration(req,res){return handle(res,()=>updateMixRegistrationAdmin(Number(req.params.id),Number(req.params.registrationId),req.body));}
 export async function declare(req,res){return handle(res,()=>declareMixPix(Number(req.params.id),req.user.id,req.body?.receipt_url));}
 export async function adminPayments(req,res){return handle(res,()=>adminMixPayments());}
-export async function adminPaymentStatus(req,res){return handle(res,()=>decideMixPaymentByAdmin(Number(req.params.paymentId),String(req.body?.status)));}
+export async function adminPaymentStatus(req,res){return handle(res,()=>decideMixPaymentByAdmin(req.user,Number(req.params.paymentId),String(req.body?.status)));}
 async function handle(res,action,status=200){try{return res.status(status).json(await action());}catch(error){return res.status(error.status||400).json({erro:error.message});}}

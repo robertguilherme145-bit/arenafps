@@ -5,9 +5,8 @@ import { Button } from "../../../components/ui/Button";
 import { Card, CardHeader } from "../../../components/ui/Card";
 import { DataTable } from "../../../components/ui/DataTable";
 import { useToast } from "../../../hooks/useToast";
-import { getAdminMixPayments, updateAdminMixPayment } from "../../../services/api";
+import { getAdminMixPayments, openPaymentReceipt, updateAdminMixPayment } from "../../../services/api";
 import type { AdminPayment } from "../../../types/api";
-import { safeHref } from "../../../utils/safeHref";
 import { PaymentSettingsCard } from "../PaymentSettingsCard";
 import { formatCurrency, formatDateTime, paymentTone } from "../adminShared";
 
@@ -77,12 +76,24 @@ export function FinanceSection({ payments, onStatus }: Props) {
 }
 
 function PaymentState({ status, declaredAt, receipt }: { status: string; declaredAt?: string | null; receipt?: string | null }) {
-  const link = safeHref(receipt ?? "");
+  const toast = useToast();
+  // Comprovante e privado: abre com o login do admin, nunca por link publico.
+  const link = receipt && /^\/payment\/receipts\/[0-9a-f]{32}$/.test(receipt) ? receipt : null;
+  async function open() {
+    const tab = window.open("", "_blank");
+    try {
+      const objectUrl = await openPaymentReceipt(link!);
+      if (tab) tab.location.href = objectUrl; else window.location.assign(objectUrl);
+    } catch (reason) {
+      tab?.close();
+      toast.error("Não foi possível abrir o comprovante", reason instanceof Error ? reason.message : "Tente novamente.");
+    }
+  }
   return (
     <div className="space-y-1">
       <Badge tone={paymentTone(status as AdminPayment["status"])}>{STATUS[status] ?? status}</Badge>
       {status === "pendente" && declaredAt ? <p className="text-xs text-arena-amber">Disse que pagou em {formatDateTime(declaredAt)}</p> : null}
-      {link ? <a className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-200 hover:text-cyan-100" href={link} rel="noreferrer" target="_blank">Ver comprovante <ExternalLink className="h-3 w-3" /></a> : null}
+      {link ? <button className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-200 hover:text-cyan-100" onClick={() => void open()} type="button">Ver comprovante <ExternalLink className="h-3 w-3" /></button> : null}
     </div>
   );
 }

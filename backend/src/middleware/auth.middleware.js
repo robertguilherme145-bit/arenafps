@@ -26,3 +26,20 @@ export async function auth(req, res, next) {
     return res.status(401).json({ erro:"Token inválido" });
   }
 }
+
+// Rotas publicas que mostram mais para quem esta logado (ex.: rascunhos para o admin).
+// Sem token, ou com token invalido, segue como visitante; nunca bloqueia.
+export async function optionalAuth(req, res, next) {
+  const bearer = req.headers.authorization;
+  if (!bearer) return next();
+  try {
+    const payload = verifySessionToken(bearer.replace("Bearer ", ""), process.env.JWT_SECRET);
+    if (await touchUserSession(payload.jti)) {
+      const access = await resolveUserAccess(payload.id, payload.role);
+      if (access) req.user = { ...payload, ...access, role:access.active_role };
+    }
+  } catch {
+    // visitante
+  }
+  return next();
+}

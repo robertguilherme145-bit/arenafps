@@ -1166,3 +1166,16 @@ export async function updateAdminMixPayment(paymentId: number, status: AdminMixP
   const { data } = await api.patch(`/mix/admin/payments/${paymentId}`, { status });
   return data;
 }
+
+// Comprovante de PIX: guardado em area privada (so quem enviou e o admin abrem).
+export async function uploadPaymentReceipt(file: File) {
+  const body = new FormData();
+  body.append("image", file);
+  const { data } = await api.post<{ url: string }>("/payment/receipts", body, { timeout:180000 });
+  return data;
+}
+
+export async function openPaymentReceipt(url: string) {
+  const { data } = await api.get<Blob>(url, { responseType:"blob" });
+  return URL.createObjectURL(data);
+}

@@ -310,6 +310,7 @@ export async function getMatchOperations(matchId) {
 
 export async function saveMatchRoomSettings(adminUser, matchId, payload) {
   const match = await requireMatchOperationsBase(matchId);
+  const streamUrl = payload.stream_url !== undefined ? normalizeStreamUrl(payload.stream_url) : undefined;
   await upsertMatchCompetitionSettings(match.id, {
     best_of: match.best_of,
     pick_ban_enabled: match.pick_ban_enabled ? 1 : 0,
@@ -323,7 +324,7 @@ export async function saveMatchRoomSettings(adminUser, matchId, payload) {
     captain_confirmation_enabled: payload.captain_confirmation_enabled !== false,
     veto_action_seconds: Number.isFinite(seconds) ? Math.round(seconds) : 30
   });
-  if (payload.stream_url !== undefined) await updateMatchStream(match.id, normalizeStreamUrl(payload.stream_url));
+  if (streamUrl !== undefined) await updateMatchStream(match.id, streamUrl);
   await audit(adminUser, "match.room.updated", "match", match.id, { server_address: optionalText(payload.server_address, 255), veto_action_seconds: seconds, stream_url: payload.stream_url ?? undefined });
   return await getMatchOperations(match.id);
 }

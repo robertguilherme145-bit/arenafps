@@ -451,6 +451,8 @@ export async function replacePayment(id, data){
          WHERE id = ? AND status <> 'aprovado'`,
         [data.provider, data.payment_id ?? null, data.external_reference ?? null, data.valor, data.qr_code ?? null, data.qr_code_base64 ?? null, data.copia_cola ?? null, id]
     );
+    // Depois de um pagamento recusado, a inscricao volta a "aguardando pagamento".
+    await pool.query("UPDATE entries e INNER JOIN payments p ON p.entry_id = e.id SET e.payment_status = 'aguardando' WHERE p.id = ? AND e.payment_status = 'falhou'", [id]);
     return findPayment(id);
 }
 

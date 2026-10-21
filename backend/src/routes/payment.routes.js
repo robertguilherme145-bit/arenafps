@@ -8,6 +8,10 @@ import {
 
 from "../controllers/payment.controller.js";
 import { auth } from "../middleware/auth.middleware.js";
+import { uploadImage } from "../middleware/imageUpload.middleware.js";
+import { uploadLimiter } from "../middleware/rateLimit.middleware.js";
+import { requireVerifiedEmail } from "../middleware/verified.middleware.js";
+import { show as showReceipt, upload as uploadReceipt } from "../controllers/paymentReceipt.controller.js";
 import { getPaymentSettings } from "../services/paymentSettings.service.js";
 
 const router = Router();
@@ -28,5 +32,9 @@ router.get("/info", auth, async (req, res) => {
     }
     catch (error) { return res.status(400).json({ erro:error.message }); }
 });
+
+// Comprovantes de PIX (privados).
+router.post("/receipts", auth, requireVerifiedEmail, uploadLimiter(), uploadImage, uploadReceipt);
+router.get("/receipts/:token", auth, showReceipt);
 
 export default router;

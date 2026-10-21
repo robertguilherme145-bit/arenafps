@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Check, ClipboardCopy, Clock3 } from "lucide-react";
+import { Check, ClipboardCopy, Clock3, FileCheck2, ImagePlus, LoaderCircle } from "lucide-react";
 import { useState } from "react";
-import { getPaymentInfo } from "../../services/api";
+import { getPaymentInfo, uploadPaymentReceipt } from "../../services/api";
 import { useToast } from "../../hooks/useToast";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader } from "../ui/Card";
-import { ImageUploadField } from "../ui/ImageUploadField";
 
 type PixPayment = {
   provider: string;
@@ -63,12 +62,33 @@ export function PixPaymentCard({ title, payment, onDeclare }: { title: string; p
           ) : (
             <div className="space-y-3 border-t border-arena-line pt-3">
               <p className="text-sm text-arena-muted">Comprovante (opcional): ajuda a organização a confirmar mais rápido.</p>
-              <ImageUploadField label="Enviar comprovante" value={receipt} onChange={setReceipt} />
+              <ReceiptField value={receipt} onChange={setReceipt} />
               <Button icon={<Check className="h-4 w-4" />} loading={sending} onClick={() => void declare()}>Já paguei</Button>
             </div>
           ) : null}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Envio do comprovante para a area privada (nao vira imagem publica do site).
+function ReceiptField({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const { error } = useToast();
+  const [busy, setBusy] = useState(false);
+  async function select(file?: File) {
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { error("Arquivo muito grande", "Envie uma imagem de até 3 MB (um print da tela do banco serve)."); return; }
+    setBusy(true);
+    try { onChange((await uploadPaymentReceipt(file)).url); }
+    catch (reason) { error("Não foi possível enviar o comprovante", reason instanceof Error ? reason.message : "Tente novamente."); }
+    finally { setBusy(false); }
+  }
+  return (
+    <label className="flex h-10 cursor-pointer items-center justify-center gap-2 border border-arena-line bg-white/[.04] px-3 text-sm font-semibold hover:bg-white/[.07]">
+      {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : value ? <FileCheck2 className="h-4 w-4 text-arena-success" /> : <ImagePlus className="h-4 w-4" />}
+      {busy ? "Enviando" : value ? "Comprovante anexado (trocar)" : "Anexar comprovante"}
+      <input accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy} type="file" onChange={(event) => void select(event.target.files?.[0])} />
+    </label>
   );
 }

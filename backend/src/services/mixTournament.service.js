@@ -5,7 +5,9 @@ import { declareMixPaymentRecord, findMixPaymentById, listMixPaymentsForAdmin, r
 import { buildManualPix } from "./paymentSettings.js";
 import { getPaymentSettings } from "./paymentSettings.service.js";
 import { createMixPaymentRecord, findMixPaymentByGateway, getMixTournament, listAvailableMixTournaments, reconcileMixPayment, registerMixPlayer, saveMixSettings, cancelMixRegistration } from "../models/mixTournament.model.js";
-import { createPixPayment, getPayment } from "./mercadopago.service.js";
+import { cancelPixPayment, createPixPayment, getPayment } from "./mercadopago.service.js";
+import { planPayment } from "./paymentPlan.js";
+import { createAuditLog } from "../models/auditLog.model.js";
 import { normalizeGatewayPaymentStatus, preparePixData, resolvePaymentStatusTransition } from "../utils/pix.js";
 import { notify } from "./notification.service.js";
 import { safeReceiptUrl } from "./payment.service.js";
@@ -44,10 +46,13 @@ export async function updateMixRegistrationAdmin(tournamentId,registrationId,pay
 export async function createMixPix(tournamentId,userId) {
   const mix=await getMixTournament(tournamentId); if(!mix)throw new Error("Torneio Mix nao encontrado."); if(mix.payment_mode!=="paid")throw new Error("Este Mix possui inscricao gratuita.");
   const registration=mix.registrations.find(item=>Number(item.user_id)===Number(userId)); if(!registration)throw new Error("Inscricao nao encontrada."); if(registration.status==='waitlist')throw new Error("Jogadores na lista de espera nao realizam pagamento."); if(registration.gateway_status==='aprovado')throw new Error("Esta inscricao ja esta paga.");
+  if(registration.status==='cancelled')throw new Error("Esta inscricao foi cancelada.");
   const settings=await getPaymentSettings();
-  if(settings.mode==="pix_manual")return createManualMixPix(mix,registration,settings);
-  if(registration.payment_id&&registration.payment_provider!=="pix_manual")throw new Error("O PIX desta inscricao ja foi gerado.");
-  if(registration.declared_at)throw new Error("Voce ja informou o pagamento pelo PIX. Aguarde a organizacao confirmar.");
+  const local=registration.payment_id?await findMixPaymentById(registration.payment_id):null;
+  const plan=planPayment(settings.mode,local&&{provider:local.provider,status:local.status,declared_at:local.declared_at,gateway_id:local.payment_id});
+  if(plan==="reuse")return local;
+  if(plan==="check-gateway")await retireMixMercadoPagoPix(local.payment_id);
+  if(settings.mode==="pix_manual")return createManualMixPix(mix,registration,settings,plan);
   const user=await findUserById(userId); if(!user?.cpf)throw new Error("Informe seu CPF no perfil antes de gerar o PIX.");
   const pix=await createPixPayment({valor:mix.price_per_player,descricao:`Arena Camp | Jogador: ${String(user.nickname||user.nome).slice(0,80)} | Mix: ${String(mix.nome).slice(0,120)}`.slice(0,255),email:user.email,cpf:user.cpf,externalReference:`MIX_${registration.id}`});
   const prepared=await preparePixData(pix);const status=normalizeGatewayPaymentStatus(pix.status);const data={provider:"mercadopago",payment_id:pix.id,external_reference:pix.external_reference,status,valor:pix.transaction_amount,...prepared};const saved=registration.payment_id?await replaceMixPayment(registration.payment_id,data):await createMixPaymentRecord(registration.id,data);return saved;
@@ -90,18 +95,10 @@ function shuffle(items){const copy=[...items];for(let i=copy.length-1;i>0;i--){c
 function parseLabels(value,count){try{const parsed=typeof value==='string'?JSON.parse(value):value;if(Array.isArray(parsed)&&parsed.length>=count)return parsed;}catch{}return DEFAULT_TEAMS.slice(0,count).map(([color,hex])=>({name:`Equipe ${color}`,color:hex}));}
 
 // PIX proprio no Mix: copia e cola com o valor por jogador e o codigo da inscricao.
-async function createManualMixPix(mix, registration, settings) {
-  if (registration.payment_provider === "pix_manual" && registration.declared_at) return findMixPaymentById(registration.payment_id);
-  if (registration.payment_provider === "mercadopago" && registration.gateway_status === "pendente") {
-    const local = await findMixPaymentById(registration.payment_id);
-    if (local?.payment_id) {
-      const result = await reconcileMixByPaymentId(local.payment_id).catch(() => null);
-      if (result?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
-    }
-  }
+async function createManualMixPix(mix, registration, settings, plan) {
   const reference = `ARENA-M${registration.id}`;
   const pix = await buildManualPix(settings, { amount:Number(mix.price_per_player), txid:reference, description:`Mix ${mix.nome}` });
-  if (registration.payment_provider === "pix_manual" && registration.gateway_status === "pendente" && registration.copia_cola === pix.copia_cola) return findMixPaymentById(registration.payment_id);
+  if (plan === "refresh" && registration.copia_cola === pix.copia_cola) return findMixPaymentById(registration.payment_id);
   const data = { provider:"pix_manual", payment_id:null, external_reference:reference, status:"pendente", valor:Number(mix.price_per_player), ...pix };
   return registration.payment_id ? replaceMixPayment(registration.payment_id, data) : createMixPaymentRecord(registration.id, data);
 }
@@ -112,7 +109,8 @@ export async function declareMixPix(tournamentId, userId, receiptUrl) {
   const registration = mix?.registrations?.[0];
   if (!registration?.payment_id || registration.payment_provider !== "pix_manual") throw new Error("Gere o PIX antes de informar o pagamento.");
   if (registration.gateway_status === "aprovado") throw new Error("Este pagamento ja foi confirmado.");
-  const saved = await declareMixPaymentRecord(registration.payment_id, safeReceiptUrl(receiptUrl));
+  if (registration.gateway_status !== "pendente") throw new Error("Este PIX foi recusado ou cancelado. Gere um PIX novo para pagar.");
+  const saved = await declareMixPaymentRecord(registration.payment_id, await safeReceiptUrl(receiptUrl, userId));
   const admins = await findUserIdsByRole("admin");
   await Promise.all(admins.map((id) => notify({ user_id:id, titulo:"PIX do Mix para conferir", mensagem:`${saved.player_name} informou o pagamento de ${saved.tournament_name}. Confira no extrato (codigo ${saved.external_reference}).`, tipo:"mix_payment_declared", link:"/admin/financeiro", dedupe_key:`mix-declared:${saved.id}:admin:${id}` })));
   return saved;
@@ -121,13 +119,24 @@ export async function declareMixPix(tournamentId, userId, receiptUrl) {
 export async function adminMixPayments() { return listMixPaymentsForAdmin(); }
 
 // Confirmacao (ou recusa) do pagamento do Mix pelo admin.
-export async function decideMixPaymentByAdmin(paymentId, status) {
+export async function decideMixPaymentByAdmin(adminUser, paymentId, status) {
   if (!["aprovado", "pendente", "cancelado", "rejeitado"].includes(status)) throw new Error("Status de pagamento invalido.");
   const local = await findMixPaymentById(paymentId);
   if (!local) throw new Error("Pagamento do Mix nao encontrado.");
   const result = await reconcileMixPayment(local.id, { payment_id:local.payment_id, status, paid_at:status === "aprovado" ? new Date() : null });
+  await createAuditLog({ actor_user_id:adminUser.id, action:"mix.payment.updated", entity_type:"mix_payment", entity_id:local.id, details:{ previous_status:local.status, next_status:status } });
   if (status === "aprovado" && result.status_changed) {
     await notify({ user_id:local.user_id, titulo:"Pagamento do Mix confirmado", mensagem:`Sua inscricao em ${local.tournament_name} esta confirmada.`, tipo:"mix_payment", link:"/minha-arena/torneios?aba=mix" });
   }
   return result;
+}
+
+// Antes de trocar um PIX do Mercado Pago no Mix: confere se ja foi pago e cancela no Mercado Pago.
+async function retireMixMercadoPagoPix(gatewayId) {
+  let result;
+  try { result = await reconcileMixByPaymentId(gatewayId); }
+  catch { throw new Error("Nao foi possivel conferir o PIX anterior no Mercado Pago agora. Tente de novo em alguns minutos."); }
+  if (result?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
+  try { await cancelPixPayment(gatewayId); }
+  catch (error) { console.error(`Nao foi possivel cancelar o PIX ${gatewayId} no Mercado Pago:`, error.message); }
 }

@@ -2347,7 +2347,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
             {
               header: "Ação",
               cell: (entry) =>
-                entry.payment_status === "aguardando" &&
+                ["aguardando", "falhou"].includes(entry.payment_status) &&
                 Number(entry.valor) > 0 ? (
                   <Button
                     className="h-8 text-xs"

@@ -1,3 +1,5 @@
+import { canSeeHiddenTournaments, isHiddenTournament, visibleTournaments } from "../utils/tournamentVisibility.js";
+import { findTournament } from "../models/tournament.model.js";
 import {registerTournament, listTournaments, getTournament, editTournament, updateTournamentStatus}
 
 from "../services/tournament.service.js";
@@ -48,7 +50,7 @@ export async function index(req,res){
 
     const tournaments = await listTournaments();
 
-    return res.json(tournaments);
+    return res.json(visibleTournaments(tournaments, req.user));
 
   }
 
@@ -76,6 +78,8 @@ export async function show(req,res){
       req.params.id
 
     );
+
+    if (isHiddenTournament(tournament?.status) && !canSeeHiddenTournaments(req.user)) return res.status(404).json({ erro:"Torneio nao encontrado." });
 
     return res.json(tournament);
 
@@ -170,6 +174,7 @@ export async function ranking(req,res){
 
   try{
 
+    if (await hiddenFor(req)) return res.status(404).json({ erro:"Torneio nao encontrado." });
     const resultado = await getTournamentTeamRanking(req.params.id);
 
     return res.json(resultado);
@@ -194,6 +199,7 @@ export async function statistics(req,res){
 
   try{
 
+    if (await hiddenFor(req)) return res.status(404).json({ erro:"Torneio nao encontrado." });
     const resultado = await getTournamentPlayerStatistics(req.params.id);
 
     return res.json(resultado);
@@ -209,4 +215,10 @@ export async function statistics(req,res){
 
   }
 
+}
+
+// Ranking e estatisticas de rascunho/cancelado so para o admin.
+async function hiddenFor(req) {
+  const tournament = await findTournament(Number(req.params.id));
+  return isHiddenTournament(tournament?.status) && !canSeeHiddenTournaments(req.user);
 }

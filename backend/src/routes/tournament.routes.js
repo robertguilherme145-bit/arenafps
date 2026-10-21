@@ -20,13 +20,7 @@ import {
 
 from "../controllers/tournament.controller.js";
 
-import {
-
-  auth
-
-}
-
-from "../middleware/auth.middleware.js";
+import { auth, optionalAuth } from "../middleware/auth.middleware.js";
 
 import {
 
@@ -61,6 +55,8 @@ router.get(
 
   "/all",
 
+  optionalAuth,
+
   index
 
 );
@@ -71,6 +67,8 @@ router.get(
 router.get(
 
   "/:id",
+
+  optionalAuth,
 
   show
 
@@ -83,6 +81,8 @@ router.get(
 
   "/:id/ranking",
 
+  optionalAuth,
+
   ranking
 
 );
@@ -93,6 +93,8 @@ router.get(
 router.get(
 
   "/:id/statistics",
+
+  optionalAuth,
 
   statistics
 

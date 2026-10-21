@@ -93,6 +93,8 @@ export async function findMixPaymentById(id) {
 export async function replaceMixPayment(id, data) {
   await pool.query(`UPDATE mix_payments SET provider=?,payment_id=?,external_reference=?,status='pendente',valor=?,qr_code=?,qr_code_base64=?,copia_cola=?,paid_at=NULL,declared_at=NULL,receipt_url=NULL WHERE id=? AND status<>'aprovado'`,
     [data.provider, data.payment_id==null?null:String(data.payment_id), data.external_reference, data.valor, data.qr_code, data.qr_code_base64, data.copia_cola, id]);
+  // Depois de um pagamento recusado, a inscricao volta a "aguardando pagamento".
+  await pool.query("UPDATE mix_registrations mr INNER JOIN mix_payments mp ON mp.registration_id = mr.id SET mr.payment_status = 'pending' WHERE mp.id = ? AND mr.payment_status = 'failed'", [id]);
   return findMixPaymentById(id);
 }
 

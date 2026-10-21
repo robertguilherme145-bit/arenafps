@@ -16,12 +16,15 @@ import {
 } from "../models/payment.model.js";
 import { buildManualPix } from "./paymentSettings.js";
 import { getPaymentSettings } from "./paymentSettings.service.js";
+import { findReceiptOwner } from "../models/paymentReceipt.model.js";
+import { receiptToken, receiptUrlFor } from "../utils/receiptUrl.js";
 import { findUserTeam } from "../models/team.model.js";
 import { findTournament } from "../models/tournament.model.js";
 import { findUserById, findUserIdsByRole } from "../models/user.model.js";
 import { normalizeGatewayPaymentStatus, preparePixData, resolvePaymentStatusTransition } from "../utils/pix.js";
 import { dispatchCompetitionEvent } from "./competitionEngine.service.js";
-import { buildPixDescription, createPixPayment, getPayment } from "./mercadopago.service.js";
+import { buildPixDescription, cancelPixPayment, createPixPayment, getPayment } from "./mercadopago.service.js";
+import { planPayment } from "./paymentPlan.js";
 import { notify } from "./notification.service.js";
 import { findPendingMixPayments } from "../models/mixTournament.model.js";
 import { processMixGatewayPayment } from "./mixTournament.service.js";
@@ -49,12 +52,10 @@ export async function createEntryPayment(userId, entryId) {
   if (!tournament) throw new Error("Torneio nao encontrado.");
 
   const settings = await getPaymentSettings();
-  if (settings.mode === "pix_manual") return createManualEntryPayment({ entry, team, tournament, settings, existingPayment });
-
-  // Mercado Pago: reaproveita o PIX automatico ja gerado; um PIX proprio pendente e trocado.
-  if (existingPayment?.provider === "mercadopago") return formatPaymentResponse(existingPayment);
-  if (existingPayment && existingPayment.provider !== "pix_manual") throw new Error("Ja existe outro pagamento pendente para esta inscricao.");
-  if (existingPayment?.declared_at) throw new Error("Voce ja informou o pagamento pelo PIX. Aguarde a organizacao confirmar.");
+  const plan = planPayment(settings.mode, existingPayment && { ...existingPayment, gateway_id:existingPayment.payment_id });
+  if (plan === "reuse") return formatPaymentResponse(existingPayment, settings);
+  if (plan === "check-gateway") await retireMercadoPagoPix(existingPayment.payment_id);
+  if (settings.mode === "pix_manual") return createManualEntryPayment({ entry, team, tournament, settings, existingPayment, plan });
 
   const pix = await createPixPayment({
     valor: tournament.valor,
@@ -80,18 +81,10 @@ export async function createEntryPayment(userId, entryId) {
 }
 
 // PIX proprio: copia e cola gerado aqui, com o valor e o codigo da inscricao. Quem confirma e a organizacao.
-async function createManualEntryPayment({ entry, team, tournament, settings, existingPayment }) {
-  if (existingPayment?.provider === "pix_manual" && existingPayment.declared_at) return formatPaymentResponse(existingPayment, settings);
-  if (existingPayment?.provider === "mercadopago" && existingPayment.status === "pendente" && existingPayment.payment_id) {
-    // Um PIX do Mercado Pago ja pode ter sido pago: confere antes de trocar.
-    const result = await processWebhook(existingPayment.payment_id).catch(() => null);
-    if (result?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
-  }
+async function createManualEntryPayment({ entry, team, tournament, settings, existingPayment, plan }) {
   const reference = `ARENA-E${entry.id}`;
   const pix = await buildManualPix(settings, { amount:Number(tournament.valor), txid:reference, description:`Inscricao ${team.nome}` });
-  if (existingPayment?.provider === "pix_manual" && existingPayment.status === "pendente" && existingPayment.copia_cola === pix.copia_cola) {
-    return formatPaymentResponse(existingPayment, settings);
-  }
+  if (plan === "refresh" && existingPayment.copia_cola === pix.copia_cola) return formatPaymentResponse(existingPayment, settings);
   const data = { entry_id:entry.id, provider:"pix_manual", payment_id:null, external_reference:reference, status:"pendente", valor:Number(tournament.valor), ...pix };
   const localPayment = existingPayment ? await replacePayment(existingPayment.id, data) : await createPayment(data);
   return formatPaymentResponse(localPayment, settings);
@@ -103,7 +96,8 @@ export async function declareEntryPayment(userId, entryId, receiptUrl) {
   const payment = await findPaymentByEntry(entry.id);
   if (!payment || payment.provider !== "pix_manual") throw new Error("Gere o PIX antes de informar o pagamento.");
   if (payment.status === "aprovado") throw new Error("Este pagamento ja foi confirmado.");
-  const updated = await declarePayment(payment.id, safeReceiptUrl(receiptUrl));
+  if (payment.status !== "pendente") throw new Error("Este PIX foi recusado ou cancelado. Gere um PIX novo para pagar.");
+  const updated = await declarePayment(payment.id, await safeReceiptUrl(receiptUrl, userId));
   const tournament = await findTournament(entry.tournament_id);
   const adminIds = await findUserIdsByRole("admin");
   await Promise.all(adminIds.map((adminId) => notify({
@@ -137,16 +131,30 @@ async function requireOwnEntry(userId, entryId) {
   if (!user) throw new Error("Usuario nao encontrado.");
   if (!entry) throw new Error("Inscricao nao encontrada.");
   if (Number(entry.team_id) !== Number(team.id)) throw new Error("Esta inscricao nao pertence a sua equipe.");
+  if (entry.status === "cancelado") throw new Error("Esta inscricao foi cancelada.");
   return { team, user, entry };
 }
 
-// Comprovante: so links https ou imagens enviadas ao proprio site.
-export function safeReceiptUrl(value) {
-  const url = String(value ?? "").trim();
-  if (!url) return null;
-  if (url.length > 500) throw new Error("Link do comprovante muito longo.");
-  if (/^https:\/\//i.test(url) || /^\/media\/files\/\d+\//.test(url)) return url;
-  throw new Error("Envie o comprovante como imagem ou um link https.");
+// Antes de trocar um PIX do Mercado Pago por outra forma: confere se ja foi pago e cancela no
+// Mercado Pago, para o QR antigo nao receber dinheiro sem registro. Se nao der para conferir, nao troca.
+export async function retireMercadoPagoPix(gatewayId) {
+  let result;
+  try {
+    result = await processWebhook(gatewayId);
+  } catch {
+    throw new Error("Nao foi possivel conferir o PIX anterior no Mercado Pago agora. Tente de novo em alguns minutos.");
+  }
+  if (result?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
+  try { await cancelPixPayment(gatewayId); }
+  catch (error) { console.error(`Nao foi possivel cancelar o PIX ${gatewayId} no Mercado Pago:`, error.message); }
+}
+
+// Comprovante: so o endereco privado de um comprovante enviado pela propria pessoa.
+export async function safeReceiptUrl(value, userId) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
+  const token = receiptToken(value);
+  if (!token || await findReceiptOwner(token) !== Number(userId)) throw new Error("Envie o comprovante pelo botao do site.");
+  return receiptUrlFor(token);
 }
 
 export async function createEntryPaypalPayment(userId, entryId) {
@@ -249,6 +257,7 @@ export async function processWebhook(paymentId) {
 
   if (!localPayment) {
     const mixResult = await processMixGatewayPayment(gatewayPayment);
+    if (!mixResult && normalizeGatewayPaymentStatus(gatewayPayment.status) === "aprovado") await alertUnmatchedPayment(gatewayPayment);
     return mixResult ?? { ignored: true, reason: "payment_not_found" };
   }
 
@@ -408,4 +417,20 @@ function formatPaymentResponse(payment, settings = null) {
 function validDateOrNow(value) {
   const date = value ? new Date(value) : new Date();
   return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+// PIX pago no Mercado Pago sem pagamento correspondente no site (ex.: QR antigo pago depois de
+// trocar a forma de recebimento): avisa os admins para confirmar a inscricao manualmente.
+async function alertUnmatchedPayment(gatewayPayment) {
+  const adminIds = await findUserIdsByRole("admin");
+  const amount = Number(gatewayPayment.transaction_amount ?? 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+  const reference = String(gatewayPayment.external_reference ?? "sem referencia");
+  await Promise.all(adminIds.map((adminId) => notify({
+    user_id: adminId,
+    titulo: "PIX pago sem inscricao ligada",
+    mensagem: `O Mercado Pago confirmou ${amount} (referencia ${reference}, pagamento ${gatewayPayment.id}), mas o site nao achou o pagamento. Confira e confirme a inscricao no Financeiro.`,
+    tipo: "payment_unmatched",
+    link: "/admin/financeiro",
+    dedupe_key: `payment-unmatched:${gatewayPayment.id}:admin:${adminId}`
+  })));
 }

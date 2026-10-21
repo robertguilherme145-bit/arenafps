@@ -12,6 +12,19 @@ export async function ensurePaymentTables() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS payment_receipts (
+      token CHAR(32) NOT NULL,
+      user_id INT NOT NULL,
+      mime_type VARCHAR(80) NOT NULL,
+      file_size INT UNSIGNED NOT NULL,
+      file_data LONGBLOB NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (token),
+      KEY idx_payment_receipts_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
   await pool.query(`ALTER TABLE payments MODIFY provider ENUM('mercadopago','paypal','pix_manual') NOT NULL DEFAULT 'mercadopago'`);
   await ensureColumn("payments", "declared_at", "DATETIME NULL");
   await ensureColumn("payments", "receipt_url", "VARCHAR(500) NULL");
