@@ -346,17 +346,19 @@ function AdminWorkspace({ section }: { section: NonNullable<ReturnType<typeof ad
     [entries, activeTournament],
   );
 
-  const filteredPayments = useMemo(
-    () =>
-      activeTournament
-        ? payments.filter((item) => item.tournament_id === activeTournament.id)
-        : [],
-    [payments, activeTournament],
-  );
-
   const scopedTournamentIds = useMemo(
     () => new Set(filteredTournaments.map((item) => item.id)),
     [filteredTournaments],
+  );
+  // Financeiro: pagamentos de todos os torneios do filtro de jogo, com os informados ("Ja paguei") primeiro.
+  const filteredPayments = useMemo(
+    () => {
+      const rank = (item: AdminPayment) => item.status === "pendente" ? (item.declared_at ? 0 : 1) : 2;
+      return payments
+        .filter((item) => scopedTournamentIds.has(item.tournament_id))
+        .sort((a, b) => rank(a) - rank(b));
+    },
+    [payments, scopedTournamentIds],
   );
   const scopedEntries = useMemo(
     () => entries.filter((item) => scopedTournamentIds.has(item.tournament_id)),

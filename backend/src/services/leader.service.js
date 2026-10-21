@@ -233,6 +233,8 @@ export async function freezeLeaderLineup(user, lineupId) {
 export async function registerLeaderEntry(user, payload) {
   const team = await requireLeaderTeam(user.id);
   if (!payload.accepted_rules) throw new Error("Aceite o regulamento para confirmar a inscricao.");
+  if (!positiveId(payload.tournament_id)) throw new Error("Torneio nao encontrado.");
+  if (!positiveId(payload.lineup_id)) throw new Error("Selecione uma lineup valida da equipe.");
   const tournament = await findTournament(Number(payload.tournament_id));
   if (!tournament) throw new Error("Torneio nao encontrado.");
   if (tournament.status !== "aberto") throw new Error("As inscricoes deste torneio nao estao abertas.");
@@ -509,3 +511,9 @@ function validDate(value, message) {
 
 function toSqlDate(date) { return date.toISOString().slice(0, 19).replace("T", " "); }
 function messagePayload(payload) { return { message: requiredText(payload.message, "Escreva uma mensagem.", 5000), attachment_url: optionalUrl(payload.attachment_url) }; }
+
+// Ids vindos da tela: so inteiros positivos (evita mandar NaN ao banco e devolve mensagem clara).
+function positiveId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0;
+}

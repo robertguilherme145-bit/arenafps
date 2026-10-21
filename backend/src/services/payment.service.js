@@ -82,7 +82,7 @@ export async function createEntryPayment(userId, entryId) {
 
 // PIX proprio: copia e cola gerado aqui, com o valor e o codigo da inscricao. Quem confirma e a organizacao.
 async function createManualEntryPayment({ entry, team, tournament, settings, existingPayment, plan }) {
-  const reference = `ARENA-E${entry.id}`;
+  const reference = `ARENAE${entry.id}`;
   const pix = await buildManualPix(settings, { amount:Number(tournament.valor), txid:reference, description:`Inscricao ${team.nome}` });
   if (plan === "refresh" && existingPayment.copia_cola === pix.copia_cola) return formatPaymentResponse(existingPayment, settings);
   const data = { entry_id:entry.id, provider:"pix_manual", payment_id:null, external_reference:reference, status:"pendente", valor:Number(tournament.valor), ...pix };
@@ -126,6 +126,7 @@ export async function decidePaymentByAdmin(paymentId, status) {
 }
 
 async function requireOwnEntry(userId, entryId) {
+  if (!Number.isInteger(Number(entryId)) || Number(entryId) <= 0) throw new Error("Inscricao nao encontrada.");
   const [team, user, entry] = await Promise.all([findUserTeam(userId), findUserById(userId), findEntry(entryId)]);
   if (!team) throw new Error("Equipe nao encontrada.");
   if (!user) throw new Error("Usuario nao encontrado.");

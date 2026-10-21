@@ -46,7 +46,8 @@ export async function findTodayData() {
     pool.query("SELECT COUNT(*) total FROM public_contact_messages WHERE status = 'novo'"),
     pool.query(
       `SELECT t.id, t.nome, t.status,
-         (SELECT COUNT(*) FROM entries e WHERE e.tournament_id = t.id AND e.status = 'pendente') pending_entries,
+         (SELECT COUNT(*) FROM entries e WHERE e.tournament_id = t.id AND e.status = 'pendente'
+            AND (e.payment_status = 'pago' OR t.valor = 0)) pending_entries,
          (SELECT COUNT(*) FROM matches m WHERE m.tournament_id = t.id) match_count
        FROM tournaments t
        WHERE t.status IN ('criado','aberto','fechado')
