@@ -1,7 +1,13 @@
 import pool from "../config/database.js";
 
 export async function findSetting(key) {
-  const [[row]] = await pool.query("SELECT setting_value, updated_at FROM platform_settings WHERE setting_key = ? LIMIT 1", [key]);
+  let row;
+  try {
+    [[row]] = await pool.query("SELECT setting_value, updated_at FROM platform_settings WHERE setting_key = ? LIMIT 1", [key]);
+  } catch (error) {
+    if (error?.code === "ER_NO_SUCH_TABLE") return null;
+    throw error;
+  }
   if (!row) return null;
   try { return { value:JSON.parse(row.setting_value), updated_at:row.updated_at }; }
   catch { return null; }

@@ -86,3 +86,13 @@ function compactText(value) {
 function gatewayErrorMessage(error) {
   return error?.message ?? error?.cause?.message ?? "Erro nao identificado pelo gateway.";
 }
+
+// Cancela um PIX ainda nao pago (ex.: a organizacao trocou para o PIX proprio).
+export async function cancelPixPayment(paymentId) {
+  try {
+    return await payment.cancel({ id: paymentId });
+  } catch (error) {
+    console.error(`Falha ao cancelar pagamento ${paymentId} no Mercado Pago:`, gatewayErrorMessage(error));
+    throw error;
+  }
+}

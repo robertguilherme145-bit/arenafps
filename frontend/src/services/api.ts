@@ -1166,3 +1166,22 @@ export async function updateAdminMixPayment(paymentId: number, status: AdminMixP
   const { data } = await api.patch(`/mix/admin/payments/${paymentId}`, { status });
   return data;
 }
+
+// Comprovante de PIX: guardado em area privada (so quem enviou e o admin abrem).
+export async function uploadPaymentReceipt(file: File) {
+  const body = new FormData();
+  body.append("image", file);
+  const { data } = await api.post<{ url: string }>("/payment/receipts", body, { timeout:180000 });
+  return data;
+}
+
+export async function openPaymentReceipt(url: string) {
+  try {
+    const { data } = await api.get<Blob>(url, { responseType:"blob" });
+    const objectUrl = URL.createObjectURL(data);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    return objectUrl;
+  } catch {
+    throw new Error("Comprovante não encontrado ou sem permissão para abrir.");
+  }
+}
