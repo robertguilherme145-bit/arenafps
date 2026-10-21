@@ -1176,6 +1176,12 @@ export async function uploadPaymentReceipt(file: File) {
 }
 
 export async function openPaymentReceipt(url: string) {
-  const { data } = await api.get<Blob>(url, { responseType:"blob" });
-  return URL.createObjectURL(data);
+  try {
+    const { data } = await api.get<Blob>(url, { responseType:"blob" });
+    const objectUrl = URL.createObjectURL(data);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    return objectUrl;
+  } catch {
+    throw new Error("Comprovante não encontrado ou sem permissão para abrir.");
+  }
 }
