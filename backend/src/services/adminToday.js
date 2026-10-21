@@ -3,8 +3,26 @@
 
 const STALE_PIX_MINUTES = 30;
 
-export function buildTodayQueue({ disputes = [], payments = [], matches = [], tickets = [], contacts = 0, tournaments = [], numbers = {} }, now = new Date()) {
+export function buildTodayQueue({ disputes = [], payments = [], matches = [], tickets = [], contacts = 0, tournaments = [], numbers = {}, manualToConfirm = 0, pixSetupMissing = false }, now = new Date()) {
   const items = [];
+
+  if (pixSetupMissing) {
+    items.push({
+      key:"pix-config", kind:"pagamento", severity:"alta",
+      title:"Cadastre sua chave PIX",
+      detail:"O recebimento está no PIX próprio, mas falta a chave. Sem ela ninguém consegue pagar a inscrição.",
+      action:"Configurar recebimento", href:"/admin/financeiro"
+    });
+  }
+
+  if (manualToConfirm > 0) {
+    items.push({
+      key:"pix-confirmar", kind:"pagamento", severity:"alta",
+      title:`${manualToConfirm} ${manualToConfirm === 1 ? "PIX para confirmar" : "PIX para confirmar"}`,
+      detail:"Confira no extrato do banco e confirme no Financeiro.",
+      action:"Confirmar pagamentos", href:"/admin/financeiro"
+    });
+  }
 
   for (const dispute of disputes) {
     items.push({

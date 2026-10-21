@@ -25,6 +25,7 @@ import { ensureMixTables } from "./database/ensureMixTables.js";
 import { ensureModerationAndOfficialTables } from "./database/ensureModerationAndOfficialTables.js";
 import { ensureMediaTables } from "./database/ensureMediaTables.js";
 import { ensureIntegrationTables } from "./database/ensureIntegrationTables.js";
+import { ensurePaymentTables } from "./database/ensurePaymentTables.js";
 import { startPaymentReconciliation } from "./services/paymentReconciliation.service.js";
 import { startRegistrationCloser } from "./services/registrationCloser.service.js";
 import { startDiscordBot, stopDiscordBot } from "./services/discordBot.service.js";

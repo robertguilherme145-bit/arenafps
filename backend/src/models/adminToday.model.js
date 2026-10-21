@@ -1,4 +1,6 @@
 import pool from "../config/database.js";
+import { isManualPixReady } from "../services/paymentSettings.js";
+import { getPaymentSettings } from "../services/paymentSettings.service.js";
 
 // Dados crus da fila "Hoje". Somente leitura; cada lista tem limite para a tela continuar leve.
 export async function findTodayData() {
@@ -9,7 +11,8 @@ export async function findTodayData() {
     [tickets],
     [[contacts]],
     [tournaments],
-    [[numbers]]
+    [[numbers]],
+    [[manual]]
   ] = await Promise.all([
     pool.query(
       `SELECT d.id, d.title, d.match_id, t.nome AS tournament_name
@@ -21,7 +24,7 @@ export async function findTodayData() {
        FROM payments p
        INNER JOIN entries e ON e.id = p.entry_id
        INNER JOIN teams tm ON tm.id = e.team_id
-       WHERE p.status = 'pendente' AND p.created_at >= NOW() - INTERVAL 3 DAY
+       WHERE p.status = 'pendente' AND p.provider = 'mercadopago' AND p.created_at >= NOW() - INTERVAL 3 DAY
        ORDER BY p.created_at ASC LIMIT 20`
     ),
     pool.query(
@@ -54,8 +57,15 @@ export async function findTodayData() {
          (SELECT COUNT(*) FROM matches WHERE DATE(scheduled_at) = CURDATE()) matches_today,
          (SELECT COUNT(*) FROM matches WHERE status = 'andamento') live_matches,
          (SELECT COUNT(*) FROM entries WHERE DATE(created_at) = CURDATE()) registrations_today,
-         (SELECT COALESCE(SUM(valor), 0) FROM payments WHERE status = 'aprovado' AND DATE(paid_at) = CURDATE()) revenue_today`
+         (SELECT COALESCE(SUM(valor), 0) FROM payments WHERE status = 'aprovado' AND DATE(paid_at) = CURDATE())
+         + (SELECT COALESCE(SUM(valor), 0) FROM mix_payments WHERE status = 'aprovado' AND DATE(paid_at) = CURDATE()) revenue_today`
+    ),
+    pool.query(
+      `SELECT
+         (SELECT COUNT(*) FROM payments WHERE provider = 'pix_manual' AND status = 'pendente' AND declared_at IS NOT NULL)
+         + (SELECT COUNT(*) FROM mix_payments WHERE provider = 'pix_manual' AND status = 'pendente' AND declared_at IS NOT NULL) total`
     )
   ]);
-  return { disputes, payments, matches, tickets, contacts:Number(contacts.total), tournaments, numbers };
+  const settings = await getPaymentSettings();
+  return { disputes, payments, matches, tickets, contacts:Number(contacts.total), tournaments, numbers, manualToConfirm:Number(manual.total), pixSetupMissing:settings.mode === "pix_manual" && !isManualPixReady(settings) };
 }
