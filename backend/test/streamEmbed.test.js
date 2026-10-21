@@ -37,3 +37,12 @@ test("normalizeStreamUrl valida ao salvar", () => {
   assert.throws(() => normalizeStreamUrl("https://www.youtube.com/@canal"), /Abra a live no YouTube e copie o link do vídeo/);
   assert.throws(() => normalizeStreamUrl("javascript:alert(1)"), /URL/);
 });
+
+test("normalizeStreamUrl aceita link colado sem https e continua recusando esquemas perigosos", () => {
+  assert.equal(normalizeStreamUrl("twitch.tv/arenacamp"), "https://twitch.tv/arenacamp");
+  assert.equal(normalizeStreamUrl("  kick.com/arenacamp "), "https://kick.com/arenacamp");
+  assert.equal(normalizeStreamUrl("youtu.be/dQw4w9WgXcQ"), "https://youtu.be/dQw4w9WgXcQ");
+  assert.throws(() => normalizeStreamUrl("javascript:alert(1)"));
+  assert.throws(() => normalizeStreamUrl("data:text/html,oi"));
+  assert.throws(() => normalizeStreamUrl("exemplo.com/live"), /Twitch, YouTube ou Kick/);
+});

@@ -27,7 +27,10 @@ export function toEmbed(value, parent) {
 
 // Valida o link ao salvar: vazio vira null; link que nao vira player e recusado com mensagem clara.
 export function normalizeStreamUrl(value) {
-  const url = optionalHttpUrl(value, "Informe uma URL valida para a transmissao.");
+  // Aceita o link colado sem "https://" (ex.: twitch.tv/canal), como muita gente copia.
+  const text = String(value ?? "").trim();
+  const withScheme = text && !/^[a-z][a-z0-9+.-]*:/i.test(text) ? `https://${text}` : text;
+  const url = optionalHttpUrl(withScheme, "Informe uma URL valida para a transmissao.");
   if (!url) return null;
   if (toEmbed(url, "arenafps.com.br")) return url;
   if (/youtube\.com\/@/i.test(url)) throw new Error("Abra a live no YouTube e copie o link do vídeo (youtube.com/watch?v=... ou youtu.be/...).");
