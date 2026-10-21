@@ -33,6 +33,7 @@ import {
 } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { arenaPathForModule } from "../../lib/minhaArena";
+import { PixPaymentCard } from "../../components/payment/PixPaymentCard";
 import { Badge } from "../../components/ui/Badge";
 import { AttendanceResponse } from "../../components/attendance/AttendanceResponse";
 import { Button } from "../../components/ui/Button";
@@ -51,7 +52,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../hooks/useToast";
 import {
   archiveLeaderTeam,
-  captureLeaderPaypalPayment,
+  declareLeaderPayment,
   createLeaderCompetitionRequest,
   createLeaderDispute,
   createLeaderDocument,
@@ -147,51 +148,6 @@ export function LeaderArena({ module: activeModule }: { module: LeaderModule }) 
       )
       .map((payment) => payment.id)
       .join(",") ?? "";
-  const paypalReturnToken = searchParams.get("token");
-
-  useEffect(() => {
-    if (activeModule !== "finance" || !paypalReturnToken) return;
-
-    let cancelled = false;
-    const capture = async () => {
-      setBusy("paypal-capture");
-      try {
-        await captureLeaderPaypalPayment(paypalReturnToken);
-        if (!cancelled) {
-          toast.success(
-            "Pagamento PayPal confirmado",
-            "A inscrição foi atualizada automaticamente.",
-          );
-          await Promise.all([load(), refreshSession()]);
-        }
-      } catch (error) {
-        if (!cancelled) toast.error("PayPal não confirmado", messageOf(error));
-      } finally {
-        if (!cancelled) {
-          const next = new URLSearchParams(searchParams);
-          next.delete("token");
-          next.delete("PayerID");
-          next.delete("paypal");
-          setSearchParams(next, { replace: true });
-          setBusy(null);
-        }
-      }
-    };
-
-    void capture();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    activeModule,
-    load,
-    paypalReturnToken,
-    refreshSession,
-    searchParams,
-    setSearchParams,
-    toast,
-  ]);
-
   useEffect(() => {
     if (activeModule !== "finance" || !pendingPaymentKey) return;
 
@@ -2331,20 +2287,6 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
     subject: "Solicitacao de reembolso",
     description: "",
   });
-  const startPaypalPayment = (entryId: number) =>
-    run(
-      `paypal-${entryId}`,
-      async () => {
-        const payment = await createLeaderPayment(entryId, "paypal");
-        if (!payment.checkout_url) {
-          throw new Error("O PayPal nao retornou o link de pagamento.");
-        }
-        window.location.assign(payment.checkout_url);
-      },
-      "Redirecionando para o PayPal",
-      false,
-    );
-
   return (
     <div className="space-y-5">
       <div className="grid gap-4 md:grid-cols-3">
@@ -2359,7 +2301,7 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
           value={String(
             data.payments.filter((item) => item.status === "aprovado").length,
           )}
-          helper="Confirmados pelo gateway"
+          helper="Pagamentos confirmados"
           icon={<Check className="h-5 w-5" />}
         />
         <StatCard
@@ -2407,30 +2349,19 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
               cell: (entry) =>
                 entry.payment_status === "aguardando" &&
                 Number(entry.valor) > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      className="h-8 text-xs"
-                      loading={busy === `payment-${entry.id}`}
-                      onClick={() =>
-                        void run(
-                          `payment-${entry.id}`,
-                          () => createLeaderPayment(entry.id, "mercadopago"),
-                          "PIX gerado",
-                        )
-                      }
-                    >
-                      Gerar PIX
-                    </Button>
-                    <Button
-                      className="h-8 text-xs"
-                      icon={<ExternalLink className="h-3.5 w-3.5" />}
-                      loading={busy === `paypal-${entry.id}`}
-                      variant="secondary"
-                      onClick={() => void startPaypalPayment(entry.id)}
-                    >
-                      PayPal
-                    </Button>
-                  </div>
+                  <Button
+                    className="h-8 text-xs"
+                    loading={busy === `payment-${entry.id}`}
+                    onClick={() =>
+                      void run(
+                        `payment-${entry.id}`,
+                        () => createLeaderPayment(entry.id),
+                        "PIX pronto para pagar",
+                      )
+                    }
+                  >
+                    Pagar com PIX
+                  </Button>
                 ) : (
                   <span className="text-xs text-arena-muted">
                     Sem ação pendente
@@ -2443,77 +2374,23 @@ function FinanceModule({ data, busy, run }: ModuleProps) {
       {data.payments
         .filter(
           (payment) =>
-            payment.provider === "mercadopago" &&
+            ["mercadopago", "pix_manual"].includes(payment.provider) &&
             payment.copia_cola &&
             payment.status === "pendente",
         )
         .map((payment) => (
-          <Card key={payment.id}>
-            <CardHeader>
-              <h2 className="font-display text-xl font-semibold">
-                PIX · {payment.tournament_name}
-              </h2>
-            </CardHeader>
-            <CardContent className="grid gap-5 md:grid-cols-[180px_1fr]">
-              {payment.qr_code_base64 ? (
-                <img
-                  alt="QR Code PIX"
-                  className="aspect-square w-full bg-white p-2"
-                  src={`data:image/png;base64,${payment.qr_code_base64}`}
-                />
-              ) : null}
-              <div>
-                <p className="text-sm text-arena-muted">
-                  Copie o código abaixo para concluir o pagamento.
-                </p>
-                <div className="mt-3 break-all border border-arena-line bg-black/20 p-3 font-mono text-xs">
-                  {payment.copia_cola}
-                </div>
-                <Button
-                  className="mt-3"
-                  icon={<ClipboardCopy className="h-4 w-4" />}
-                  variant="secondary"
-                  onClick={() =>
-                    void navigator.clipboard.writeText(payment.copia_cola!)
-                  }
-                >
-                  Copiar código
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      {data.payments
-        .filter(
-          (payment) =>
-            payment.provider === "paypal" &&
-            payment.checkout_url &&
-            payment.status === "pendente",
-        )
-        .map((payment) => (
-          <Card key={payment.id}>
-            <CardHeader>
-              <h2 className="font-display text-xl font-semibold">
-                PayPal - {payment.tournament_name}
-              </h2>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm text-arena-muted">
-                  Pagamento internacional pendente para esta inscricao.
-                </p>
-                <p className="mt-2 text-lg font-semibold">
-                  {formatPaymentCurrency(payment)}
-                </p>
-              </div>
-              <Button
-                icon={<ExternalLink className="h-4 w-4" />}
-                onClick={() => window.location.assign(payment.checkout_url!)}
-              >
-                Continuar no PayPal
-              </Button>
-            </CardContent>
-          </Card>
+          <PixPaymentCard
+            key={payment.id}
+            onDeclare={(receiptUrl) =>
+              run(
+                `declare-${payment.id}`,
+                () => declareLeaderPayment(payment.entry_id, receiptUrl),
+                "Pagamento informado. A organização vai conferir.",
+              )
+            }
+            payment={payment}
+            title={payment.tournament_name}
+          />
         ))}
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
@@ -3816,13 +3693,6 @@ function formatCurrency(value: number | string | null | undefined) {
     style: "currency",
     currency: "BRL",
   }).format(Number(value ?? 0));
-}
-function formatPaymentCurrency(payment: LeaderPayment) {
-  const currency = payment.currency || "BRL";
-  return new Intl.NumberFormat(currency === "BRL" ? "pt-BR" : "en-US", {
-    style: "currency",
-    currency,
-  }).format(Number(payment.valor ?? 0));
 }
 function formatDate(value: string | null | undefined) {
   return value

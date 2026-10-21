@@ -21,7 +21,7 @@ export async function getMixTournament(tournamentId, userId = null) {
 }
 
 export async function listAvailableMixTournaments(userId) {
-  const [rows] = await pool.query(`SELECT ms.*,t.nome,t.descricao,t.status tournament_status,t.inicio,t.fim,t.banner,t.premiacao,g.nome game_name,mr.id registration_id,mr.status registration_status,mr.payment_status,mp.qr_code_base64,mp.copia_cola,mp.status gateway_status,mp.provider payment_provider,mp.declared_at,
+  const [rows] = await pool.query(`SELECT ms.*,t.nome,t.descricao,t.status tournament_status,t.inicio,t.fim,t.banner,t.premiacao,g.nome game_name,mr.id registration_id,mr.status registration_status,mr.payment_status,mp.qr_code_base64,mp.copia_cola,mp.status gateway_status,mp.provider payment_provider,mp.declared_at,mp.external_reference payment_reference,mp.valor payment_value,
     (SELECT COUNT(*) FROM mix_registrations c WHERE c.tournament_id=t.id AND c.status<>'cancelled') registered_players,
     (SELECT COUNT(*) FROM mix_registrations c WHERE c.tournament_id=t.id AND c.status IN ('confirmed','assigned')) confirmed_players
     FROM mix_tournament_settings ms INNER JOIN tournaments t ON t.id=ms.tournament_id LEFT JOIN games g ON g.id=CAST(t.game AS UNSIGNED) LEFT JOIN mix_registrations mr ON mr.tournament_id=t.id AND mr.user_id=? LEFT JOIN mix_payments mp ON mp.registration_id=mr.id ORDER BY t.inicio`, [userId]);

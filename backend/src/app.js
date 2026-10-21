@@ -135,6 +135,8 @@ async function start() {
   await ensureModerationAndOfficialTables();
   await ensureMediaTables();
   await ensureIntegrationTables();
+  // Se a atualizacao das tabelas de pagamento falhar, o site continua no ar (so o PIX proprio fica indisponivel).
+  await ensurePaymentTables().catch((error) => console.error("Falha ao preparar tabelas de pagamento:", error.message));
 
   console.log("BANCO CONECTADO");
 

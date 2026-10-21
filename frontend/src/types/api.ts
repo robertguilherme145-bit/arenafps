@@ -137,6 +137,7 @@ export type MixTournament = {
   price_per_player:number; max_players:number; players_per_team:number; team_count:number; draw_status:"pending"|"completed";
   registered_players:number; confirmed_players:number; registration_id?:number|null; registration_status?:string|null; payment_status?:string|null;
   qr_code_base64?:string|null; copia_cola?:string|null; gateway_status?:string|null;
+  payment_provider?:"mercadopago"|"pix_manual"|null; declared_at?:string|null; payment_reference?:string|null; payment_value?:number|string|null;
   teams?:Array<{team_id:number;nome:string;color_name:string;color_hex:string;seed_number:number}>;
   registrations?:Array<{id:number;user_id:number;nome:string;nickname:string|null;avatar:string|null;status:string;payment_status:string;assigned_team_id:number|null;payment_id:number|null;gateway_status:string|null;valor:number|null;qr_code:string|null;qr_code_base64:string|null;copia_cola:string|null}>;
 };
@@ -768,6 +769,8 @@ export type AdminPayment = {
   qr_code_base64: string | null;
   copia_cola: string | null;
   paid_at: string | null;
+  declared_at?: string | null;
+  receipt_url?: string | null;
   created_at: string;
   entry_status: AdminEntry["status"];
   entry_payment_status: AdminEntry["payment_status"];
@@ -1076,6 +1079,8 @@ export type LeaderPayment = {
   copia_cola: string | null;
   checkout_url: string | null;
   paid_at: string | null;
+  declared_at?: string | null;
+  receipt_url?: string | null;
   created_at: string;
 };
 
