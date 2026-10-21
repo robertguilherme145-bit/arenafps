@@ -48,3 +48,10 @@ test("etapa parada de cada torneio", () => {
   assert.equal(tournamentStep({ status:"aberto", pending_entries:0 }), null);
   assert.equal(tournamentStep({ status:"em_andamento", pending_entries:3 }), null);
 });
+
+test("PIX proprio: falta de chave e pagamentos informados sobem para o topo", () => {
+  const today = buildTodayQueue({ contacts:1, pixSetupMissing:true, manualToConfirm:2 }, now);
+  assert.deepEqual(today.items.map((item) => item.key), ["pix-config", "pix-confirmar", "contato"]);
+  assert.equal(today.items[1].title, "2 PIX para confirmar");
+  assert.equal(today.items[0].href, "/admin/financeiro");
+});

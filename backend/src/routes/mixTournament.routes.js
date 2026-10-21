@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminDetails, adminRegistration, configure, details, draw, index, join, leave, payment } from "../controllers/mixTournament.controller.js";
+import { adminDetails, adminPayments, adminPaymentStatus, adminRegistration, configure, declare, details, draw, index, join, leave, payment } from "../controllers/mixTournament.controller.js";
 import { auth } from "../middleware/auth.middleware.js";
 import { role } from "../middleware/role.middleware.js";
 import { requireVerifiedEmail } from "../middleware/verified.middleware.js";
@@ -11,6 +11,9 @@ router.get("/:id",details);
 router.post("/:id/register",join);
 router.delete("/:id/register",leave);
 router.post("/:id/payment",payment);
+router.post("/:id/payment/declare",declare);
+router.get("/admin/payments/all",role("admin"),adminPayments);
+router.patch("/admin/payments/:paymentId",role("admin"),adminPaymentStatus);
 router.get("/admin/:id",role("admin"),adminDetails);
 router.put("/admin/:id",role("admin"),configure);
 router.post("/admin/:id/draw",role("admin"),draw);

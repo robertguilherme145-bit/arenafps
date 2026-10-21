@@ -267,7 +267,7 @@ export async function reconcileGatewayPayment(id, { payment_id, status, paid_at 
             SET payment_id = ?, status = ?, paid_at = ?
             WHERE id = ?
             `,
-            [String(payment_id), status, paid_at, id]
+            [payment_id == null ? null : String(payment_id), status, paid_at, id]
         );
 
         if(status === "cancelado" || status === "rejeitado"){
@@ -290,7 +290,7 @@ export async function reconcileGatewayPayment(id, { payment_id, status, paid_at 
             previous_status: current.status,
             status,
             status_changed: current.status !== status,
-            payment_id: String(payment_id),
+            payment_id: payment_id == null ? null : String(payment_id),
             paid_at
         };
 
@@ -439,4 +439,23 @@ export async function updateCheckoutPaymentData(
 
     );
 
+}
+
+// Troca o conteudo de um pagamento ainda nao pago (ex.: a organizacao mudou de Mercado Pago para PIX proprio).
+export async function replacePayment(id, data){
+    await pool.query(
+        `UPDATE payments
+         SET provider = ?, payment_id = ?, external_reference = ?, status = 'pendente', valor = ?,
+             qr_code = ?, qr_code_base64 = ?, copia_cola = ?, checkout_url = NULL, currency = 'BRL',
+             paid_at = NULL, declared_at = NULL, receipt_url = NULL
+         WHERE id = ? AND status <> 'aprovado'`,
+        [data.provider, data.payment_id ?? null, data.external_reference ?? null, data.valor, data.qr_code ?? null, data.qr_code_base64 ?? null, data.copia_cola ?? null, id]
+    );
+    return findPayment(id);
+}
+
+// Quem pagou pelo PIX proprio avisa que pagou (com comprovante opcional).
+export async function declarePayment(id, receiptUrl){
+    await pool.query("UPDATE payments SET declared_at = NOW(), receipt_url = ? WHERE id = ? AND status = 'pendente'", [receiptUrl ?? null, id]);
+    return findPayment(id);
 }

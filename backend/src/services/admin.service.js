@@ -1,3 +1,4 @@
+import { decidePaymentByAdmin } from "./payment.service.js";
 import pool from "../config/database.js";
 import { createAuditLog, findAuditLogs } from "../models/auditLog.model.js";
 import {
@@ -137,19 +138,7 @@ export async function updateAdminPayment(adminUser, paymentId, status) {
     throw new Error("Status de pagamento invalido.");
   }
 
-  await updateGatewayPaymentStatus(payment.id, {
-    payment_id: payment.payment_id,
-    status,
-    paid_at: status === "aprovado" ? new Date() : null
-  });
-
-  if (status === "aprovado") {
-    await updateEntryPaymentStatus(payment.entry_id, "pago");
-  }
-
-  if (status === "cancelado" || status === "rejeitado") {
-    await updateEntryPaymentStatus(payment.entry_id, "falhou");
-  }
+  await decidePaymentByAdmin(payment.id, status);
 
   await audit(adminUser.id, "payment.updated", "payment", payment.id, {
     previous_status: payment.status,

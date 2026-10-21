@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { save as savePaymentSettings, show as showPaymentSettings } from "../controllers/paymentSettings.controller.js";
 import { createDraft, duplicate as duplicateTournamentRoute, overview as tournamentOverview, today as adminToday } from "../controllers/adminTournament.controller.js";
 import {
   approveEntry,
@@ -72,6 +73,8 @@ router.get("/dashboard", dashboard);
 router.post("/tournaments", createDraft);
 router.get("/tournaments/:id/overview", tournamentOverview);
 router.get("/today", adminToday);
+router.get("/payment-settings", showPaymentSettings);
+router.put("/payment-settings", savePaymentSettings);
 router.post("/tournaments/:id/duplicate", duplicateTournamentRoute);
 router.get("/achievements", achievements);
 router.post("/achievements", createAchievement);

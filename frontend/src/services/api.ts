@@ -772,13 +772,14 @@ export async function registerLeaderTournament(input: { tournament_id: number; l
   return data;
 }
 
-export async function createLeaderPayment(entryId: number, provider: "mercadopago" | "paypal" = "mercadopago") {
-  const { data } = await api.post(`/leader/payments/${entryId}`, { provider });
+export async function createLeaderPayment(entryId: number) {
+  const { data } = await api.post(`/leader/payments/${entryId}`);
   return data;
 }
 
-export async function captureLeaderPaypalPayment(orderId: string) {
-  const { data } = await api.post("/leader/payments/paypal/capture", { orderId });
+// "Ja paguei" do PIX proprio (comprovante opcional).
+export async function declareLeaderPayment(entryId: number, receiptUrl?: string | null) {
+  const { data } = await api.post(`/leader/payments/${entryId}/declare`, { receipt_url:receiptUrl || null });
   return data;
 }
 
@@ -1055,6 +1056,7 @@ export async function getMixTournament(tournamentId:number) { const {data}=await
 export async function registerMixTournament(tournamentId:number) { const {data}=await api.post<{id:number;status:string;payment_status:string;payment_required:boolean}>(`/mix/${tournamentId}/register`);return data; }
 export async function cancelMixTournamentRegistration(tournamentId:number) { const {data}=await api.delete(`/mix/${tournamentId}/register`);return data; }
 export async function createMixTournamentPayment(tournamentId:number) { const {data}=await api.post(`/mix/${tournamentId}/payment`);return data; }
+export async function declareMixTournamentPayment(tournamentId:number, receiptUrl?:string|null) { const {data}=await api.post(`/mix/${tournamentId}/payment/declare`,{ receipt_url:receiptUrl || null });return data; }
 
 export async function updateTournamentStream(tournamentId: number, streamUrl: string | null) {
   const { data } = await api.put<{ tournament_id: number; stream_url: string | null }>(`/admin/competition/tournaments/${tournamentId}/stream`, { stream_url: streamUrl });
@@ -1108,5 +1110,59 @@ export type AdminToday = {
 
 export async function getAdminToday() {
   const { data } = await api.get<AdminToday>("/admin/today");
+  return data;
+}
+
+export type PaymentMode = "mercadopago" | "pix_manual";
+export type PaymentInfo = { mode: PaymentMode; receiver_name: string | null; instructions: string | null };
+
+export async function getPaymentInfo() {
+  const { data } = await api.get<PaymentInfo>("/payment/info");
+  return data;
+}
+
+export type AdminPaymentSettings = {
+  mode: PaymentMode;
+  pix_key_type: "" | "cpf" | "cnpj" | "email" | "telefone" | "aleatoria";
+  pix_key: string;
+  receiver_name: string;
+  receiver_city: string;
+  instructions: string;
+  manual_ready: boolean;
+  mercadopago_ready: boolean;
+};
+
+export async function getAdminPaymentSettings() {
+  const { data } = await api.get<AdminPaymentSettings>("/admin/payment-settings");
+  return data;
+}
+
+export async function saveAdminPaymentSettings(payload: Omit<AdminPaymentSettings, "manual_ready" | "mercadopago_ready">) {
+  const { data } = await api.put<AdminPaymentSettings>("/admin/payment-settings", payload);
+  return data;
+}
+
+export type AdminMixPayment = {
+  id: number;
+  provider: "mercadopago" | "pix_manual";
+  status: "pendente" | "aprovado" | "cancelado" | "rejeitado";
+  valor: number | string;
+  external_reference: string | null;
+  declared_at: string | null;
+  receipt_url: string | null;
+  paid_at: string | null;
+  created_at: string;
+  tournament_id: number;
+  tournament_name: string;
+  player_name: string;
+};
+
+export async function getAdminMixPayments() {
+  const { data } = await api.get<AdminMixPayment[]>("/mix/admin/payments/all");
+  return data;
+}
+
+export async function updateAdminMixPayment(paymentId: number, status: AdminMixPayment["status"]) {
+  const { data } = await api.patch(`/mix/admin/payments/${paymentId}`, { status });
   return data;
 }

@@ -9,8 +9,13 @@ import {
   findPaymentWithEntry,
   findPendingPayments,
   findPendingPaymentsByTeam,
-  reconcileGatewayPayment
+  declarePayment,
+  findPayment,
+  reconcileGatewayPayment,
+  replacePayment
 } from "../models/payment.model.js";
+import { buildManualPix } from "./paymentSettings.js";
+import { getPaymentSettings } from "./paymentSettings.service.js";
 import { findUserTeam } from "../models/team.model.js";
 import { findTournament } from "../models/tournament.model.js";
 import { findUserById, findUserIdsByRole } from "../models/user.model.js";
@@ -36,28 +41,20 @@ import {
 } from "./paypal.service.js";
 
 export async function createEntryPayment(userId, entryId) {
-  const [team, user, entry] = await Promise.all([
-    findUserTeam(userId),
-    findUserById(userId),
-    findEntry(entryId)
-  ]);
-
-  if (!team) throw new Error("Equipe nao encontrada.");
-  if (!user) throw new Error("Usuario nao encontrado.");
-  if (!entry) throw new Error("Inscricao nao encontrada.");
-  if (Number(entry.team_id) !== Number(team.id)) {
-    throw new Error("Esta inscricao nao pertence a sua equipe.");
-  }
-
+  const { team, user, entry } = await requireOwnEntry(userId, entryId);
   const existingPayment = await findPaymentByEntry(entry.id);
-  if (existingPayment) {
-    if (existingPayment.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
-    if (existingPayment.provider === "mercadopago") return formatPaymentResponse(existingPayment);
-    throw new Error("Ja existe um pagamento PayPal pendente para esta inscricao.");
-  }
+  if (existingPayment?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
 
   const tournament = await findTournament(entry.tournament_id);
   if (!tournament) throw new Error("Torneio nao encontrado.");
+
+  const settings = await getPaymentSettings();
+  if (settings.mode === "pix_manual") return createManualEntryPayment({ entry, team, tournament, settings, existingPayment });
+
+  // Mercado Pago: reaproveita o PIX automatico ja gerado; um PIX proprio pendente e trocado.
+  if (existingPayment?.provider === "mercadopago") return formatPaymentResponse(existingPayment);
+  if (existingPayment && existingPayment.provider !== "pix_manual") throw new Error("Ja existe outro pagamento pendente para esta inscricao.");
+  if (existingPayment?.declared_at) throw new Error("Voce ja informou o pagamento pelo PIX. Aguarde a organizacao confirmar.");
 
   const pix = await createPixPayment({
     valor: tournament.valor,
@@ -67,24 +64,89 @@ export async function createEntryPayment(userId, entryId) {
     externalReference: `ENTRY_${entryId}`
   });
   const pixData = await preparePixData(pix);
-  const status = normalizeGatewayPaymentStatus(pix.status);
-
-  const localPayment = await createPayment({
+  const data = {
     entry_id: entry.id,
     provider: "mercadopago",
     payment_id: String(pix.id),
     external_reference: pix.external_reference,
-    status,
+    status: normalizeGatewayPaymentStatus(pix.status),
     valor: pix.transaction_amount,
     qr_code: pixData.qr_code,
     qr_code_base64: pixData.qr_code_base64,
     copia_cola: pixData.copia_cola
-  });
-
-  return {
-    ...formatPaymentResponse(localPayment),
-    payment_id: pix.id
   };
+  const localPayment = existingPayment ? await replacePayment(existingPayment.id, data) : await createPayment(data);
+  return { ...formatPaymentResponse(localPayment), payment_id: pix.id };
+}
+
+// PIX proprio: copia e cola gerado aqui, com o valor e o codigo da inscricao. Quem confirma e a organizacao.
+async function createManualEntryPayment({ entry, team, tournament, settings, existingPayment }) {
+  if (existingPayment?.provider === "pix_manual" && existingPayment.declared_at) return formatPaymentResponse(existingPayment, settings);
+  if (existingPayment?.provider === "mercadopago" && existingPayment.status === "pendente" && existingPayment.payment_id) {
+    // Um PIX do Mercado Pago ja pode ter sido pago: confere antes de trocar.
+    const result = await processWebhook(existingPayment.payment_id).catch(() => null);
+    if (result?.status === "aprovado") throw new Error("Esta inscricao ja esta paga.");
+  }
+  const reference = `ARENA-E${entry.id}`;
+  const pix = await buildManualPix(settings, { amount:Number(tournament.valor), txid:reference, description:`Inscricao ${team.nome}` });
+  if (existingPayment?.provider === "pix_manual" && existingPayment.status === "pendente" && existingPayment.copia_cola === pix.copia_cola) {
+    return formatPaymentResponse(existingPayment, settings);
+  }
+  const data = { entry_id:entry.id, provider:"pix_manual", payment_id:null, external_reference:reference, status:"pendente", valor:Number(tournament.valor), ...pix };
+  const localPayment = existingPayment ? await replacePayment(existingPayment.id, data) : await createPayment(data);
+  return formatPaymentResponse(localPayment, settings);
+}
+
+// "Ja paguei": avisa a organizacao para conferir no extrato.
+export async function declareEntryPayment(userId, entryId, receiptUrl) {
+  const { team, entry } = await requireOwnEntry(userId, entryId);
+  const payment = await findPaymentByEntry(entry.id);
+  if (!payment || payment.provider !== "pix_manual") throw new Error("Gere o PIX antes de informar o pagamento.");
+  if (payment.status === "aprovado") throw new Error("Este pagamento ja foi confirmado.");
+  const updated = await declarePayment(payment.id, safeReceiptUrl(receiptUrl));
+  const tournament = await findTournament(entry.tournament_id);
+  const adminIds = await findUserIdsByRole("admin");
+  await Promise.all(adminIds.map((adminId) => notify({
+    user_id: adminId,
+    titulo: "PIX para conferir",
+    mensagem: `A equipe ${team.nome} informou o pagamento de ${tournament?.nome ?? "um torneio"}. Confira no extrato (codigo ${payment.external_reference}).`,
+    tipo: "payment_declared",
+    link: "/admin/financeiro",
+    dedupe_key: `payment-declared:${payment.id}:admin:${adminId}`
+  })));
+  return formatPaymentResponse(updated, await getPaymentSettings());
+}
+
+// Decisao do admin no Financeiro. Aprovar segue o mesmo caminho da confirmacao automatica:
+// confirma a inscricao, roda as regras do torneio e avisa a equipe.
+export async function decidePaymentByAdmin(paymentId, status) {
+  const payment = await findPayment(paymentId);
+  if (!payment) throw new Error("Pagamento nao encontrado.");
+  const paidAt = status === "aprovado" ? validDateOrNow(payment.paid_at) : null;
+  const reconciled = await reconcileGatewayPayment(payment.id, { payment_id: payment.payment_id, status, paid_at: paidAt });
+  if (status === "aprovado" && reconciled.status_changed) {
+    await dispatchCompetitionEvent(COMPETITION_EVENTS.PAYMENT_APPROVED, { payment_id: reconciled.id, entry_id: reconciled.entry_id });
+    await notifyPaymentApproved(reconciled);
+  }
+  return reconciled;
+}
+
+async function requireOwnEntry(userId, entryId) {
+  const [team, user, entry] = await Promise.all([findUserTeam(userId), findUserById(userId), findEntry(entryId)]);
+  if (!team) throw new Error("Equipe nao encontrada.");
+  if (!user) throw new Error("Usuario nao encontrado.");
+  if (!entry) throw new Error("Inscricao nao encontrada.");
+  if (Number(entry.team_id) !== Number(team.id)) throw new Error("Esta inscricao nao pertence a sua equipe.");
+  return { team, user, entry };
+}
+
+// Comprovante: so links https ou imagens enviadas ao proprio site.
+export function safeReceiptUrl(value) {
+  const url = String(value ?? "").trim();
+  if (!url) return null;
+  if (url.length > 500) throw new Error("Link do comprovante muito longo.");
+  if (/^https:\/\//i.test(url) || /^\/media\/files\/\d+\//.test(url)) return url;
+  throw new Error("Envie o comprovante como imagem ou um link https.");
 }
 
 export async function createEntryPaypalPayment(userId, entryId) {
@@ -314,14 +376,14 @@ async function notifyPaymentApproved(payment) {
   await notify({
     user_id: Number(payment.team_creator_id),
     titulo: "Pagamento confirmado",
-    mensagem: `O pagamento da equipe ${payment.team_name} para ${payment.tournament_name} foi confirmado automaticamente.`,
+    mensagem: `O pagamento da equipe ${payment.team_name} para ${payment.tournament_name} foi confirmado.`,
     tipo: "payment_approved",
-    link: "/lider?module=finance",
+    link: "/minha-arena/time?aba=pagamentos",
     dedupe_key: `payment-approved:${payment.id}:leader:${payment.team_creator_id}`
   });
 }
 
-function formatPaymentResponse(payment) {
+function formatPaymentResponse(payment, settings = null) {
   return {
     id: payment.id,
     entry_id: payment.entry_id,
@@ -335,7 +397,11 @@ function formatPaymentResponse(payment) {
     qr_code_base64: payment.qr_code_base64 ?? null,
     copia_cola: payment.copia_cola ?? null,
     checkout_url: payment.checkout_url ?? null,
-    paid_at: payment.paid_at ?? null
+    paid_at: payment.paid_at ?? null,
+    declared_at: payment.declared_at ?? null,
+    receipt_url: payment.receipt_url ?? null,
+    receiver_name: payment.provider === "pix_manual" ? settings?.receiver_name ?? null : null,
+    instructions: payment.provider === "pix_manual" ? settings?.instructions || null : null
   };
 }
 

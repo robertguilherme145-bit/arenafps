@@ -15,13 +15,13 @@ export async function getMixTournament(tournamentId, userId = null) {
     FROM mix_tournament_settings ms INNER JOIN tournaments t ON t.id=ms.tournament_id LEFT JOIN games g ON g.id=CAST(t.game AS UNSIGNED) WHERE ms.tournament_id=?`, [tournamentId]);
   if (!settings) return null;
   const [teams] = await pool.query(`SELECT mgt.*,t.nome,t.tag,t.logo FROM mix_generated_teams mgt INNER JOIN teams t ON t.id=mgt.team_id WHERE mgt.tournament_id=? ORDER BY mgt.seed_number`, [tournamentId]);
-  const [registrations] = await pool.query(`SELECT mr.id,mr.user_id,mr.status,mr.payment_status,mr.assigned_team_id,mr.created_at,u.nome,u.nickname,u.avatar,mp.id payment_id,mp.status gateway_status,mp.valor,mp.qr_code,mp.qr_code_base64,mp.copia_cola
+  const [registrations] = await pool.query(`SELECT mr.id,mr.user_id,mr.status,mr.payment_status,mr.assigned_team_id,mr.created_at,u.nome,u.nickname,u.avatar,mp.id payment_id,mp.status gateway_status,mp.valor,mp.qr_code,mp.qr_code_base64,mp.copia_cola,mp.provider payment_provider,mp.external_reference payment_reference,mp.declared_at,mp.receipt_url
     FROM mix_registrations mr INNER JOIN users u ON u.id=mr.user_id LEFT JOIN mix_payments mp ON mp.registration_id=mr.id WHERE mr.tournament_id=? ORDER BY mr.created_at`, [tournamentId]);
   return { ...settings, teams, registrations:userId ? registrations.filter((item) => Number(item.user_id) === Number(userId)) : registrations };
 }
 
 export async function listAvailableMixTournaments(userId) {
-  const [rows] = await pool.query(`SELECT ms.*,t.nome,t.descricao,t.status tournament_status,t.inicio,t.fim,t.banner,t.premiacao,g.nome game_name,mr.id registration_id,mr.status registration_status,mr.payment_status,mp.qr_code_base64,mp.copia_cola,mp.status gateway_status,
+  const [rows] = await pool.query(`SELECT ms.*,t.nome,t.descricao,t.status tournament_status,t.inicio,t.fim,t.banner,t.premiacao,g.nome game_name,mr.id registration_id,mr.status registration_status,mr.payment_status,mp.qr_code_base64,mp.copia_cola,mp.status gateway_status,mp.provider payment_provider,mp.declared_at,mp.external_reference payment_reference,mp.valor payment_value,
     (SELECT COUNT(*) FROM mix_registrations c WHERE c.tournament_id=t.id AND c.status<>'cancelled') registered_players,
     (SELECT COUNT(*) FROM mix_registrations c WHERE c.tournament_id=t.id AND c.status IN ('confirmed','assigned')) confirmed_players
     FROM mix_tournament_settings ms INNER JOIN tournaments t ON t.id=ms.tournament_id LEFT JOIN games g ON g.id=CAST(t.game AS UNSIGNED) LEFT JOIN mix_registrations mr ON mr.tournament_id=t.id AND mr.user_id=? LEFT JOIN mix_payments mp ON mp.registration_id=mr.id ORDER BY t.inicio`, [userId]);
@@ -64,22 +64,47 @@ export async function findMixPaymentByGateway(value) {
 
 export async function findPendingMixPayments(limit = 50) {
   const safeLimit=Math.min(Math.max(Number(limit)||50,1),200);
-  const [rows]=await pool.query(`SELECT * FROM mix_payments WHERE status='pendente' AND payment_id IS NOT NULL ORDER BY created_at LIMIT ?`,[safeLimit]);
+  const [rows]=await pool.query(`SELECT * FROM mix_payments WHERE status='pendente' AND provider='mercadopago' AND payment_id IS NOT NULL ORDER BY created_at LIMIT ?`,[safeLimit]);
   return rows;
 }
 
 export async function createMixPaymentRecord(registrationId, data) {
-  const [result] = await pool.query(`INSERT INTO mix_payments (registration_id,payment_id,external_reference,status,valor,qr_code,qr_code_base64,copia_cola) VALUES (?,?,?,?,?,?,?,?)`, [registrationId,String(data.payment_id),data.external_reference,data.status,data.valor,data.qr_code,data.qr_code_base64,data.copia_cola]);
+  const [result] = await pool.query(`INSERT INTO mix_payments (registration_id,provider,payment_id,external_reference,status,valor,qr_code,qr_code_base64,copia_cola) VALUES (?,?,?,?,?,?,?,?,?)`, [registrationId,data.provider||'mercadopago',data.payment_id==null?null:String(data.payment_id),data.external_reference,data.status,data.valor,data.qr_code,data.qr_code_base64,data.copia_cola]);
   return { id:result.insertId,...data };
 }
 
 export async function reconcileMixPayment(id, data) {
   const connection = await pool.getConnection();
   try { await connection.beginTransaction(); const [[current]] = await connection.query(`SELECT mp.*,mr.user_id,mr.tournament_id FROM mix_payments mp INNER JOIN mix_registrations mr ON mr.id=mp.registration_id WHERE mp.id=? FOR UPDATE`, [id]); if(!current) throw new Error("Pagamento Mix nao encontrado.");
-    await connection.query(`UPDATE mix_payments SET payment_id=?,status=?,paid_at=? WHERE id=?`, [String(data.payment_id),data.status,data.paid_at,id]);
+    await connection.query(`UPDATE mix_payments SET payment_id=?,status=?,paid_at=? WHERE id=?`, [data.payment_id==null?null:String(data.payment_id),data.status,data.paid_at,id]);
     await connection.query(`UPDATE mix_registrations SET payment_status=?,status=CASE WHEN ?='aprovado' THEN 'confirmed' WHEN status='assigned' THEN status ELSE 'pending_payment' END WHERE id=?`, [data.status==='aprovado'?'paid':data.status==='pendente'?'pending':'failed',data.status,current.registration_id]);
     await connection.commit(); return {...current,previous_status:current.status,status:data.status,status_changed:current.status!==data.status};
   } catch(error){await connection.rollback();throw error;} finally{connection.release();}
 }
 
 export { pool as mixPool };
+
+export async function findMixPaymentById(id) {
+  const [rows] = await pool.query(`SELECT mp.*,mr.tournament_id,mr.user_id,t.nome tournament_name,u.nome player_name FROM mix_payments mp INNER JOIN mix_registrations mr ON mr.id=mp.registration_id INNER JOIN tournaments t ON t.id=mr.tournament_id INNER JOIN users u ON u.id=mr.user_id WHERE mp.id=? LIMIT 1`, [id]);
+  return rows[0];
+}
+
+// Troca um pagamento ainda nao pago (ex.: a organizacao mudou para o PIX proprio).
+export async function replaceMixPayment(id, data) {
+  await pool.query(`UPDATE mix_payments SET provider=?,payment_id=?,external_reference=?,status='pendente',valor=?,qr_code=?,qr_code_base64=?,copia_cola=?,paid_at=NULL,declared_at=NULL,receipt_url=NULL WHERE id=? AND status<>'aprovado'`,
+    [data.provider, data.payment_id==null?null:String(data.payment_id), data.external_reference, data.valor, data.qr_code, data.qr_code_base64, data.copia_cola, id]);
+  return findMixPaymentById(id);
+}
+
+export async function declareMixPaymentRecord(id, receiptUrl) {
+  await pool.query("UPDATE mix_payments SET declared_at=NOW(),receipt_url=? WHERE id=? AND status='pendente'", [receiptUrl ?? null, id]);
+  return findMixPaymentById(id);
+}
+
+// Pagamentos do Mix para o Financeiro do painel.
+export async function listMixPaymentsForAdmin() {
+  const [rows] = await pool.query(`SELECT mp.id,mp.provider,mp.status,mp.valor,mp.external_reference,mp.declared_at,mp.receipt_url,mp.paid_at,mp.created_at,mr.tournament_id,t.nome tournament_name,COALESCE(NULLIF(u.nickname,''),u.nome) player_name
+    FROM mix_payments mp INNER JOIN mix_registrations mr ON mr.id=mp.registration_id INNER JOIN tournaments t ON t.id=mr.tournament_id INNER JOIN users u ON u.id=mr.user_id
+    ORDER BY (mp.status='pendente' AND mp.declared_at IS NOT NULL) DESC, mp.created_at DESC LIMIT 300`);
+  return rows;
+}
