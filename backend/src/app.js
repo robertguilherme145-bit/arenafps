@@ -86,7 +86,12 @@ if (publicDirectory) {
  app.use(express.static(publicDirectory, {
   maxAge:process.env.NODE_ENV === "production" ? "1y" : 0,
   immutable:process.env.NODE_ENV === "production",
-  index:false
+  index:false,
+  // Cache de 1 ano so para /assets (o nome muda a cada versao). Icone, robots e sitemap
+  // mantem o mesmo nome, entao o navegador confere de novo a cada hora.
+  setHeaders:(res, filePath) => {
+   if (!filePath.includes(`${path.sep}assets${path.sep}`)) res.setHeader("Cache-Control", "public, max-age=3600");
+  }
  }));
  app.use((req,res,next) => {
   const isPageRequest = req.method === "GET"
