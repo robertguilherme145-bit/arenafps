@@ -96,7 +96,7 @@ function parseLabels(value,count){try{const parsed=typeof value==='string'?JSON.
 
 // PIX proprio no Mix: copia e cola com o valor por jogador e o codigo da inscricao.
 async function createManualMixPix(mix, registration, settings, plan) {
-  const reference = `ARENA-M${registration.id}`;
+  const reference = `ARENAM${registration.id}`;
   const pix = await buildManualPix(settings, { amount:Number(mix.price_per_player), txid:reference, description:`Mix ${mix.nome}` });
   if (plan === "refresh" && registration.copia_cola === pix.copia_cola) return findMixPaymentById(registration.payment_id);
   const data = { provider:"pix_manual", payment_id:null, external_reference:reference, status:"pendente", valor:Number(mix.price_per_player), ...pix };
